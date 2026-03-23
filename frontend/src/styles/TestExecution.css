@@ -1,0 +1,13 @@
+.test-execution-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--spacing-lg);
+}
+
+.test-container {
+  position: relative;
+}
+
+.back-btn {
+  margin-bottom: var(--spacing-lg);
+}

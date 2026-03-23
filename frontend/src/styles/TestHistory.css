@@ -1,0 +1,212 @@
+.test-history {
+  background-color: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-lg);
+  margin-top: var(--spacing-lg);
+}
+
+.test-history h3 {
+  margin-top: 0;
+  margin-bottom: var(--spacing-lg);
+  color: var(--color-text-primary);
+}
+
+.no-tests {
+  text-align: center;
+  color: var(--color-text-muted);
+  padding: var(--spacing-2xl) var(--spacing-lg);
+  font-style: italic;
+  margin: 0;
+}
+
+.test-detail-view {
+  position: relative;
+}
+
+.back-btn {
+  margin-bottom: var(--spacing-lg);
+}
+
+.test-detail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+.detail-section {
+  background-color: var(--color-bg-tertiary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-md);
+  padding: var(--spacing-lg);
+}
+
+.detail-section.error {
+  border-color: var(--color-danger);
+  background-color: rgba(239, 68, 68, 0.05);
+}
+
+.detail-section h4 {
+  margin-top: 0;
+  margin-bottom: var(--spacing-md);
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  text-transform: uppercase;
+}
+
+.test-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.test-item {
+  background-color: var(--color-bg-tertiary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-md);
+  padding: var(--spacing-md);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.test-item:hover {
+  border-color: var(--color-primary);
+  background-color: var(--color-bg-primary);
+  transform: translateX(4px);
+}
+
+.test-item.status-completed {
+  border-left: 4px solid var(--color-success);
+}
+
+.test-item.status-failed {
+  border-left: 4px solid var(--color-danger);
+}
+
+.test-item.status-queued {
+  border-left: 4px solid var(--color-warning);
+}
+
+.test-item.status-running {
+  border-left: 4px solid var(--color-info);
+}
+
+.test-header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-sm);
+}
+
+.test-number {
+  font-weight: 600;
+  color: var(--color-text-muted);
+  font-size: 12px;
+  min-width: 35px;
+}
+
+.status-badge {
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.status-badge.status-completed {
+  background-color: rgba(34, 197, 94, 0.1);
+  color: var(--color-success);
+}
+
+.status-badge.status-failed {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: var(--color-danger);
+}
+
+.status-badge.status-queued {
+  background-color: rgba(234, 179, 8, 0.1);
+  color: var(--color-warning);
+}
+
+.status-badge.status-running {
+  background-color: rgba(59, 130, 246, 0.1);
+  color: var(--color-info);
+}
+
+.test-date {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  margin-left: auto;
+}
+
+.test-preview {
+  margin-bottom: var(--spacing-sm);
+}
+
+.input-preview {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  margin: 0;
+  word-break: break-word;
+}
+
+.test-metrics {
+  display: flex;
+  gap: var(--spacing-md);
+  flex-wrap: wrap;
+}
+
+.metric-small {
+  font-size: 12px;
+  background-color: var(--color-bg-secondary);
+  padding: 2px 6px;
+  border-radius: 3px;
+  color: var(--color-text-muted);
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: var(--spacing-md);
+}
+
+.metric {
+  background-color: var(--color-bg-secondary);
+  padding: var(--spacing-md);
+  border-radius: var(--border-radius-md);
+  text-align: center;
+}
+
+.metric label {
+  display: block;
+  font-size: 12px;
+  color: var(--color-text-muted);
+  margin-bottom: var(--spacing-sm);
+  text-transform: uppercase;
+}
+
+.metric .value {
+  display: block;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
+.metric .value.status-completed {
+  color: var(--color-success);
+}
+
+.metric .value.status-failed {
+  color: var(--color-danger);
+}
+
+.detail-footer {
+  padding-top: var(--spacing-lg);
+  border-top: 1px solid var(--color-border);
+  text-align: right;
+  font-size: 12px;
+  color: var(--color-text-muted);
+}

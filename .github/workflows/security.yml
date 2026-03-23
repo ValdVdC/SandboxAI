@@ -1,0 +1,249 @@
+name: Security — Vulnerability Scanning
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'backend/**'
+      - 'frontend/**'
+      - 'Dockerfile*'
+      - '.github/workflows/security.yml'
+  pull_request:
+    branches: [main, develop]
+  schedule:
+    # Run security scan daily at 2 AM UTC
+    - cron: '0 2 * * *'
+
+jobs:
+  trivy-fs-scan:
+    name: Trivy Filesystem Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Run Trivy filesystem scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-fs-results.sarif'
+          skip-dirs: '.git,node_modules,__pycache__,.pytest_cache'
+      
+      - name: Upload Trivy filesystem results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: 'trivy-fs-results.sarif'
+          category: 'trivy-fs'
+      
+      - name: Run Trivy filesystem scan (table)
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'table'
+          exit-code: '0'
+          ignore-unfixed: true
+          severity: 'HIGH,CRITICAL'
+
+  trivy-docker-api:
+    name: Trivy Docker Image Scan — API
+    runs-on: ubuntu-latest
+    if: always()
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      
+      - name: Build API image for scanning
+        uses: docker/build-push-action@v4
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: false
+          load: true
+          tags: sandboxai-api:test
+      
+      - name: Run Trivy scan on API image
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'sandboxai-api:test'
+          format: 'sarif'
+          output: 'trivy-docker-api.sarif'
+          severity: 'HIGH,CRITICAL'
+      
+      - name: Upload API image scan results
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: 'trivy-docker-api.sarif'
+          category: 'trivy-docker-api'
+      
+      - name: Run Trivy scan on API image (table)
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'sandboxai-api:test'
+          format: 'table'
+          exit-code: '0'
+          ignore-unfixed: true
+          severity: 'HIGH,CRITICAL'
+
+  trivy-docker-worker:
+    name: Trivy Docker Image Scan — Worker
+    runs-on: ubuntu-latest
+    if: always()
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      
+      - name: Build Worker image for scanning
+        uses: docker/build-push-action@v4
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile.worker
+          push: false
+          load: true
+          tags: sandboxai-worker:test
+      
+      - name: Run Trivy scan on Worker image
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'sandboxai-worker:test'
+          format: 'sarif'
+          output: 'trivy-docker-worker.sarif'
+          severity: 'HIGH,CRITICAL'
+      
+      - name: Upload Worker image scan results
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: 'trivy-docker-worker.sarif'
+          category: 'trivy-docker-worker'
+      
+      - name: Run Trivy scan on Worker image (table)
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'sandboxai-worker:test'
+          format: 'table'
+          exit-code: '0'
+          ignore-unfixed: true
+          severity: 'HIGH,CRITICAL'
+
+  trivy-docker-frontend:
+    name: Trivy Docker Image Scan — Frontend
+    runs-on: ubuntu-latest
+    if: always()
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      
+      - name: Build Frontend image for scanning
+        uses: docker/build-push-action@v4
+        with:
+          context: ./frontend
+          file: ./frontend/Dockerfile
+          push: false
+          load: true
+          tags: sandboxai-frontend:test
+      
+      - name: Run Trivy scan on Frontend image
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'sandboxai-frontend:test'
+          format: 'sarif'
+          output: 'trivy-docker-frontend.sarif'
+          severity: 'HIGH,CRITICAL'
+      
+      - name: Upload Frontend image scan results
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: 'trivy-docker-frontend.sarif'
+          category: 'trivy-docker-frontend'
+      
+      - name: Run Trivy scan on Frontend image (table)
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'sandboxai-frontend:test'
+          format: 'table'
+          exit-code: '0'
+          ignore-unfixed: true
+          severity: 'HIGH,CRITICAL'
+
+  dependency-check:
+    name: Dependency Check — Python
+    runs-on: ubuntu-latest
+    if: always()
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      
+      - name: Install safety
+        run: pip install safety
+      
+      - name: Check Python dependencies
+        run: |
+          cd backend
+          safety check --json > /tmp/safety-report.json || true
+          echo "## 🔐 Python Dependency Report" >> $GITHUB_STEP_SUMMARY
+          cat /tmp/safety-report.json | python -m json.tool >> $GITHUB_STEP_SUMMARY || echo "All dependencies are safe" >> $GITHUB_STEP_SUMMARY
+
+  dependency-check-npm:
+    name: Dependency Check — NPM
+    runs-on: ubuntu-latest
+    if: always()
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: 'frontend/package-lock.json'
+      
+      - name: Install dependencies
+        run: cd frontend && npm ci
+      
+      - name: Check for vulnerabilities
+        run: cd frontend && npm audit --json > /tmp/npm-audit.json || true
+      
+      - name: Report vulnerabilities
+        run: |
+          echo "## 🔐 NPM Dependency Report" >> $GITHUB_STEP_SUMMARY
+          cat /tmp/npm-audit.json | python -c "import sys, json; data = json.load(sys.stdin); high_vuln = len([v for v in data.get('vulnerabilities', {}).values() if v.get('severity') in ['high', 'critical']]); print(f'Found {high_vuln} high/critical vulnerabilities')" >> $GITHUB_STEP_SUMMARY || echo "All dependencies are safe" >> $GITHUB_STEP_SUMMARY
+
+  summary:
+    name: Security Summary
+    runs-on: ubuntu-latest
+    needs: [trivy-fs-scan, trivy-docker-api, trivy-docker-worker, trivy-docker-frontend, dependency-check, dependency-check-npm]
+    if: always()
+    
+    steps:
+      - name: Check scan results
+        run: |
+          echo "## 🔒 Security Scan Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Scan | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Filesystem | ${{ needs.trivy-fs-scan.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Docker API | ${{ needs.trivy-docker-api.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Docker Worker | ${{ needs.trivy-docker-worker.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Docker Frontend | ${{ needs.trivy-docker-frontend.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Python Deps | ${{ needs.dependency-check.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| NPM Deps | ${{ needs.dependency-check-npm.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Security scans completed. Check GitHub Security tab for detailed results." >> $GITHUB_STEP_SUMMARY

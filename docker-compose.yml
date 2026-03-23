@@ -1,0 +1,160 @@
+services:
+  # ─────────────────────────────────────────────────────
+  # 🗄️ DATABASE — PostgreSQL 15
+  # ─────────────────────────────────────────────────────
+  postgres:
+    image: postgres:15-alpine
+    container_name: sandboxai-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-sandboxai}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-sandboxai}
+      POSTGRES_DB: ${POSTGRES_DB:-sandboxai}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-sandboxai}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - sandboxai-network
+    restart: unless-stopped
+
+  # ─────────────────────────────────────────────────────
+  # 📦 MESSAGE QUEUE — Redis 7
+  # ─────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: sandboxai-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - redis_data:/data
+    networks:
+      - sandboxai-network
+    restart: unless-stopped
+
+  # ─────────────────────────────────────────────────────
+  # 🤖 LLM LOCAL — Ollama
+  # ─────────────────────────────────────────────────────
+  ollama:
+    image: ollama/ollama:latest
+    container_name: sandboxai-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    environment:
+      - OLLAMA_DEBUG=false
+    healthcheck:
+      test: ["CMD-SHELL", "timeout 5 bash -c 'cat < /dev/null > /dev/tcp/127.0.0.1/11434' || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+    networks:
+      - sandboxai-network
+    restart: unless-stopped
+
+  # ─────────────────────────────────────────────────────
+  # 🔧 API — FastAPI Backend
+  # ─────────────────────────────────────────────────────
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: runtime
+    container_name: sandboxai-api
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-sandboxai}:${POSTGRES_PASSWORD:-sandboxai}@postgres:5432/${POSTGRES_DB:-sandboxai}
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=${JWT_SECRET:-change-me-in-production}
+      - JWT_EXPIRE_HOURS=${JWT_EXPIRE_HOURS:-24}
+      - DEBUG=${DEBUG:-false}
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-*}
+    volumes:
+      - ./backend:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - sandboxai-network
+    restart: unless-stopped
+
+  # ─────────────────────────────────────────────────────
+  # ⚙️ WORKER — Celery Test Executor
+  # ─────────────────────────────────────────────────────
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: runtime
+    container_name: sandboxai-worker
+    command: celery -A app.workers.config worker --loglevel=info --queues=default,tests,priority
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-sandboxai}:${POSTGRES_PASSWORD:-sandboxai}@postgres:5432/${POSTGRES_DB:-sandboxai}
+      - REDIS_URL=redis://redis:6379
+      - OLLAMA_URL=${OLLAMA_URL:-http://ollama:11434}
+      - GROQ_API_KEY=${GROQ_API_KEY:-}
+      - MAX_CONTAINER_TIMEOUT=${MAX_CONTAINER_TIMEOUT:-60}
+      - MAX_CONCURRENT_TESTS=${MAX_CONCURRENT_TESTS:-10}
+    volumes:
+      - ./backend:/app
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      ollama:
+        condition: service_started
+    networks:
+      - sandboxai-network
+    restart: unless-stopped
+
+  # ─────────────────────────────────────────────────────
+  # 🎨 FRONTEND — React + TypeScript
+  # ─────────────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: development
+    container_name: sandboxai-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - VITE_API_URL=${VITE_API_URL:-http://localhost:8000}
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - api
+    networks:
+      - sandboxai-network
+    restart: unless-stopped
+
+networks:
+  sandboxai-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
+  ollama_data:

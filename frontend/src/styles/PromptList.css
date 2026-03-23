@@ -1,0 +1,125 @@
+.prompt-list-page {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: var(--spacing-lg);
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-2xl);
+  gap: var(--spacing-lg);
+}
+
+.page-header h1 {
+  margin: 0;
+}
+
+.search-box {
+  margin-bottom: var(--spacing-2xl);
+}
+
+.search-box input {
+  width: 100%;
+  max-width: 500px;
+}
+
+.prompts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: var(--spacing-lg);
+}
+
+.no-prompts {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: var(--spacing-2xl);
+  color: var(--color-text-muted);
+}
+
+.no-prompts p {
+  margin-bottom: var(--spacing-lg);
+}
+
+.prompt-card {
+  background-color: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-lg);
+  transition: all var(--transition);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.prompt-card:hover {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 8px rgba(88, 166, 255, 0.05);
+  transform: translateY(-2px);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  gap: var(--spacing-md);
+}
+
+.card-header h3 {
+  margin: 0;
+  color: var(--color-primary);
+  font-size: 18px;
+  flex: 1;
+}
+
+.version-badge {
+  background-color: var(--color-bg-tertiary);
+  color: var(--color-text-muted);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--border-radius-sm);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.card-description {
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  margin: 0;
+  flex: 1;
+  min-height: 40px;
+}
+
+.card-meta {
+  display: flex;
+  gap: var(--spacing-md);
+  color: var(--color-text-muted);
+  font-size: 12px;
+}
+
+.card-actions {
+  display: flex;
+  gap: var(--spacing-sm);
+  margin-top: auto;
+}
+
+.card-actions .btn {
+  flex: 1;
+  padding: var(--spacing-sm);
+  font-size: 13px;
+}
+
+@media (max-width: 768px) {
+  .page-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .page-header .btn {
+    width: 100%;
+  }
+
+  .prompts-grid {
+    grid-template-columns: 1fr;
+  }
+}

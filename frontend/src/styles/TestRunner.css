@@ -1,0 +1,30 @@
+.test-runner {
+  background-color: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-xl);
+  max-width: 600px;
+}
+
+.test-runner h3 {
+  margin-top: 0;
+  margin-bottom: var(--spacing-lg);
+}
+
+.test-runner .form-group {
+  margin-bottom: var(--spacing-lg);
+}
+
+.test-runner textarea {
+  font-family: var(--font-family-mono);
+  font-size: 12px;
+}
+
+.test-runner small {
+  margin-top: var(--spacing-sm);
+}
+
+.test-runner .btn {
+  width: 100%;
+  margin-top: var(--spacing-lg);
+}

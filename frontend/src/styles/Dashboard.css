@@ -1,0 +1,125 @@
+.dashboard {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: var(--spacing-lg);
+}
+
+.dashboard h1 {
+  margin-bottom: var(--spacing-2xl);
+}
+
+.metrics-container {
+  width: 100%;
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-2xl);
+}
+
+.metric-card {
+  background-color: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-xl);
+  text-align: center;
+  transition: all var(--transition);
+}
+
+.metric-card:hover {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 8px rgba(88, 166, 255, 0.05);
+}
+
+.metric-card h3 {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: var(--spacing-md);
+}
+
+.metric-value {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--color-primary);
+  margin-bottom: var(--spacing-sm);
+}
+
+.metric-subtext {
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.charts-section {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: var(--spacing-lg);
+}
+
+.chart-card {
+  background-color: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-xl);
+}
+
+.chart-card h3 {
+  margin-bottom: var(--spacing-lg);
+  color: var(--color-text-primary);
+}
+
+.provider-stats,
+.status-stats {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-md);
+  background-color: var(--color-bg-tertiary);
+  border-radius: var(--border-radius-md);
+}
+
+.provider-name,
+.status-name {
+  text-transform: capitalize;
+  color: var(--color-text-secondary);
+  font-weight: 500;
+}
+
+.stat-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.stat-row.status-completed {
+  border-left: 3px solid var(--color-success);
+}
+
+.stat-row.status-running {
+  border-left: 3px solid var(--color-info);
+}
+
+.stat-row.status-failed {
+  border-left: 3px solid var(--color-danger);
+}
+
+.stat-row.status-pending {
+  border-left: 3px solid var(--color-warning);
+}
+
+.no-data {
+  text-align: center;
+  color: var(--color-text-muted);
+  padding: var(--spacing-md) 0;
+  margin: 0;
+  font-size: 13px;
+}
