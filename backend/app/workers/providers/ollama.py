@@ -49,7 +49,7 @@ class OllamaProvider(BaseProvider):
                 if response.status_code != 200:
                     raise Exception(f"Ollama API error: {response.status_code} - {response.text}")
                 
-                data = response.json()
+                data = await response.json()
                 
                 # Calculate metrics
                 latency_ms = (time.time() - start_time) * 1000

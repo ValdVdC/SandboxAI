@@ -125,11 +125,38 @@ cp .env.example .env
 
 Edite o arquivo `.env` com suas chaves de API (veja [ENVIRONMENT.md](./ENVIRONMENT.md)).
 
-### 3. Suba os containers
+### 3. Suba os cointainers e escolha a configuração de deployment
 
+**Sem Ollama Local (padrão - economiza CPU/storage)**
 ```bash
+# Primeira vez ou após mudanças em Dockerfile/requirements/docker-compose
+docker compose up --build -d
+
+# Apenas subir containers (código Python/TypeScript usa hot reload)
 docker compose up -d
 ```
+Use quando: desenvolvendo com APIs cloud (Groq, OpenAI, Anthropic) ou sem acesso à GPU.
+
+**Com Ollama Local (desenvolvimento com LLM offline)**
+```bash
+# Primeira vez: build das imagens
+docker compose -f docker-compose.yml -f docker-compose.ollama.local.yml up --build -d
+
+# Rotina: code changes com hot reload (sem rebuild)
+docker compose -f docker-compose.yml -f docker-compose.ollama.local.yml up -d
+```
+Use quando: quer testar prompts localmente sem API keys ou com modelos específicos.
+
+**Notas sobre hot reload:**
+- Frontend (Vite): mudanças em TypeScript/React refletem em ~100ms
+- Backend (FastAPI): mudanças em Python refletem em ~1s
+- Use `--build` apenas se alterar Dockerfile, requirements.txt ou docker-compose.yml
+
+**Produção (APIs cloud apenas)**
+```bash
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+```
+Use quando: fazer deploy em produção com domínio customizado e CORS restrito.
 
 ### 4. Acesse a aplicação
 
@@ -193,10 +220,37 @@ sandboxai/
 │   └── package.json
 ├── docker/
 │   └── ollama/             # Configuração do Ollama local
+├── docker-compose.yml           # Base (sem Ollama)
+├── docker-compose.ollama.local.yml  # Overlay: adiciona Ollama
+├── docker-compose.prod.yml      # Overlay: otimizações de produção
 ├── docs/                   # Documentação completa
 ├── .env.example
-├── docker-compose.yml
 └── README.md
+```
+
+---
+
+## 🐳 Estratégia Docker Compose
+
+Este projeto usa **Docker Compose com overlays** para flexibilidade de deployment:
+
+| Arquivo | Quando usar | RAM | Storage |
+|---------|-----------|-----|---------|
+| `docker-compose.yml` (base) | Desenvolvimento com APIs cloud | ~2GB | ~5GB |
+| `+ docker-compose.ollama.local.yml` | Desenvolvimento local com Ollama | ~8GB | ~15GB |
+| `+ docker-compose.prod.yml` | Produção (CORS, domínio customizado) | ~2GB | ~5GB |
+
+**Exemplos de uso:**
+
+```bash
+# Base: PostgreSQL, Redis, API, Worker, Frontend
+docker compose up -d
+
+# Dev com Ollama: adiciona serviço local de LLM
+docker compose -f docker-compose.yml -f docker-compose.ollama.local.yml up -d
+
+# Produção: otimizações e variáveis de ambiente
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 ```
 
 ---

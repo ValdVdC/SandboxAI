@@ -1,0 +1,60 @@
+version: '3.8'
+
+# ═══════════════════════════════════════════════════════════════════════════
+# 🌍 PRODUÇÃO — Configurações de produção (SEM Ollama)
+# ═══════════════════════════════════════════════════════════════════════════
+#
+# Use este arquivo em produção com APIs cloud:
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+#
+# Usa Groq, OpenAI, Anthropic (APIs cloud)
+# Ollama NÃO é usado em produção (economiza CPU/memória)
+#
+# ═══════════════════════════════════════════════════════════════════════════
+
+services:
+  # ─────────────────────────────────────────────────────
+  # 🔧 API — Configurações de PRODUÇÃO
+  # ─────────────────────────────────────────────────────
+  api:
+    environment:
+      - DEBUG=false
+      - ALLOWED_ORIGINS=https://seu-dominio.com    # Alterar para seu domínio!
+    restart: always
+
+  # ─────────────────────────────────────────────────────
+  # ⚙️ WORKER — Configurações de PRODUÇÃO
+  # ─────────────────────────────────────────────────────
+  worker:
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    restart: always
+
+  # ─────────────────────────────────────────────────────
+  # 🗄️ DATABASE — Configurações de PRODUÇÃO
+  # ─────────────────────────────────────────────────────
+  postgres:
+    restart: always
+
+  # ─────────────────────────────────────────────────────
+  # 📦 MESSAGE QUEUE — Configurações de PRODUÇÃO
+  # ─────────────────────────────────────────────────────
+  redis:
+    restart: always
+
+  # ─────────────────────────────────────────────────────
+  # 🎨 FRONTEND — Configurações de PRODUÇÃO
+  # ─────────────────────────────────────────────────────
+  frontend:
+    restart: always
+
+volumes:
+  # Usa os volumes da base (postgres_data, redis_data)
+  # Ollama não é usado em produção
+
+networks:
+  sandboxai-network:
+    driver: bridge

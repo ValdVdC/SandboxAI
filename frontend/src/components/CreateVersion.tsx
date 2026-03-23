@@ -11,6 +11,13 @@ interface CreateVersionProps {
   onCancel: () => void;
 }
 
+interface ProviderStatus {
+  [key: string]: {
+    available: boolean;
+    reason: string;
+  };
+}
+
 const PROVIDER_MODELS: Record<string, string[]> = {
   ollama: ['llama2:7b', 'mistral', 'neural-chat'],
   groq: ['llama-3.3-70b-versatile', 'openai/gpt-oss-120b', 'llama-3.1-8b-instant'],
@@ -34,6 +41,40 @@ const CreateVersion: React.FC<CreateVersionProps> = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [providerStatus, setProviderStatus] = useState<ProviderStatus>({
+    groq: { available: true, reason: 'API key configured' },
+    ollama: { available: false, reason: 'Service not running (disabled in this deployment)' },
+    openai: { available: false, reason: 'API key not configured' },
+    anthropic: { available: false, reason: 'API key not configured' },
+  });
+  const [loadingProviders, setLoadingProviders] = useState(true);
+
+  // Fetch provider status on mount
+  useEffect(() => {
+    const fetchProviderStatus = async () => {
+      try {
+        const response = await fetch('http://localhost:8000/providers/status');
+        if (response.ok) {
+          const status = await response.json();
+          setProviderStatus(status);
+          
+          // If current provider is not available, switch to first available one
+          if (!status[provider]?.available) {
+            const firstAvailable = Object.keys(status).find(p => status[p].available);
+            if (firstAvailable) {
+              setProvider(firstAvailable);
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Failed to fetch provider status:', err);
+      } finally {
+        setLoadingProviders(false);
+      }
+    };
+
+    fetchProviderStatus();
+  }, []);
 
   // Update available models when provider changes
   useEffect(() => {
@@ -112,10 +153,18 @@ const CreateVersion: React.FC<CreateVersionProps> = ({
               onChange={(e) => setProvider(e.target.value)}
               className="form-control"
             >
-              <option value="groq">Groq</option>
-              <option value="ollama">Ollama (Local)</option>
-              <option value="openai">OpenAI</option>
-              <option value="anthropic">Anthropic</option>
+              <option value="groq" disabled={providerStatus.groq?.available === false}>
+                {providerStatus.groq?.available === false ? 'Groq (Desativado)' : 'Groq'}
+              </option>
+              <option value="ollama" disabled={providerStatus.ollama?.available === false}>
+                {providerStatus.ollama?.available === false ? 'Ollama (Local) (Desativado)' : 'Ollama (Local)'}
+              </option>
+              <option value="openai" disabled={providerStatus.openai?.available === false}>
+                {providerStatus.openai?.available === false ? 'OpenAI (Desativado)' : 'OpenAI'}
+              </option>
+              <option value="anthropic" disabled={providerStatus.anthropic?.available === false}>
+                {providerStatus.anthropic?.available === false ? 'Anthropic (Desativado)' : 'Anthropic'}
+              </option>
             </select>
           </div>
 

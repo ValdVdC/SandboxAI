@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import asyncio
 from app.core.database import init_db, dispose_engine
-from app.api import auth, prompts, versions, tests, metrics
+from app.api import auth, prompts, versions, tests, metrics, providers
 
 # Criar aplicação FastAPI
 app = FastAPI(
@@ -44,6 +44,7 @@ app.include_router(prompts.router)
 app.include_router(versions.router)
 app.include_router(tests.router)
 app.include_router(metrics.router)
+app.include_router(providers.router)
 
 
 # Startup and shutdown events

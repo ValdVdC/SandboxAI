@@ -13,27 +13,28 @@ from app.workers.config import celery_app
 class TestGroqProvider:
     """Test Groq cloud provider."""
     
-    @pytest.fixture
-    def provider(self):
-        return GroqProvider()
-    
+    @pytest.mark.asyncio
     @patch.dict("os.environ", {"GROQ_API_KEY": "test-key"})
     @patch("app.workers.providers.groq.Groq")
-    def test_groq_execute_success(self, mock_groq, provider):
+    async def test_groq_execute_success(self, mock_groq):
         """Test successful Groq API call."""
-        # Mock Groq client response
-        mock_response = Mock()
+        # Mock Groq client response with MagicMock to support subscripting
+        from unittest.mock import MagicMock
+        
+        mock_response = MagicMock()
+        mock_response.choices = [MagicMock()]
         mock_response.choices[0].message.content = "Test output"
         mock_response.usage.prompt_tokens = 10
         mock_response.usage.completion_tokens = 5
         mock_response.usage.total_tokens = 15
         
-        mock_client = Mock()
+        mock_client = MagicMock()
         mock_client.chat.completions.create.return_value = mock_response
         mock_groq.return_value = mock_client
         
-        # Execute
-        result = provider.execute("test prompt", "test-model", 30)
+        # Create provider and execute
+        provider = GroqProvider()
+        result = await provider.execute("test prompt", "test-model", 30)
         
         # Verify
         assert result.output == "Test output"
@@ -42,10 +43,10 @@ class TestGroqProvider:
         assert result.cost_usd > 0
     
     @patch.dict("os.environ", {"GROQ_API_KEY": ""})
-    def test_groq_missing_api_key(self, provider):
+    def test_groq_missing_api_key(self):
         """Test Groq provider with missing API key."""
         with pytest.raises(ValueError):
-            provider.execute("test prompt", "test-model", 30)
+            GroqProvider()
 
 
 class TestOllamaProvider:

@@ -1,6 +1,7 @@
 """Test configuration and fixtures."""
 
 import asyncio
+import os
 import pytest
 import uuid
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
@@ -10,8 +11,11 @@ from app.models import Base, User, Prompt, PromptVersion, TestResult
 from app.core.database import get_db
 
 
-# In-memory SQLite database for testing
-TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
+# PostgreSQL database for testing
+TEST_DATABASE_URL = os.getenv(
+    "DATABASE_URL",
+    "postgresql+asyncpg://test:test@postgres:5432/test_sandboxai"
+)
 
 
 @pytest.fixture(scope="session")

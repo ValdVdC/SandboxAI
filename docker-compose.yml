@@ -42,28 +42,6 @@ services:
     restart: unless-stopped
 
   # ─────────────────────────────────────────────────────
-  # 🤖 LLM LOCAL — Ollama
-  # ─────────────────────────────────────────────────────
-  ollama:
-    image: ollama/ollama:latest
-    container_name: sandboxai-ollama
-    ports:
-      - "11434:11434"
-    volumes:
-      - ollama_data:/root/.ollama
-    environment:
-      - OLLAMA_DEBUG=false
-    healthcheck:
-      test: ["CMD-SHELL", "timeout 5 bash -c 'cat < /dev/null > /dev/tcp/127.0.0.1/11434' || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 40s
-    networks:
-      - sandboxai-network
-    restart: unless-stopped
-
-  # ─────────────────────────────────────────────────────
   # 🔧 API — FastAPI Backend
   # ─────────────────────────────────────────────────────
   api:
@@ -81,6 +59,10 @@ services:
       - JWT_EXPIRE_HOURS=${JWT_EXPIRE_HOURS:-24}
       - DEBUG=${DEBUG:-false}
       - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-*}
+      - OLLAMA_URL=${OLLAMA_URL:-http://ollama:11434}
+      - GROQ_API_KEY=${GROQ_API_KEY:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
     volumes:
       - ./backend:/app
     depends_on:
@@ -112,6 +94,8 @@ services:
       - REDIS_URL=redis://redis:6379
       - OLLAMA_URL=${OLLAMA_URL:-http://ollama:11434}
       - GROQ_API_KEY=${GROQ_API_KEY:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
       - MAX_CONTAINER_TIMEOUT=${MAX_CONTAINER_TIMEOUT:-60}
       - MAX_CONCURRENT_TESTS=${MAX_CONCURRENT_TESTS:-10}
     volumes:
@@ -122,8 +106,6 @@ services:
         condition: service_healthy
       postgres:
         condition: service_healthy
-      ollama:
-        condition: service_started
     networks:
       - sandboxai-network
     restart: unless-stopped
@@ -157,4 +139,3 @@ networks:
 volumes:
   postgres_data:
   redis_data:
-  ollama_data:

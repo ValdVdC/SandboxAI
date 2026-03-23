@@ -1,0 +1,55 @@
+version: '3.8'
+
+# ═══════════════════════════════════════════════════════════════════════════
+# 🛠️ DESENVOLVIMENTO — com Ollama (opcional)
+# ═══════════════════════════════════════════════════════════════════════════
+#
+# Use este arquivo para adicionar Ollama em desenvolvimento:
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+#
+# Ou sem Ollama (economiza CPU):
+#   docker compose up -d
+#
+# ═══════════════════════════════════════════════════════════════════════════
+
+services:
+  # ─────────────────────────────────────────────────────
+  # 🤖 LLM LOCAL — Ollama (adiciona ao base)
+  # ─────────────────────────────────────────────────────
+  ollama:
+    image: ollama/ollama:latest
+    container_name: sandboxai-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    environment:
+      - OLLAMA_DEBUG=false
+    healthcheck:
+      test: ["CMD-SHELL", "timeout 5 bash -c 'cat < /dev/null > /dev/tcp/127.0.0.1/11434' || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+    networks:
+      - sandboxai-network
+    restart: unless-stopped
+
+  # ─────────────────────────────────────────────────────
+  # ⚙️ WORKER — Adiciona dependência de Ollama
+  # ─────────────────────────────────────────────────────
+  worker:
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      ollama:
+        condition: service_started
+
+volumes:
+  ollama_data:
+
+networks:
+  sandboxai-network:
+    driver: bridge

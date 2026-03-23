@@ -139,10 +139,10 @@ jobs:
         run: cd frontend && npm ci
       
       - name: Lint with ESLint
-        run: cd frontend && npm run lint || true
+        run: cd frontend && npm run lint
       
       - name: Type check with TypeScript
-        run: cd frontend && npm run type-check || true
+        run: cd frontend && npm run type-check
       
       - name: Build frontend
         run: cd frontend && npm run build
@@ -152,7 +152,16 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        service: [api, worker, frontend]
+        include:
+          - service: api
+            dockerfile: ./backend/Dockerfile
+            context: ./backend
+          - service: worker
+            dockerfile: ./backend/Dockerfile
+            context: ./backend
+          - service: frontend
+            dockerfile: ./frontend/Dockerfile
+            context: ./frontend
     
     steps:
       - uses: actions/checkout@v4
@@ -163,8 +172,8 @@ jobs:
       - name: Build ${{ matrix.service }} image
         uses: docker/build-push-action@v4
         with:
-          context: .
-          file: ./Dockerfile.${{ matrix.service }}
+          context: ${{ matrix.context }}
+          file: ${{ matrix.dockerfile }}
           push: false
           cache-from: type=gha
           cache-to: type=gha,mode=max
