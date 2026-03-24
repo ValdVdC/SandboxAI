@@ -11,7 +11,7 @@ interface PromptEditorProps {
   initialProvider?: string;
   initialModel?: string;
   isNew?: boolean;
-  onSave: (prompt: CreatePromptRequest) => void;
+  onSave: (prompt: CreatePromptRequest | null) => void;
   onCancel: () => void;
 }
 
