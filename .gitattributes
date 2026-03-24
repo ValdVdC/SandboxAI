@@ -1,0 +1,2 @@
+# Garante que os arquivos de script sejam tratados como texto e usem finais de linha LF
+*.sh text eol=lf
