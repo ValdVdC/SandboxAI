@@ -47,7 +47,6 @@ const CreateVersion: React.FC<CreateVersionProps> = ({
     openai: { available: false, reason: 'API key not configured' },
     anthropic: { available: false, reason: 'API key not configured' },
   });
-  const [loadingProviders, setLoadingProviders] = useState(true);
 
   // Fetch provider status on mount
   useEffect(() => {
@@ -68,13 +67,11 @@ const CreateVersion: React.FC<CreateVersionProps> = ({
         }
       } catch (err) {
         console.error('Failed to fetch provider status:', err);
-      } finally {
-        setLoadingProviders(false);
       }
     };
 
     fetchProviderStatus();
-  }, []);
+  }, [provider]);
 
   // Update available models when provider changes
   useEffect(() => {

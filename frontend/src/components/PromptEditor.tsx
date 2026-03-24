@@ -11,7 +11,7 @@ interface PromptEditorProps {
   initialProvider?: string;
   initialModel?: string;
   isNew?: boolean;
-  onSave: (prompt: any) => void;
+  onSave: (prompt: CreatePromptRequest) => void;
   onCancel: () => void;
 }
 
@@ -56,7 +56,6 @@ const PromptEditor: React.FC<PromptEditorProps> = ({
     openai: { available: false, reason: 'API key not configured' },
     anthropic: { available: false, reason: 'API key not configured' },
   });
-  const [loadingProviders, setLoadingProviders] = useState(true);
 
   // Fetch provider status on mount
   useEffect(() => {
@@ -77,13 +76,11 @@ const PromptEditor: React.FC<PromptEditorProps> = ({
         }
       } catch (err) {
         console.error('Failed to fetch provider status:', err);
-      } finally {
-        setLoadingProviders(false);
       }
     };
 
     fetchProviderStatus();
-  }, []);
+  }, [provider]);
 
   // Update available models when provider changes
   useEffect(() => {
