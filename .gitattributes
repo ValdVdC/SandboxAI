@@ -1,2 +1,16 @@
-# Garante que os arquivos de script sejam tratados como texto e usem finais de linha LF
-*.sh text eol=lf
+# Força LF para todos os arquivos do projeto
+* text=auto eol=lf
+
+# Binários
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary
+*.mp4 binary
+*.mov binary
+*.mp3 binary
