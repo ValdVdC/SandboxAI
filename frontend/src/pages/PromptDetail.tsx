@@ -165,7 +165,7 @@ const PromptDetail: React.FC = () => {
                 {showCreateVersion ? (
                   <CreateVersion
                     promptId={id}
-                    currentVersion={selectedVersion}
+                    currentVersion={selectedVersion ?? undefined}
                     onVersionCreated={handleVersionCreated}
                     onCancel={() => setShowCreateVersion(false)}
                   />

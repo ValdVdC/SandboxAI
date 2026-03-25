@@ -148,8 +148,8 @@ async def list_tests(
         )
 
     # Count total tests
-    count_stmt = select(func.count()).select_from(TestResult).where(
-        TestResult.version_id == version.id
+    count_stmt = (
+        select(func.count()).select_from(TestResult).where(TestResult.version_id == version.id)
     )
     count_result = await db.execute(count_stmt)
     total = count_result.scalar() or 0

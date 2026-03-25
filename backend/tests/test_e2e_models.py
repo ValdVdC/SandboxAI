@@ -20,12 +20,12 @@ async def test_create_and_retrieve_user(db_session):
     )
     db_session.add(user)
     await db_session.commit()
-    
+
     # Retrieve user
     stmt = select(User).where(User.email == "newuser@example.com")
     result = await db_session.execute(stmt)
     retrieved_user = result.scalar_one()
-    
+
     # Validate
     assert retrieved_user.id == user_id
     assert retrieved_user.email == "newuser@example.com"
@@ -44,7 +44,7 @@ async def test_user_email_unique_constraint(db_session):
     )
     db_session.add(user1)
     await db_session.commit()
-    
+
     # Try to add user with same email
     user2 = User(
         id=uuid.uuid4(),
@@ -53,7 +53,7 @@ async def test_user_email_unique_constraint(db_session):
         is_active=True,
     )
     db_session.add(user2)
-    
+
     # Should raise integrity error
     with pytest.raises(Exception):  # IntegrityError
         await db_session.commit()
@@ -71,12 +71,12 @@ async def test_create_prompt_for_user(db_session, sample_user):
     )
     db_session.add(prompt)
     await db_session.commit()
-    
+
     # Retrieve and validate
     stmt = select(Prompt).where(Prompt.id == prompt.id)
     result = await db_session.execute(stmt)
     retrieved = result.scalar_one()
-    
+
     assert retrieved.user_id == sample_user.id
     assert retrieved.name == "Test Prompt"
 
@@ -92,13 +92,13 @@ async def test_prompt_cascade_delete(db_session, sample_user):
     )
     db_session.add(prompt)
     await db_session.commit()
-    
+
     prompt_id = prompt.id
-    
+
     # Delete user
     await db_session.delete(sample_user)
     await db_session.commit()
-    
+
     # Verify prompt is also deleted
     stmt = select(Prompt).where(Prompt.id == prompt_id)
     result = await db_session.execute(stmt)
@@ -118,12 +118,12 @@ async def test_create_prompt_version(db_session, sample_prompt):
     )
     db_session.add(version)
     await db_session.commit()
-    
+
     # Retrieve
     stmt = select(PromptVersion).where(PromptVersion.id == version.id)
     result = await db_session.execute(stmt)
     retrieved = result.scalar_one()
-    
+
     assert retrieved.version == 1
     assert retrieved.provider == "ollama"
     assert retrieved.model == "llama2:7b"
@@ -133,7 +133,7 @@ async def test_create_prompt_version(db_session, sample_prompt):
 async def test_create_test_result(db_session, sample_version):
     """Test creating a test result."""
     from decimal import Decimal
-    
+
     result = TestResult(
         id=uuid.uuid4(),
         version_id=sample_version.id,
@@ -147,12 +147,12 @@ async def test_create_test_result(db_session, sample_version):
     )
     db_session.add(result)
     await db_session.commit()
-    
+
     # Retrieve
     stmt = select(TestResult).where(TestResult.id == result.id)
     db_result = await db_session.execute(stmt)
     retrieved = db_result.scalar_one()
-    
+
     assert retrieved.status == "completed"
     assert retrieved.latency_ms == 1250
     assert retrieved.tokens_used == 85
@@ -162,7 +162,7 @@ async def test_create_test_result(db_session, sample_version):
 async def test_full_hierarchy_create_retrieve(db_session):
     """Test creating full hierarchy: User -> Prompt -> Version -> TestResult."""
     from decimal import Decimal
-    
+
     # 1. Create user
     user = User(
         id=uuid.uuid4(),
@@ -172,7 +172,7 @@ async def test_full_hierarchy_create_retrieve(db_session):
     )
     db_session.add(user)
     await db_session.commit()
-    
+
     # 2. Create prompt
     prompt = Prompt(
         id=uuid.uuid4(),
@@ -182,7 +182,7 @@ async def test_full_hierarchy_create_retrieve(db_session):
     )
     db_session.add(prompt)
     await db_session.commit()
-    
+
     # 3. Create version
     version = PromptVersion(
         id=uuid.uuid4(),
@@ -194,7 +194,7 @@ async def test_full_hierarchy_create_retrieve(db_session):
     )
     db_session.add(version)
     await db_session.commit()
-    
+
     # 4. Create test result
     test_result = TestResult(
         id=uuid.uuid4(),
@@ -208,24 +208,24 @@ async def test_full_hierarchy_create_retrieve(db_session):
     )
     db_session.add(test_result)
     await db_session.commit()
-    
+
     # 5. Retrieve entire hierarchy
     stmt = select(User).where(User.id == user.id)
     result = await db_session.execute(stmt)
     retrieved_user = result.scalar_one()
-    
+
     stmt = select(Prompt).where(Prompt.user_id == retrieved_user.id)
     result = await db_session.execute(stmt)
     retrieved_prompt = result.scalar_one()
-    
+
     stmt = select(PromptVersion).where(PromptVersion.prompt_id == retrieved_prompt.id)
     result = await db_session.execute(stmt)
     retrieved_version = result.scalar_one()
-    
+
     stmt = select(TestResult).where(TestResult.version_id == retrieved_version.id)
     result = await db_session.execute(stmt)
     retrieved_result = result.scalar_one()
-    
+
     # 6. Validate entire chain
     assert retrieved_user.email == "hierarchy@example.com"
     assert retrieved_prompt.name == "Hierarchy Test"
@@ -238,19 +238,19 @@ async def test_full_hierarchy_create_retrieve(db_session):
 async def test_count_records(db_session, sample_user, sample_prompt, sample_version):
     """Test counting records in database."""
     from sqlalchemy import func
-    
+
     # Count users
     stmt = select(func.count(User.id))
     result = await db_session.execute(stmt)
     user_count = result.scalar()
     assert user_count == 1
-    
+
     # Count prompts
     stmt = select(func.count(Prompt.id))
     result = await db_session.execute(stmt)
     prompt_count = result.scalar()
     assert prompt_count == 1
-    
+
     # Count versions
     stmt = select(func.count(PromptVersion.id))
     result = await db_session.execute(stmt)

@@ -18,7 +18,11 @@ from app.schemas import (
 router = APIRouter(prefix="/prompts", tags=["Versions"])
 
 
-@router.post("/{prompt_id}/versions", response_model=VersionResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/{prompt_id}/versions",
+    response_model=VersionResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 async def create_version(
     prompt_id: UUID,
     version_data: VersionCreate,
@@ -43,8 +47,8 @@ async def create_version(
     prompt = await get_user_prompt(prompt_id, user, db)
 
     # Get current version count to determine next version number
-    stmt = select(func.count()).select_from(PromptVersion).where(
-        PromptVersion.prompt_id == prompt_id
+    stmt = (
+        select(func.count()).select_from(PromptVersion).where(PromptVersion.prompt_id == prompt_id)
     )
     result = await db.execute(stmt)
     count = result.scalar() or 0
@@ -97,8 +101,8 @@ async def list_versions(
     prompt = await get_user_prompt(prompt_id, user, db)
 
     # Count total versions
-    count_stmt = select(func.count()).select_from(PromptVersion).where(
-        PromptVersion.prompt_id == prompt_id
+    count_stmt = (
+        select(func.count()).select_from(PromptVersion).where(PromptVersion.prompt_id == prompt_id)
     )
     count_result = await db.execute(count_stmt)
     total = count_result.scalar() or 0

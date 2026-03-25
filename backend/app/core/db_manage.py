@@ -13,17 +13,17 @@ from app.core.database import engine, dispose_engine
 async def init_database():
     """
     Initialize database with Alembic migrations.
-    
+
     This should be called on application startup.
     """
     # Run Alembic upgrade to latest revision
     backend_dir = Path(__file__).parent.parent.parent
     alembic_dir = backend_dir / "alembic"
-    
+
     # Prepare environment for Alembic
     env = os.environ.copy()
     env["PYTHONPATH"] = str(backend_dir.parent)
-    
+
     # Run Alembic upgrade
     result = subprocess.run(
         [sys.executable, "-m", "alembic", "upgrade", "head"],
@@ -32,7 +32,7 @@ async def init_database():
         capture_output=True,
         text=True,
     )
-    
+
     if result.returncode != 0:
         print(f"Alembic upgrade failed: {result.stderr}")
         # Fallback: create all tables if Alembic fails
@@ -41,22 +41,22 @@ async def init_database():
             await conn.run_sync(Base.metadata.create_all)
     else:
         print("Database migration completed successfully")
-    
+
     await dispose_engine()
 
 
 async def create_migration(message: str) -> None:
     """
     Create a new migration file.
-    
+
     Args:
         message: Description of the migration
     """
     backend_dir = Path(__file__).parent.parent.parent
-    
+
     env = os.environ.copy()
     env["PYTHONPATH"] = str(backend_dir.parent)
-    
+
     result = subprocess.run(
         [sys.executable, "-m", "alembic", "revision", "--autogenerate", "-m", message],
         cwd=str(backend_dir),
@@ -64,7 +64,7 @@ async def create_migration(message: str) -> None:
         capture_output=True,
         text=True,
     )
-    
+
     if result.returncode != 0:
         print(f"Failed to create migration: {result.stderr}")
     else:
@@ -78,9 +78,9 @@ if __name__ == "__main__":
         print("  init           - Initialize database")
         print("  migrate <msg>  - Create new migration")
         sys.exit(1)
-    
+
     command = sys.argv[1]
-    
+
     if command == "init":
         asyncio.run(init_database())
     elif command == "migrate" and len(sys.argv) > 2:

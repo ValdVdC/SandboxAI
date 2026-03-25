@@ -11,8 +11,10 @@ from decimal import Decimal
 # Authentication Schemas
 # ════════════════════════════════════════════════════════════════════════════
 
+
 class UserRegister(BaseModel):
     """Schema for user registration."""
+
     email: EmailStr
     password: str
     full_name: str
@@ -20,12 +22,14 @@ class UserRegister(BaseModel):
 
 class UserLogin(BaseModel):
     """Schema for user login."""
+
     email: EmailStr
     password: str
 
 
 class UserResponse(BaseModel):
     """Schema for user response."""
+
     id: UUID
     email: str
     full_name: Optional[str]
@@ -38,6 +42,7 @@ class UserResponse(BaseModel):
 
 class TokenResponse(BaseModel):
     """Schema for authentication token response."""
+
     access_token: str
     token_type: str = "bearer"
     user: UserResponse
@@ -47,19 +52,23 @@ class TokenResponse(BaseModel):
 # Prompt Schemas
 # ════════════════════════════════════════════════════════════════════════════
 
+
 class PromptCreate(BaseModel):
     """Schema for creating a new prompt."""
+
     name: str
     description: Optional[str] = None
 
 
 class PromptUpdate(BaseModel):
     """Schema for updating a prompt (creates new version)."""
+
     description: Optional[str] = None
 
 
 class PromptResponse(BaseModel):
     """Schema for prompt response."""
+
     id: UUID
     user_id: UUID
     name: str
@@ -80,6 +89,7 @@ class PromptResponse(BaseModel):
 
 class PromptListResponse(BaseModel):
     """Schema for listing prompts with pagination."""
+
     total: int
     page: int
     per_page: int
@@ -90,16 +100,19 @@ class PromptListResponse(BaseModel):
 # Prompt Version Schemas
 # ════════════════════════════════════════════════════════════════════════════
 
+
 class VersionCreate(BaseModel):
     """Schema for creating a new prompt version."""
+
     content: str
     provider: str  # "ollama", "groq", "openai", "anthropic"
-    model: str     # "llama2:7b", "gpt-4", etc
+    model: str  # "llama2:7b", "gpt-4", etc
     change_description: str | None = None  # Description of changes in this version
 
 
 class VersionResponse(BaseModel):
     """Schema for prompt version response."""
+
     id: UUID
     prompt_id: UUID
     version: int
@@ -115,6 +128,7 @@ class VersionResponse(BaseModel):
 
 class VersionListResponse(BaseModel):
     """Schema for listing prompt versions."""
+
     total: int
     items: list[VersionResponse]
 
@@ -123,14 +137,17 @@ class VersionListResponse(BaseModel):
 # Test Execution Schemas
 # ════════════════════════════════════════════════════════════════════════════
 
+
 class TestExecuteRequest(BaseModel):
     """Schema for executing a test."""
+
     input: str
     expected: Optional[str] = None
 
 
 class TestResultResponse(BaseModel):
     """Schema for test result response."""
+
     id: UUID
     version_id: UUID
     input: str
@@ -149,6 +166,7 @@ class TestResultResponse(BaseModel):
 
 class TestListResponse(BaseModel):
     """Schema for listing test results."""
+
     total: int
     page: int
     per_page: int
@@ -159,8 +177,10 @@ class TestListResponse(BaseModel):
 # Metrics Schemas
 # ════════════════════════════════════════════════════════════════════════════
 
+
 class MetricsResponse(BaseModel):
     """Schema for aggregated metrics."""
+
     total_prompts: int
     total_versions: int
     total_tests: int
@@ -174,6 +194,7 @@ class MetricsResponse(BaseModel):
 
 class ProviderMetricsResponse(BaseModel):
     """Schema for metrics by provider."""
+
     provider: str
     model: str
     test_count: int
@@ -186,8 +207,10 @@ class ProviderMetricsResponse(BaseModel):
 # Error Response Schemas
 # ════════════════════════════════════════════════════════════════════════════
 
+
 class ErrorResponse(BaseModel):
     """Schema for error responses."""
+
     detail: str
     error_code: str
     timestamp: datetime

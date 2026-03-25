@@ -12,10 +12,10 @@ router = APIRouter(prefix="/providers", tags=["providers"])
 async def get_provider_status():
     """
     Get availability status of all LLM providers.
-    
+
     Returns:
         Dict with provider status and availability information
-        
+
     Example:
         {
             "groq": {
@@ -37,28 +37,28 @@ async def get_provider_status():
         }
     """
     status = {}
-    
+
     # Check Groq
     groq_key = os.getenv("GROQ_API_KEY", "").strip()
     status["groq"] = {
         "available": bool(groq_key),
-        "reason": "API key configured" if groq_key else "API key not configured"
+        "reason": "API key configured" if groq_key else "API key not configured",
     }
-    
+
     # Check OpenAI
     openai_key = os.getenv("OPENAI_API_KEY", "").strip()
     status["openai"] = {
         "available": bool(openai_key),
-        "reason": "API key configured" if openai_key else "API key not configured"
+        "reason": "API key configured" if openai_key else "API key not configured",
     }
-    
+
     # Check Anthropic
     anthropic_key = os.getenv("ANTHROPIC_API_KEY", "").strip()
     status["anthropic"] = {
         "available": bool(anthropic_key),
-        "reason": "API key configured" if anthropic_key else "API key not configured"
+        "reason": "API key configured" if anthropic_key else "API key not configured",
     }
-    
+
     # Check Ollama - test if service is running
     ollama_url = os.getenv("OLLAMA_URL", "http://ollama:11434")
     try:
@@ -72,10 +72,7 @@ async def get_provider_status():
     except Exception as e:
         ollama_available = False
         ollama_reason = f"Service unavailable"
-    
-    status["ollama"] = {
-        "available": ollama_available,
-        "reason": ollama_reason
-    }
-    
+
+    status["ollama"] = {"available": ollama_available, "reason": ollama_reason}
+
     return status

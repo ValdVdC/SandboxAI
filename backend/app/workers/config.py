@@ -18,21 +18,16 @@ celery_app.conf.update(
     result_serializer="json",
     timezone="UTC",
     enable_utc=True,
-    
     # Broker configuration
     broker_connection_retry_on_startup=True,
-    
     # Worker pool settings
     worker_prefetch_multiplier=1,
     worker_max_tasks_per_child=1000,
-    
     # Task timeout
     task_soft_time_limit=int(os.getenv("MAX_CONTAINER_TIMEOUT", "60")) - 5,
     task_time_limit=int(os.getenv("MAX_CONTAINER_TIMEOUT", "60")),
-    
     # Concurrency limits
     worker_concurrency=int(os.getenv("MAX_CONCURRENT_TESTS", "10")),
-    
     # Queue configuration
     task_default_queue="default",
     task_queues=(
@@ -49,4 +44,4 @@ celery_app.conf.task_routes = {
 }
 
 # Import tasks to register them
-celery_app.autodiscover_tasks(['app.workers'])
+celery_app.autodiscover_tasks(["app.workers"])

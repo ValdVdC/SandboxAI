@@ -12,13 +12,18 @@ class PromptVersion(BaseModel):
     __tablename__ = "prompt_versions"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    prompt_id = Column(UUID(as_uuid=True), ForeignKey("prompts.id", ondelete="CASCADE"), nullable=False, index=True)
+    prompt_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("prompts.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
     version = Column(Integer, nullable=False)
     content = Column(Text, nullable=False)
     provider = Column(String(50), nullable=False)  # "ollama", "groq", "openai", "anthropic"
     model = Column(String(100), nullable=False)  # "llama2:7b", "gpt-4", etc
     change_description = Column(Text, nullable=True)  # Description of changes in this version
-    
+
     # Relationships
     prompt = relationship("Prompt", back_populates="versions", foreign_keys=[prompt_id])
     test_results = relationship(

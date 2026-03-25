@@ -47,7 +47,7 @@ def execute_test(
 ):
     """
     Execute a test asynchronously.
-    
+
     Args:
         test_id: UUID of the test result record
         prompt_content: The prompt text to execute
@@ -55,14 +55,14 @@ def execute_test(
         model: Model identifier
     """
     import asyncio
-    
+
     timeout = int(os.getenv("MAX_CONTAINER_TIMEOUT", "60"))
-    
-    # Create a new event loop for this task to avoid "Future attached to a different loop" 
+
+    # Create a new event loop for this task to avoid "Future attached to a different loop"
     # errors in Celery prefork environments with asyncpg
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
-    
+
     try:
         # Run async code in sync Celery context with isolated event loop
         result = loop.run_until_complete(
@@ -78,7 +78,7 @@ def execute_test(
     except Exception as exc:
         logger.error(f"Task execute_test failed for {test_id}: {exc}")
         # Retry with exponential backoff
-        raise self.retry(exc=exc, countdown=2 ** self.request.retries)
+        raise self.retry(exc=exc, countdown=2**self.request.retries)
     finally:
         loop.close()
 
@@ -92,14 +92,14 @@ async def _execute_test_async(
 ) -> dict:
     """
     Execute test asynchronously with database updates.
-    
+
     Args:
         test_id: UUID of test result
         prompt_content: Prompt template text
         provider: Provider name
         model: Model identifier
         timeout: Timeout in seconds
-        
+
     Returns:
         Dictionary with execution result
     """
@@ -110,10 +110,10 @@ async def _execute_test_async(
             stmt = select(TestResult).where(TestResult.id == test_id)
             result_obj = await db.execute(stmt)
             test_result = result_obj.scalar_one_or_none()
-            
+
             if test_result:
                 test_input = test_result.input
-            
+
             # Update status to "running"
             stmt = (
                 update(TestResult)
@@ -122,12 +122,12 @@ async def _execute_test_async(
             )
             await db.execute(stmt)
             await db.commit()
-            
+
         except Exception as e:
             logger.error(f"Failed to update status to running: {e}")
             await db.rollback()
             raise
-    
+
     # Interpolate prompt with test input
     # Support both Python format style {input} and Jinja2 style {{input}}
     if test_input:
@@ -137,18 +137,20 @@ async def _execute_test_async(
         except (KeyError, ValueError):
             try:
                 # Try Jinja2 style: {{input}} → convert to {input} and format
-                final_prompt = prompt_content.replace("{{input}}", "{input}").format(input=test_input)
+                final_prompt = prompt_content.replace("{{input}}", "{input}").format(
+                    input=test_input
+                )
             except (KeyError, ValueError):
                 # If template doesn't have placeholders, use as-is
                 final_prompt = prompt_content
     else:
         final_prompt = prompt_content
-    
+
     # Execute provider (outside database session to avoid conflicts)
     try:
         provider_instance = _get_provider(provider)
         result = await provider_instance.execute(final_prompt, model, timeout)
-        
+
     except Exception as e:
         logger.error(f"Provider execution failed for {test_id}: {e}")
         # Update failure in new session
@@ -169,7 +171,7 @@ async def _execute_test_async(
                 logger.error(f"Failed to update error status: {db_error}")
                 await db.rollback()
         raise
-    
+
     # Update with results in new session
     async with AsyncSessionLocal() as db:
         try:
@@ -188,7 +190,7 @@ async def _execute_test_async(
             )
             await db.execute(stmt)
             await db.commit()
-            
+
             logger.info(f"Test {test_id} completed successfully")
             return {
                 "test_id": str(test_id),
@@ -197,7 +199,7 @@ async def _execute_test_async(
                 "tokens_used": result.tokens_used,
                 "cost_usd": result.cost_usd,
             }
-            
+
         except Exception as e:
             logger.error(f"Failed to update completion status: {e}")
             await db.rollback()
@@ -207,13 +209,13 @@ async def _execute_test_async(
 def _get_provider(provider_name: str):
     """
     Factory function to get the appropriate provider instance.
-    
+
     Args:
         provider_name: Name of the provider ("groq" or "ollama")
-        
+
     Returns:
         Provider instance
-        
+
     Raises:
         ValueError: If provider is not supported
     """
@@ -235,7 +237,7 @@ def execute_test_with_priority(
 ):
     """
     Execute test with higher priority.
-    
+
     Same as execute_test but routed to priority queue.
     """
     return execute_test(test_id, prompt_content, provider, model)
@@ -245,16 +247,16 @@ def execute_test_with_priority(
 def cleanup_stale_tests(hours: int = 24):
     """
     Clean up tests stuck in "running" status for too long.
-    
+
     Args:
         hours: Hours to consider a test stale
     """
     import asyncio
-    
+
     # Create a new event loop for this task to avoid event loop conflicts
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
-    
+
     try:
         loop.run_until_complete(_cleanup_stale_tests_async(hours))
     finally:
@@ -264,23 +266,20 @@ def cleanup_stale_tests(hours: int = 24):
 async def _cleanup_stale_tests_async(hours: int):
     """Clean up stale tests in database."""
     from datetime import timedelta
-    
+
     async with AsyncSessionLocal() as db:
         # Find tests stuck in "running" status
         stale_threshold = datetime.utcnow() - timedelta(hours=hours)
-        
+
         # Update stale running tests to failed
         await db.execute(
             update(TestResult)
-            .where(
-                (TestResult.status == "running") &
-                (TestResult.created_at < stale_threshold)
-            )
+            .where((TestResult.status == "running") & (TestResult.created_at < stale_threshold))
             .values(
                 status="failed",
                 error_message=f"Stale test cleaned up after {hours} hours",
             )
         )
         await db.commit()
-        
+
         logger.info("Cleaned up stale tests")
