@@ -1,9 +1,10 @@
 """Base model class for SQLAlchemy ORM models."""
 
+import uuid
+from datetime import datetime
+
 from sqlalchemy import Column, DateTime, func
 from sqlalchemy.orm import declarative_base
-from datetime import datetime
-import uuid
 
 # Create declarative base for all models
 Base = declarative_base()

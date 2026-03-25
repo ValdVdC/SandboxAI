@@ -1,7 +1,7 @@
 """Utility functions for Celery worker."""
 
-import os
 import logging
+import os
 from typing import Optional, Tuple
 from uuid import UUID
 
@@ -9,7 +9,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
-from app.models import TestResult, PromptVersion
+from app.models import PromptVersion, TestResult
 
 logger = logging.getLogger(__name__)
 

@@ -1,20 +1,21 @@
 """Prompt management endpoints."""
 
-from fastapi import APIRouter, HTTPException, Query, Depends, status
-from sqlalchemy import select, func, and_
+from typing import Optional
+from uuid import UUID, uuid4
+
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
-from uuid import UUID, uuid4
-from typing import Optional
 
-from app.models import User, Prompt, PromptVersion
 from app.core.database import get_db
 from app.dependencies import get_current_user, get_user_prompt
+from app.models import Prompt, PromptVersion, User
 from app.schemas import (
     PromptCreate,
-    PromptUpdate,
-    PromptResponse,
     PromptListResponse,
+    PromptResponse,
+    PromptUpdate,
 )
 
 router = APIRouter(prefix="/prompts", tags=["Prompts"])

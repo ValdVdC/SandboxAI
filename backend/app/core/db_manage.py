@@ -6,8 +6,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+from app.core.database import dispose_engine, engine
 from app.models import Base
-from app.core.database import engine, dispose_engine
 
 
 async def init_database():

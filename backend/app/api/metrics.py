@@ -1,15 +1,16 @@
 """Analytics and metrics endpoints."""
 
-from fastapi import APIRouter, HTTPException, Depends, status
-from sqlalchemy import select, func
-from sqlalchemy.ext.asyncio import AsyncSession
-from uuid import UUID
-from typing import List
 from decimal import Decimal
+from typing import List
+from uuid import UUID
 
-from app.models import User, Prompt, PromptVersion, TestResult
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.core.database import get_db
 from app.dependencies import get_current_user, get_user_prompt
+from app.models import Prompt, PromptVersion, TestResult, User
 from app.schemas import (
     MetricsResponse,
     ProviderMetricsResponse,

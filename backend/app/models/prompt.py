@@ -1,8 +1,10 @@
 """Prompt model."""
 
-from sqlalchemy import Column, String, Text, UUID, ForeignKey, Integer
-from sqlalchemy.orm import relationship
 import uuid
+
+from sqlalchemy import UUID, Column, ForeignKey, Integer, String, Text
+from sqlalchemy.orm import relationship
+
 from .base import BaseModel
 
 

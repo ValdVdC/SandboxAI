@@ -1,6 +1,7 @@
 """Celery application configuration."""
 
 import os
+
 from celery import Celery
 from kombu import Exchange, Queue
 

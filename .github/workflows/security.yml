@@ -105,7 +105,7 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: ./backend
-          file: ./backend/Dockerfile.worker
+          file: ./backend/Dockerfile
           push: false
           load: true
           tags: sandboxai-worker:test

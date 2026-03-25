@@ -1,14 +1,15 @@
 """FastAPI dependency injection utilities."""
 
-from fastapi import Depends, HTTPException, status, Header
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Optional
 from uuid import UUID
 
-from app.models import User, Prompt
+from fastapi import Depends, Header, HTTPException, status
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.core.database import get_db
-from app.core.security import extract_user_id_from_token, JWTError
+from app.core.security import JWTError, extract_user_id_from_token
+from app.models import Prompt, User
 
 
 async def get_token_from_header(

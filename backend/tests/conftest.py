@@ -4,6 +4,7 @@ import asyncio
 import os
 import pytest
 import uuid
+from pytest_asyncio import fixture as pytest_asyncio_fixture
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from httpx import AsyncClient
 from app.main import app
@@ -17,18 +18,7 @@ TEST_DATABASE_URL = os.getenv(
 )
 
 
-@pytest.fixture(scope="session")
-def event_loop():
-    """Create event loop for async tests."""
-    try:
-        loop = asyncio.get_running_loop()
-    except RuntimeError:
-        loop = asyncio.new_event_loop()
-    yield loop
-    loop.close()
-
-
-@pytest.fixture(scope="function")
+@pytest_asyncio_fixture(scope="function")
 async def test_db():
     """Create a fresh test database for each test."""
     # Create async engine
@@ -58,14 +48,14 @@ async def test_db():
     await engine.dispose()
 
 
-@pytest.fixture
+@pytest_asyncio_fixture
 async def db_session(test_db):
     """Get a database session."""
     async with test_db() as session:
         yield session
 
 
-@pytest.fixture
+@pytest_asyncio_fixture
 async def client(test_db):
     """Create test client with dependency override."""
 

@@ -4,8 +4,9 @@
 Configuração central do Celery para execução assíncrona de testes.
 """
 
-from celery import Celery
 import os
+
+from celery import Celery
 
 # Criar instância do Celery (convenção: usar 'app' para Celery CLI encontrar)
 app = Celery(

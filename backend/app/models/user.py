@@ -1,8 +1,10 @@
 """User model."""
 
-from sqlalchemy import Column, String, UUID, UniqueConstraint, Boolean
-from sqlalchemy.orm import relationship
 import uuid
+
+from sqlalchemy import UUID, Boolean, Column, String, UniqueConstraint
+from sqlalchemy.orm import relationship
+
 from .base import BaseModel
 
 

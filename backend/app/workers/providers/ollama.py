@@ -2,8 +2,9 @@
 
 import os
 import time
-import httpx
 from typing import Optional
+
+import httpx
 
 from app.workers.providers import BaseProvider, ProviderResult
 

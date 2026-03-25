@@ -1,9 +1,10 @@
 """Provider availability and status endpoints."""
 
 import os
+from typing import Dict
+
 import httpx
 from fastapi import APIRouter
-from typing import Dict
 
 router = APIRouter(prefix="/providers", tags=["providers"])
 

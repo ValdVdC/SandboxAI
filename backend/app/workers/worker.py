@@ -9,8 +9,8 @@ Usage:
     celery -A app.workers.config worker --loglevel=info --concurrency=10 --queues=default,tests,priority
 """
 
-import os
 import logging
+import os
 import sys
 
 # Configure logging

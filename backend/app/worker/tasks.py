@@ -4,9 +4,11 @@
 Tarefas assíncronas para execução de testes de prompts em containers.
 """
 
-from celery import shared_task
-from .celery_app import app
 import logging
+
+from celery import shared_task
+
+from .celery_app import app
 
 # Re-exportar app para que celery CLI encontre: celery -A app.worker.tasks
 __all__ = ["app", "execute_test"]

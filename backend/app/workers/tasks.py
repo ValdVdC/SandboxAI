@@ -1,19 +1,19 @@
 """Celery tasks for asynchronous test execution."""
 
-import os
 import logging
+import os
 from datetime import datetime
 from typing import Optional
 from uuid import UUID
 
 from sqlalchemy import select, update
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
+from app.models import TestResult
 from app.workers.config import celery_app
 from app.workers.providers.groq import GroqProvider
 from app.workers.providers.ollama import OllamaProvider
-from app.models import TestResult
 
 # Configure logging
 logger = logging.getLogger(__name__)

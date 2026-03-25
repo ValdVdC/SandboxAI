@@ -4,13 +4,15 @@
 Aplicação principal para versionamento e teste de prompts para LLMs.
 """
 
+import asyncio
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-import asyncio
 from sqlalchemy import text
-from app.core.database import engine, dispose_engine
-from app.api import auth, prompts, versions, tests, metrics, providers
+
+from app.api import auth, metrics, prompts, providers, tests, versions
+from app.core.database import dispose_engine, engine
 
 # Criar aplicação FastAPI
 app = FastAPI(
