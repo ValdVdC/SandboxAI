@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import apiClient from '../services/api';
-import { Prompt } from '../types';
+import { Prompt, TestExecution } from '../types';
 
 export const usePrompts = (search?: string) => {
   const [prompts, setPrompts] = useState<Prompt[]>([]);
@@ -56,11 +56,11 @@ export const usePromptDetail = (id: string) => {
 };
 
 export const useTestExecution = (testId: string) => {
-  const [test, setTest] = useState<any>(null);
+  const [test, setTest] = useState<TestExecution | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchTest = async () => {
+  const fetchTest = useCallback(async () => {
     try {
       setLoading(true);
       const data = await apiClient.getTestExecution(testId);
@@ -71,7 +71,7 @@ export const useTestExecution = (testId: string) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [testId]);
 
   useEffect(() => {
     if (testId) {

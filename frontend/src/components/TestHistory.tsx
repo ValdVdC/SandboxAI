@@ -22,7 +22,7 @@ const TestHistory: React.FC<TestHistoryProps> = ({ promptId, versionNumber }) =>
         console.log('Fetching tests for:', { promptId, versionNumber });
         const tests = await apiClient.getPromptTests(promptId, versionNumber);
         console.log('Tests fetched:', tests);
-        const sorted = tests.sort((a: any, b: any) => 
+        const sorted = tests.sort((a, b) => 
           new Date(b.created_at || '').getTime() - new Date(a.created_at || '').getTime()
         );
         setTests(sorted);

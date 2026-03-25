@@ -14,6 +14,10 @@ on:
     # Run security scan daily at 2 AM UTC
     - cron: '0 2 * * *'
 
+permissions:
+  contents: read
+  security-events: write
+
 jobs:
   trivy-fs-scan:
     name: Trivy Filesystem Scan
@@ -32,7 +36,7 @@ jobs:
           skip-dirs: '.git,node_modules,__pycache__,.pytest_cache'
       
       - name: Upload Trivy filesystem results to GitHub Security
-        uses: github/codeql-action/upload-sarif@v2
+        uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: 'trivy-fs-results.sarif'
           category: 'trivy-fs'
@@ -76,7 +80,7 @@ jobs:
           severity: 'HIGH,CRITICAL'
       
       - name: Upload API image scan results
-        uses: github/codeql-action/upload-sarif@v2
+        uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: 'trivy-docker-api.sarif'
           category: 'trivy-docker-api'
@@ -119,7 +123,7 @@ jobs:
           severity: 'HIGH,CRITICAL'
       
       - name: Upload Worker image scan results
-        uses: github/codeql-action/upload-sarif@v2
+        uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: 'trivy-docker-worker.sarif'
           category: 'trivy-docker-worker'
@@ -162,7 +166,7 @@ jobs:
           severity: 'HIGH,CRITICAL'
       
       - name: Upload Frontend image scan results
-        uses: github/codeql-action/upload-sarif@v2
+        uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: 'trivy-docker-frontend.sarif'
           category: 'trivy-docker-frontend'

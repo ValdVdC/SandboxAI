@@ -1,10 +1,8 @@
 """Test configuration and fixtures."""
 
-import asyncio
 import os
-import pytest
 import uuid
-from pytest_asyncio import fixture as pytest_asyncio_fixture
+import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from httpx import AsyncClient
 from app.main import app
@@ -18,7 +16,7 @@ TEST_DATABASE_URL = os.getenv(
 )
 
 
-@pytest_asyncio_fixture(scope="function")
+@pytest_asyncio.fixture(scope="function")
 async def test_db():
     """Create a fresh test database for each test."""
     # Create async engine
@@ -48,14 +46,14 @@ async def test_db():
     await engine.dispose()
 
 
-@pytest_asyncio_fixture
+@pytest_asyncio.fixture(scope="function")
 async def db_session(test_db):
     """Get a database session."""
     async with test_db() as session:
         yield session
 
 
-@pytest_asyncio_fixture
+@pytest_asyncio.fixture(scope="function")
 async def client(test_db):
     """Create test client with dependency override."""
 
@@ -71,7 +69,7 @@ async def client(test_db):
     app.dependency_overrides.clear()
 
 
-@pytest.fixture
+@pytest_asyncio.fixture(scope="function")
 async def sample_user(db_session):
     """Create a sample user in the database."""
     user = User(
@@ -87,7 +85,7 @@ async def sample_user(db_session):
     return user
 
 
-@pytest.fixture
+@pytest_asyncio.fixture(scope="function")
 async def sample_prompt(db_session, sample_user):
     """Create a sample prompt in the database."""
     prompt = Prompt(
@@ -103,7 +101,7 @@ async def sample_prompt(db_session, sample_user):
     return prompt
 
 
-@pytest.fixture
+@pytest_asyncio.fixture(scope="function")
 async def sample_version(db_session, sample_prompt):
     """Create a sample prompt version."""
     version = PromptVersion(

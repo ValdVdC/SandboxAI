@@ -151,11 +151,10 @@ class ApiClient {
   }
 
   async getPromptTests(promptId: string, versionNumber: number): Promise<TestResult[]> {
-    const response = await this.client.get<any>(
+    const response = await this.client.get<PaginatedResponse<TestResult>>(
       `/prompts/${promptId}/versions/${versionNumber}/tests`
     );
-    // Response is TestListResponse with items array
-    return response.data.items || [];
+    return response.data.items;
   }
 
   async getTestResult(testId: string): Promise<TestResult> {

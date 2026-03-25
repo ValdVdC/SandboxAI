@@ -36,7 +36,7 @@ const TestResults: React.FC<TestResultsProps> = ({ testId, autoRefresh = true, o
       const interval = setInterval(fetchResult, 1000);
       return () => clearInterval(interval);
     }
-  }, [testId, result?.status, autoRefresh]);
+  }, [testId, result, autoRefresh]);
 
   if (loading) return <Loading message="Carregando resultados do teste..." />;
 

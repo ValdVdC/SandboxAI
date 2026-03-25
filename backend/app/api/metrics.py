@@ -11,10 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.dependencies import get_current_user, get_user_prompt
 from app.models import Prompt, PromptVersion, TestResult, User
-from app.schemas import (
-    MetricsResponse,
-    ProviderMetricsResponse,
-)
+from app.schemas import MetricsResponse, ProviderMetricsResponse
 
 router = APIRouter(prefix="/metrics", tags=["Metrics"])
 

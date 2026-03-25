@@ -34,10 +34,7 @@ const PromptDetail: React.FC = () => {
         const sorted = response.items.sort((a, b) => b.version - a.version);
         setVersions(sorted);
         // Auto-select the LATEST version (first in descending order) only on initial load
-        if (sorted.length > 0 && selectedVersion === null) {
-          const latestVersion = sorted[0];
-          setSelectedVersion(latestVersion);
-        }
+        setSelectedVersion((prev) => (prev === null && sorted.length > 0 ? sorted[0] : prev));
       } catch (err) {
         console.error('Failed to load versions:', err);
       } finally {

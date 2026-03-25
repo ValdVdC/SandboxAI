@@ -11,11 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.dependencies import get_current_user, get_user_prompt
 from app.models import Prompt, PromptVersion, TestResult, User
-from app.schemas import (
-    TestExecuteRequest,
-    TestListResponse,
-    TestResultResponse,
-)
+from app.schemas import TestExecuteRequest, TestListResponse, TestResultResponse
 from app.workers.tasks import execute_test as execute_test_task
 
 router = APIRouter(prefix="/prompts", tags=["Tests"])

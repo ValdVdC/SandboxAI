@@ -2,11 +2,12 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import PromptEditor from '../components/PromptEditor';
+import { Prompt } from '../types';
 
 const CreatePrompt: React.FC = () => {
   const navigate = useNavigate();
 
-  const handleSave = (prompt: any) => {
+  const handleSave = (prompt: Prompt | null) => {
     if (prompt) {
       navigate(`/prompts/${prompt.id}`);
     }

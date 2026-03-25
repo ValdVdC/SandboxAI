@@ -10,11 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.dependencies import get_current_user, get_user_prompt
 from app.models import Prompt, PromptVersion, User
-from app.schemas import (
-    VersionCreate,
-    VersionListResponse,
-    VersionResponse,
-)
+from app.schemas import VersionCreate, VersionListResponse, VersionResponse
 
 router = APIRouter(prefix="/prompts", tags=["Versions"])
 

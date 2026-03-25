@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import apiClient from '../services/api';
-import { CreatePromptRequest } from '../types';
+import { CreatePromptRequest, Prompt } from '../types';
 import Alert from './Alert';
 import '../styles/PromptEditor.css';
 
@@ -11,7 +11,7 @@ interface PromptEditorProps {
   initialProvider?: string;
   initialModel?: string;
   isNew?: boolean;
-  onSave: (prompt: CreatePromptRequest | null) => void;
+  onSave: (prompt: Prompt | null) => void;
   onCancel: () => void;
 }
 

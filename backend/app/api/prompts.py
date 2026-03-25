@@ -11,12 +11,7 @@ from sqlalchemy.orm import selectinload
 from app.core.database import get_db
 from app.dependencies import get_current_user, get_user_prompt
 from app.models import Prompt, PromptVersion, User
-from app.schemas import (
-    PromptCreate,
-    PromptListResponse,
-    PromptResponse,
-    PromptUpdate,
-)
+from app.schemas import PromptCreate, PromptListResponse, PromptResponse, PromptUpdate
 
 router = APIRouter(prefix="/prompts", tags=["Prompts"])
 
