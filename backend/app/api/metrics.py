@@ -181,8 +181,8 @@ async def get_prompt_metrics(
     prompt = await get_user_prompt(prompt_id, user, db)
 
     # Get versions count
-    versions_stmt = select(func.count()).select_from(PromptVersion).where(
-        PromptVersion.prompt_id == prompt_id
+    versions_stmt = (
+        select(func.count()).select_from(PromptVersion).where(PromptVersion.prompt_id == prompt_id)
     )
     versions_result = await db.execute(versions_stmt)
     total_versions = versions_result.scalar() or 0

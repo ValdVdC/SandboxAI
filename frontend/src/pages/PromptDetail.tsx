@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import Header from '../components/Header';
 import Loading from '../components/Loading';
-import PromptEditor from '../components/PromptEditor';
 import VersionList from '../components/VersionList';
 import TestRunner from '../components/TestRunner';
 import TestResults from '../components/TestResults';
@@ -15,14 +14,12 @@ import '../styles/PromptDetail.css';
 
 const PromptDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
   const { prompt, loading, error } = usePromptDetail(id || '');
   const [selectedVersion, setSelectedVersion] = useState<PromptVersion | null>(null);
   const [versions, setVersions] = useState<PromptVersion[]>([]);
   const [versionsLoading, setVersionsLoading] = useState(true);
   const [activeTest, setActiveTest] = useState<string | null>(null);
   const [compareMode, setCompareMode] = useState(false);
-  const [compareVersion, setCompareVersion] = useState<PromptVersion | null>(null);
   const [showCreateVersion, setShowCreateVersion] = useState(false);
   const [showTestHistory, setShowTestHistory] = useState(false);
   const [versionRefreshTrigger, setVersionRefreshTrigger] = useState(0);
@@ -168,7 +165,7 @@ const PromptDetail: React.FC = () => {
                 {showCreateVersion ? (
                   <CreateVersion
                     promptId={id}
-                    currentVersion={selectedVersion}
+                    currentVersion={selectedVersion ?? undefined}
                     onVersionCreated={handleVersionCreated}
                     onCancel={() => setShowCreateVersion(false)}
                   />

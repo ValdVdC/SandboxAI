@@ -38,7 +38,7 @@ AsyncSessionLocal = async_sessionmaker(
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
     """
     Dependency function to get database session for FastAPI.
-    
+
     Usage:
         @app.get("/items")
         async def read_items(db: AsyncSession = Depends(get_db)):

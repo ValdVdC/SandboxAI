@@ -23,6 +23,20 @@ jobs:
         with:
           fetch-depth: 0
       
+      - name: Validate Docker Hub credentials configured
+        run: |
+          if [ -z "${{ secrets.DOCKER_USERNAME }}" ]; then
+            echo "❌ ERROR: secrets.DOCKER_USERNAME is not configured"
+            echo "Please configure Docker Hub credentials in Settings → Secrets and variables"
+            exit 1
+          fi
+          if [ -z "${{ secrets.DOCKER_PASSWORD }}" ]; then
+            echo "❌ ERROR: secrets.DOCKER_PASSWORD is not configured"
+            echo "Please configure Docker Hub credentials in Settings → Secrets and variables"
+            exit 1
+          fi
+          echo "✅ Docker Hub credentials configured"
+      
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
       
@@ -48,6 +62,7 @@ jobs:
         with:
           context: ./backend
           file: ./backend/Dockerfile
+          target: runtime
           push: true
           tags: |
             ${{ secrets.DOCKER_USERNAME }}/sandboxai-api:${{ steps.tag.outputs.tag }}
@@ -59,7 +74,8 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: ./backend
-          file: ./backend/Dockerfile.worker
+          file: ./backend/Dockerfile
+          target: runtime
           push: true
           tags: |
             ${{ secrets.DOCKER_USERNAME }}/sandboxai-worker:${{ steps.tag.outputs.tag }}
@@ -97,7 +113,7 @@ jobs:
           PREV_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
           
           if [ -z "$PREV_TAG" ]; then
-            CHANGELOG=$(git log --oneline ${TAG} -- | head -20)
+            CHANGELOG=$(git log --oneline ${TAG} | head -20)
           else
             CHANGELOG=$(git log --oneline ${PREV_TAG}..${TAG} | head -20)
           fi
@@ -135,8 +151,9 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       
       - name: Notify Slack (optional)
-        if: ${{ secrets.SLACK_WEBHOOK_URL }}
         uses: slackapi/slack-github-action@v1
+        if: always()
+        continue-on-error: true
         with:
           payload: |
             {

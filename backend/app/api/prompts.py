@@ -78,9 +78,7 @@ async def list_prompts(
 
     # Apply search filter
     if search:
-        query = query.where(
-            Prompt.name.ilike(f"%{search}%")
-        )
+        query = query.where(Prompt.name.ilike(f"%{search}%"))
 
     # Count total before pagination
     count_stmt = select(func.count()).select_from(Prompt).where(Prompt.user_id == user.id)
@@ -144,9 +142,7 @@ async def update_prompt(
         Updated prompt
     """
     # Get prompt with ownership check
-    stmt = select(Prompt).where(
-        and_(Prompt.id == prompt_id, Prompt.user_id == user.id)
-    )
+    stmt = select(Prompt).where(and_(Prompt.id == prompt_id, Prompt.user_id == user.id))
     result = await db.execute(stmt)
     prompt = result.scalar_one_or_none()
 
@@ -187,9 +183,7 @@ async def delete_prompt(
         HTTPException: If prompt not found or user doesn't own it
     """
     # Get prompt with ownership check
-    stmt = select(Prompt).where(
-        and_(Prompt.id == prompt_id, Prompt.user_id == user.id)
-    )
+    stmt = select(Prompt).where(and_(Prompt.id == prompt_id, Prompt.user_id == user.id))
     result = await db.execute(stmt)
     prompt = result.scalar_one_or_none()
 

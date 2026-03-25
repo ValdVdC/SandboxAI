@@ -13,8 +13,7 @@ from app.core.database import get_db
 
 # PostgreSQL database for testing
 TEST_DATABASE_URL = os.getenv(
-    "DATABASE_URL",
-    "postgresql+asyncpg://test:test@postgres:5432/test_sandboxai"
+    "DATABASE_URL", "postgresql+asyncpg://test:test@postgres:5432/test_sandboxai"
 )
 
 
@@ -38,24 +37,24 @@ async def test_db():
         echo=False,
         future=True,
     )
-    
+
     # Create all tables
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
-    
+
     # Create session factory
     async_session = async_sessionmaker(
         engine,
         class_=AsyncSession,
         expire_on_commit=False,
     )
-    
+
     yield async_session
-    
+
     # Cleanup
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
-    
+
     await engine.dispose()
 
 
@@ -69,15 +68,16 @@ async def db_session(test_db):
 @pytest.fixture
 async def client(test_db):
     """Create test client with dependency override."""
+
     async def override_get_db():
         async with test_db() as session:
             yield session
-    
+
     app.dependency_overrides[get_db] = override_get_db
-    
+
     async with AsyncClient(app=app, base_url="http://test") as ac:
         yield ac
-    
+
     app.dependency_overrides.clear()
 
 

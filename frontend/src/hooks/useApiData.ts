@@ -60,24 +60,24 @@ export const useTestExecution = (testId: string) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchTest = async () => {
-      try {
-        setLoading(true);
-        const data = await apiClient.getTestExecution(testId);
-        setTest(data);
-        setError(null);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to fetch test');
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchTest = async () => {
+    try {
+      setLoading(true);
+      const data = await apiClient.getTestExecution(testId);
+      setTest(data);
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch test');
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     if (testId) {
       fetchTest();
     }
-  }, [testId]);
+  }, [testId, fetchTest]);
 
   return { test, loading, error, refetch: () => fetchTest() };
 };

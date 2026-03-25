@@ -39,7 +39,7 @@ async def test_database_isolation(db_session):
     result = await db_session.execute(stmt)
     users = result.scalars().all()
     assert len(users) == 0
-    
+
     # Add a user
     user = User(
         id=uuid.uuid4(),
@@ -49,7 +49,7 @@ async def test_database_isolation(db_session):
     )
     db_session.add(user)
     await db_session.commit()
-    
+
     # Now we should have 1 user
     stmt = select(User)
     result = await db_session.execute(stmt)

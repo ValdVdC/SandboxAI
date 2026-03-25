@@ -9,7 +9,7 @@ from app.models import User, Prompt
 async def test_health_endpoint(client):
     """Test the /health endpoint."""
     response = await client.get("/health")
-    
+
     assert response.status_code == 200
     data = response.json()
     assert data["status"] == "healthy"
@@ -21,7 +21,7 @@ async def test_health_endpoint(client):
 async def test_root_endpoint(client):
     """Test the / (root) endpoint."""
     response = await client.get("/")
-    
+
     assert response.status_code == 200
     data = response.json()
     assert "message" in data
@@ -33,7 +33,7 @@ async def test_root_endpoint(client):
 async def test_api_documentation_available(client):
     """Test that OpenAPI/Swagger documentation is available."""
     response = await client.get("/openapi.json")
-    
+
     assert response.status_code == 200
     openapi = response.json()
     assert "openapi" in openapi
@@ -44,7 +44,7 @@ async def test_api_documentation_available(client):
 async def test_swagger_ui_endpoint(client):
     """Test that Swagger UI endpoint exists."""
     response = await client.get("/docs")
-    
+
     assert response.status_code == 200
     # Should return HTML with Swagger UI
     assert "swagger" in response.text.lower()
