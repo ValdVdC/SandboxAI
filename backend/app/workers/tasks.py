@@ -12,10 +12,10 @@ from sqlalchemy.orm import sessionmaker
 
 from app.models import TestResult
 from app.workers.config import celery_app
+from app.workers.providers.anthropic import AnthropicProvider
 from app.workers.providers.groq import GroqProvider
 from app.workers.providers.ollama import OllamaProvider
 from app.workers.providers.openai import OpenAIProvider
-from app.workers.providers.anthropic import AnthropicProvider
 
 # Configure logging
 logger = logging.getLogger(__name__)
