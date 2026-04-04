@@ -169,7 +169,15 @@ class ApiClient {
   }
 
   async getPromptMetrics(promptId: string): Promise<PromptMetrics> {
-    const response = await this.client.get<PromptMetrics>(`/prompts/${promptId}/metrics`);
+    const response = await this.client.get<PromptMetrics>(`/metrics/by-prompt/${promptId}`);
+    return response.data;
+  }
+
+  async compareVersions(v1Id: string, v2Id: string): Promise<{
+    v1: { total_tests: number; avg_latency: number; avg_tokens: number; avg_cost: number; success_rate: number };
+    v2: { total_tests: number; avg_latency: number; avg_tokens: number; avg_cost: number; success_rate: number };
+  }> {
+    const response = await this.client.get(`/metrics/compare-versions/${v1Id}/${v2Id}`);
     return response.data;
   }
 

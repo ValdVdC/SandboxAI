@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import Loading from '../components/Loading';
 import VersionList from '../components/VersionList';
@@ -14,6 +14,7 @@ import '../styles/PromptDetail.css';
 
 const PromptDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const { prompt, loading, error } = usePromptDetail(id || '');
   const [selectedVersion, setSelectedVersion] = useState<PromptVersion | null>(null);
   const [versions, setVersions] = useState<PromptVersion[]>([]);
@@ -156,6 +157,12 @@ const PromptDetail: React.FC = () => {
                     }}
                   >
                     + Nova Versão
+                  </button>
+                  <button
+                    className="tab-btn"
+                    onClick={() => navigate(`/prompts/${id}/compare`)}
+                  >
+                    Comparar Versões
                   </button>
                 </div>
 

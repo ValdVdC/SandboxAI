@@ -236,3 +236,60 @@ async def get_prompt_metrics(
         tests_failed=tests_failed,
         tests_pending=tests_pending,
     )
+
+
+@router.get("/compare-versions/{v1_id}/{v2_id}")
+async def compare_versions(
+    v1_id: UUID,
+    v2_id: UUID,
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Compare performance metrics between two versions.
+
+    Args:
+        v1_id: ID of first version
+        v2_id: ID of second version
+        user: Current authenticated user
+        db: Database session
+
+    Returns:
+        Comparison metrics for both versions
+    """
+
+    async def get_version_stats(version_id: UUID):
+        stmt = (
+            select(
+                func.count(TestResult.id).label("count"),
+                func.avg(TestResult.latency_ms).label("avg_latency"),
+                func.avg(TestResult.tokens_used).label("avg_tokens"),
+                func.avg(TestResult.cost_usd).label("avg_cost"),
+                func.count(TestResult.id)
+                .filter(TestResult.status == "completed")
+                .label("success_count"),
+            )
+            .select_from(TestResult)
+            .where(TestResult.version_id == version_id)
+        )
+        result = await db.execute(stmt)
+        data = result.one()
+
+        return {
+            "total_tests": data.count or 0,
+            "avg_latency": float(data.avg_latency) if data.avg_latency else 0.0,
+            "avg_tokens": float(data.avg_tokens) if data.avg_tokens else 0.0,
+            "avg_cost": float(data.avg_cost) if data.avg_cost else 0.0,
+            "success_rate": (data.success_count / data.count * 100)
+            if data.count and data.count > 0
+            else 0.0,
+        }
+
+    # Fetch stats for both versions
+    v1_stats = await get_version_stats(v1_id)
+    v2_stats = await get_version_stats(v2_id)
+
+    return {
+        "v1": v1_stats,
+        "v2": v2_stats,
+    }

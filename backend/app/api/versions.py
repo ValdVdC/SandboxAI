@@ -122,6 +122,44 @@ async def list_versions(
     )
 
 
+@router.get("/{prompt_id}/versions/{version_id}", response_model=VersionResponse)
+async def get_version(
+    prompt_id: UUID,
+    version_id: UUID,
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> VersionResponse:
+    """
+    Get details of a specific prompt version by its ID.
+
+    Args:
+        prompt_id: ID of the prompt
+        version_id: ID of the specific version
+        user: Current authenticated user
+        db: Database session
+
+    Returns:
+        Version details
+    """
+    # Validate ownership of the prompt
+    await get_user_prompt(prompt_id, user, db)
+
+    # Get the specific version
+    stmt = select(PromptVersion).where(
+        and_(
+            PromptVersion.prompt_id == prompt_id,
+            PromptVersion.id == version_id,
+        )
+    )
+    result = await db.execute(stmt)
+    version = result.scalar_one_or_none()
+
+    if not version:
+        raise HTTPException(status_code=404, detail="Version not found")
+
+    return VersionResponse.from_orm(version)
+
+
 @router.post("/{prompt_id}/versions/{version_num}/restore", response_model=VersionResponse)
 async def restore_version(
     prompt_id: UUID,

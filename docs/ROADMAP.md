@@ -4,7 +4,7 @@ Este documento descreve o planejamento de desenvolvimento do SandboxAI, organiza
 
 ---
 
-## Fase 1 — MVP Acadêmico (atual)
+## Fase 1 — MVP Acadêmico (Concluída)
 
 Objetivo: entregar uma versão funcional para o seminário de Tópicos Integradores.
 
@@ -14,24 +14,24 @@ Objetivo: entregar uma versão funcional para o seminário de Tópicos Integrado
 - [x] Versionamento básico de prompts
 - [x] Integração com Ollama (local)
 - [x] Integração com Groq
-- [x] Execução de testes em containers isolados
-- [x] Registro de métricas básicas (latência, tokens)
-- [x] Frontend simples para criar e testar prompts
-- [ ] Pipeline CI/CD completo com GitHub Actions
+- [x] Registro de métricas básicas (latência, tokens, custo)
+- [x] Frontend funcional para criar e testar prompts
+- [x] Autenticação completa com JWT (User login/register)
+- [x] Integração com OpenAI e Anthropic (Backend)
+- [x] Dashboard básico de métricas e custos
 
 ---
 
-## Fase 2 — Produto
+## Fase 2 — Produto (Em andamento)
 
 Objetivo: evoluir para um produto utilizável por outros desenvolvedores.
 
-- [ ] Autenticação completa com JWT
-- [ ] Comparação side-by-side de versões
-- [ ] Integração com OpenAI e Anthropic
-- [ ] Dashboard de métricas e custos
-- [ ] Baterias de testes automatizados
+- [ ] Comparação side-by-side de versões (Visual Diff)
+- [ ] Baterias de testes automatizados (Bulk Testing)
 - [ ] Exportação de resultados em CSV
-- [ ] Documentação da API pública (Swagger)
+- [ ] Documentação da API pública (Swagger/Redoc)
+- [ ] Sandbox Real (Docker-in-Docker para isolamento total)
+- [ ] Pipeline CI/CD completo com GitHub Actions
 
 ---
 
@@ -43,11 +43,13 @@ Objetivo: transformar em um serviço escalável e monetizável.
 - [ ] Compartilhamento de prompts entre usuários
 - [ ] Webhooks para notificações externas
 - [ ] Integração com GitHub (importar prompts de repositórios)
-- [ ] API pública para integração com outras ferramentas
 - [ ] Suporte a modelos customizados via fine-tuning
 
 ---
 
-## Contribuindo com o Roadmap
+## 🛠️ Dívida Técnica & Próximos Passos Imediatos
 
-Tem uma sugestão de feature? Abra uma Issue com o label `enhancement` descrevendo o problema que ela resolve. Features com mais demanda da comunidade serão priorizadas.
+1. **Refatoração de Datas:** Migrar de `utcnow()` para `now(timezone.utc)` (Concluído ✅)
+2. **Segurança JWT:** Remover segredos padrão do código (Concluído ✅)
+3. **Isolamento:** Implementar o runner em Docker conforme planejado originalmente na arquitetura.
+4. **UX:** Implementar o componente de comparação visual na página de `VersionComparison`.

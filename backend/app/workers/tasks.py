@@ -2,7 +2,7 @@
 
 import logging
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 from uuid import UUID
 
@@ -120,7 +120,7 @@ async def _execute_test_async(
             stmt = (
                 update(TestResult)
                 .where(TestResult.id == test_id)
-                .values(status="running", updated_at=datetime.utcnow())
+                .values(status="running", updated_at=datetime.now(timezone.utc))
             )
             await db.execute(stmt)
             await db.commit()
@@ -155,7 +155,7 @@ async def _execute_test_async(
                     .values(
                         status="failed",
                         error_message=str(e)[:500],
-                        updated_at=datetime.utcnow(),
+                        updated_at=datetime.now(timezone.utc),
                     )
                 )
                 await db.execute(stmt)
@@ -178,7 +178,7 @@ async def _execute_test_async(
                     cost_usd=result.cost_usd,
                     status="completed",
                     error_message=None,
-                    updated_at=datetime.utcnow(),
+                    updated_at=datetime.now(timezone.utc),
                 )
             )
             await db.execute(stmt)
@@ -267,7 +267,7 @@ async def _cleanup_stale_tests_async(hours: int):
 
     async with AsyncSessionLocal() as db:
         # Find tests stuck in "running" status
-        stale_threshold = datetime.utcnow() - timedelta(hours=hours)
+        stale_threshold = datetime.now(timezone.utc) - timedelta(hours=hours)
 
         # Update stale running tests to failed
         await db.execute(
