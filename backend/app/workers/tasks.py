@@ -138,7 +138,7 @@ async def _execute_test_async(
         # Replace both styles if present
         final_prompt = final_prompt.replace("{{input}}", str(test_input))
         final_prompt = final_prompt.replace("{input}", str(test_input))
-    
+
     # Execute provider (outside database session to avoid conflicts)
     try:
         provider_instance = _get_provider(provider)
