@@ -52,9 +52,24 @@ async def startup_event():
     try:
         async with engine.begin() as conn:
             await conn.execute(text("SELECT 1"))
+            tables_stmt = text(
+                """
+                SELECT
+                    to_regclass('public.users') IS NOT NULL AS has_users,
+                    to_regclass('public.alembic_version') IS NOT NULL AS has_alembic
+                """
+            )
+            result = await conn.execute(tables_stmt)
+            status_row = result.mappings().one()
+
+            if not status_row["has_users"] or not status_row["has_alembic"]:
+                raise RuntimeError(
+                    "Critical database schema is missing (users/alembic_version)."
+                )
         print("✅ Database connection validated")
     except Exception as e:
         print(f"❌ Database connection failed: {e}")
+        raise
 
 
 @app.on_event("shutdown")

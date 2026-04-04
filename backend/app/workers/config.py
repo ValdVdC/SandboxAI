@@ -44,5 +44,8 @@ celery_app.conf.task_routes = {
     "app.workers.tasks.execute_test_with_priority": {"queue": "priority"},
 }
 
+# Export as 'app' for Celery CLI convenience
+app = celery_app
+
 # Import tasks to register them
 celery_app.autodiscover_tasks(["app.workers"])

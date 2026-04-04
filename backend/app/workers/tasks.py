@@ -14,6 +14,8 @@ from app.models import TestResult
 from app.workers.config import celery_app
 from app.workers.providers.groq import GroqProvider
 from app.workers.providers.ollama import OllamaProvider
+from app.workers.providers.openai import OpenAIProvider
+from app.workers.providers.anthropic import AnthropicProvider
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -211,7 +213,7 @@ def _get_provider(provider_name: str):
     Factory function to get the appropriate provider instance.
 
     Args:
-        provider_name: Name of the provider ("groq" or "ollama")
+        provider_name: Name of the provider ("groq", "ollama", "openai", "anthropic")
 
     Returns:
         Provider instance
@@ -219,10 +221,15 @@ def _get_provider(provider_name: str):
     Raises:
         ValueError: If provider is not supported
     """
-    if provider_name.lower() == "groq":
+    provider_name = provider_name.lower()
+    if provider_name == "groq":
         return GroqProvider()
-    elif provider_name.lower() == "ollama":
+    elif provider_name == "ollama":
         return OllamaProvider()
+    elif provider_name == "openai":
+        return OpenAIProvider()
+    elif provider_name == "anthropic":
+        return AnthropicProvider()
     else:
         raise ValueError(f"Unsupported provider: {provider_name}")
 
