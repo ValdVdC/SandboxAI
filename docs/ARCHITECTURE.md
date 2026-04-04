@@ -360,13 +360,10 @@ O Worker é um consumer Celery que processa testes em background:
        # Process test
    ```
 
-3. **Execução** — Worker cria container isolado
+3. **Execução** — Worker chama o provedor configurado
    ```python
-   docker.containers.run(
-       image="sandboxai-runner",
-       environment={"PROMPT": prompt_content},
-       ...
-   )
+   provider = _get_provider(provider_name)
+   result = await provider.execute(final_prompt, model, timeout)
    ```
 
 4. **Persistência** — Resultados salvos no PostgreSQL
@@ -409,6 +406,11 @@ Para escalar horizontalmente em produção:
 
 ```bash
 # Escalar workers para processar mais testes em paralelo
+docker compose up --scale worker=4
+```
+
+O Redis garante que cada tarefa seja processada por apenas um worker, sem duplicação.
+mais testes em paralelo
 docker compose up --scale worker=4
 ```
 

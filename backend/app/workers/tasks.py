@@ -132,22 +132,13 @@ async def _execute_test_async(
 
     # Interpolate prompt with test input
     # Support both Python format style {input} and Jinja2 style {{input}}
-    if test_input:
-        try:
-            # Try Python format style: {input}
-            final_prompt = prompt_content.format(input=test_input)
-        except (KeyError, ValueError):
-            try:
-                # Try Jinja2 style: {{input}} → convert to {input} and format
-                final_prompt = prompt_content.replace("{{input}}", "{input}").format(
-                    input=test_input
-                )
-            except (KeyError, ValueError):
-                # If template doesn't have placeholders, use as-is
-                final_prompt = prompt_content
-    else:
-        final_prompt = prompt_content
-
+    # We use a safer approach to avoid KeyError with extra braces in the prompt
+    final_prompt = prompt_content
+    if test_input is not None:
+        # Replace both styles if present
+        final_prompt = final_prompt.replace("{{input}}", str(test_input))
+        final_prompt = final_prompt.replace("{input}", str(test_input))
+    
     # Execute provider (outside database session to avoid conflicts)
     try:
         provider_instance = _get_provider(provider)

@@ -5,6 +5,7 @@ Aplicação principal para versionamento e teste de prompts para LLMs.
 """
 
 import asyncio
+import os
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -26,9 +27,14 @@ app = FastAPI(
 )
 
 # Middleware CORS
+allowed_origins = [
+    origin.strip() 
+    for origin in os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:5173").split(",")
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Em produção, configurar com variáveis de ambiente
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

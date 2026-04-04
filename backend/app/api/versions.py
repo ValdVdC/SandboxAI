@@ -122,46 +122,63 @@ async def list_versions(
     )
 
 
-@router.get("/{prompt_id}/versions/{version_num}", response_model=VersionResponse)
-async def get_version(
+@router.post("/{prompt_id}/versions/{version_num}/restore", response_model=VersionResponse)
+async def restore_version(
     prompt_id: UUID,
     version_num: int,
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> VersionResponse:
     """
-    Get a specific version of a prompt.
+    Restore an old version of a prompt.
+
+    Creates a new version with the content and settings of the specified old version.
 
     Args:
         prompt_id: ID of prompt
-        version_num: Version number
+        version_num: Version number to restore
         user: Current authenticated user
         db: Database session
 
     Returns:
-        Version details
-
-    Raises:
-        HTTPException: If prompt not found, user doesn't own it, or version doesn't exist
+        The new version created from the restoration
     """
     # Validate ownership
     prompt = await get_user_prompt(prompt_id, user, db)
 
-    # Get specific version
+    # Get version to restore
     stmt = select(PromptVersion).where(
         and_(
             PromptVersion.prompt_id == prompt_id,
             PromptVersion.version == version_num,
         )
     )
-
     result = await db.execute(stmt)
-    version = result.scalar_one_or_none()
+    version_to_restore = result.scalar_one_or_none()
 
-    if not version:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Version {version_num} not found",
-        )
+    if not version_to_restore:
+        raise HTTPException(status_code=404, detail=f"Version {version_num} not found")
 
-    return VersionResponse.from_orm(version)
+    # Determine next version number
+    next_version = prompt.version_count + 1
+
+    # Create new version
+    new_version = PromptVersion(
+        id=uuid4(),
+        prompt_id=prompt_id,
+        version=next_version,
+        content=version_to_restore.content,
+        provider=version_to_restore.provider,
+        model=version_to_restore.model,
+        change_description=f"Restored from version {version_num}",
+    )
+
+    # Update prompt
+    prompt.version_count = next_version
+
+    db.add(new_version)
+    db.add(prompt)
+    await db.commit()
+    await db.refresh(new_version)
+
+    return VersionResponse.from_orm(new_version)

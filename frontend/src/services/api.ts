@@ -65,7 +65,7 @@ class ApiClient {
   }
 
   async getProfile(): Promise<User> {
-    const response = await this.client.get<User>('/auth/profile');
+    const response = await this.client.get<User>('/auth/me');
     return response.data;
   }
 
@@ -75,9 +75,9 @@ class ApiClient {
     return response.data;
   }
 
-  async listPrompts(search?: string, skip: number = 0, limit: number = 20): Promise<PaginatedResponse<Prompt>> {
+  async listPrompts(search?: string, page: number = 1, per_page: number = 20): Promise<PaginatedResponse<Prompt>> {
     const response = await this.client.get<PaginatedResponse<Prompt>>('/prompts', {
-      params: { search, skip, limit },
+      params: { search, page, per_page },
     });
     return response.data;
   }
@@ -88,7 +88,7 @@ class ApiClient {
   }
 
   async updatePrompt(id: string, data: UpdatePromptRequest): Promise<Prompt> {
-    const response = await this.client.put<Prompt>(`/prompts/${id}`, data);
+    const response = await this.client.patch<Prompt>(`/prompts/${id}`, data);
     return response.data;
   }
 
@@ -170,6 +170,14 @@ class ApiClient {
 
   async getPromptMetrics(promptId: string): Promise<PromptMetrics> {
     const response = await this.client.get<PromptMetrics>(`/prompts/${promptId}/metrics`);
+    return response.data;
+  }
+
+  // Providers
+  async getProviderStatus(): Promise<Record<string, { available: boolean; reason: string }>> {
+    const response = await this.client.get<Record<string, { available: boolean; reason: string }>>(
+      '/providers/status'
+    );
     return response.data;
   }
 
