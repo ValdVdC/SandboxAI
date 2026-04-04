@@ -60,97 +60,122 @@
   gap: var(--spacing-md);
   max-height: 600px;
   overflow-y: auto;
+  padding: 4px; /* Respiro para o efeito de hover não cortar */
 }
 
 .test-item {
   background-color: var(--color-bg-tertiary);
   border: 1px solid var(--color-border);
   border-radius: var(--border-radius-md);
-  padding: var(--spacing-md);
+  padding: var(--spacing-md) var(--spacing-lg);
   cursor: pointer;
   transition: all var(--transition);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm); /* Espaçamento real entre os elementos internos */
+  position: relative;
+  min-height: auto; /* Deixa o conteúdo ditar a altura */
 }
 
 .test-item:hover {
   border-color: var(--color-primary);
   background-color: var(--color-bg-primary);
-  transform: translateX(4px);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
 }
 
-.test-item.status-completed {
-  border-left: 4px solid var(--color-success);
+/* Status markers as indicators */
+.test-item::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background-color: transparent;
 }
 
-.test-item.status-failed {
-  border-left: 4px solid var(--color-danger);
+.test-item.status-completed::after { background-color: var(--color-success); }
+.test-item.status-failed::after { background-color: var(--color-danger); }
+.test-item.status-queued::after, .test-item.status-running::after { background-color: var(--color-warning); }
+
+/* Batch Item marker */
+.batch-item::after {
+  background-color: var(--color-primary) !important;
 }
 
-.test-item.status-queued {
-  border-left: 4px solid var(--color-warning);
+.batch-item {
+  background-color: rgba(88, 166, 255, 0.03);
 }
 
-.test-item.status-running {
-  border-left: 4px solid var(--color-info);
+.batch-preview-list {
+  margin: var(--spacing-xs) 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.batch-preview-item {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-left: 12px;
+  position: relative;
+}
+
+.batch-preview-item::before {
+  content: "•";
+  position: absolute;
+  left: 0;
+  color: var(--color-primary);
+}
+
+.batch-badge {
+  background-color: var(--color-primary);
+  color: white;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+}
+
+.btn-small {
+  padding: 4px 12px;
+  font-size: 12px;
+  height: auto;
 }
 
 .test-header {
   display: flex;
   align-items: center;
   gap: var(--spacing-md);
-  margin-bottom: var(--spacing-sm);
-}
-
-.test-number {
-  font-weight: 600;
-  color: var(--color-text-muted);
-  font-size: 12px;
-  min-width: 35px;
-}
-
-.status-badge {
-  padding: 2px 8px;
-  border-radius: 4px;
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-
-.status-badge.status-completed {
-  background-color: rgba(34, 197, 94, 0.1);
-  color: var(--color-success);
-}
-
-.status-badge.status-failed {
-  background-color: rgba(239, 68, 68, 0.1);
-  color: var(--color-danger);
-}
-
-.status-badge.status-queued {
-  background-color: rgba(234, 179, 8, 0.1);
-  color: var(--color-warning);
-}
-
-.status-badge.status-running {
-  background-color: rgba(59, 130, 246, 0.1);
-  color: var(--color-info);
-}
-
-.test-date {
-  font-size: 12px;
-  color: var(--color-text-muted);
-  margin-left: auto;
-}
-
-.test-preview {
-  margin-bottom: var(--spacing-sm);
+  margin-bottom: var(--spacing-xs);
 }
 
 .input-preview {
   font-size: 13px;
   color: var(--color-text-secondary);
-  margin: 0;
+  margin: var(--spacing-xs) 0;
   word-break: break-word;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.4;
+}
+
+.batch-summary {
+  margin-top: auto; /* Empurra para o rodapé do card */
+  padding-top: var(--spacing-sm);
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .test-metrics {

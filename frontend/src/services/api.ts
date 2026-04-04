@@ -145,6 +145,18 @@ class ApiClient {
     return response.data;
   }
 
+  async executeBulkTests(
+    promptId: string,
+    versionNum: number,
+    data: { inputs: string[]; expected?: string }
+  ): Promise<{ test_ids: string[]; celery_task_ids: string[]; total_queued: number; message: string }> {
+    const response = await this.client.post(
+      `/prompts/${promptId}/versions/${versionNum}/tests/bulk`,
+      data
+    );
+    return response.data;
+  }
+
   async getTestExecution(id: string): Promise<TestExecution> {
     const response = await this.client.get<TestExecution>(`/prompts/tests/${id}`);
     return response.data;
@@ -158,7 +170,7 @@ class ApiClient {
   }
 
   async getTestResult(testId: string): Promise<TestResult> {
-    const response = await this.client.get<TestResult>(`/tests/${testId}/result`);
+    const response = await this.client.get<TestResult>(`/prompts/tests/${testId}`);
     return response.data;
   }
 

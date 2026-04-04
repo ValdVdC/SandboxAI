@@ -1,6 +1,6 @@
 """Test execution and result endpoints."""
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 from uuid import UUID, uuid4
 
@@ -11,7 +11,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.dependencies import get_current_user, get_user_prompt
 from app.models import Prompt, PromptVersion, TestResult, User
-from app.schemas import TestExecuteRequest, TestListResponse, TestResultResponse
+from app.schemas import (
+    TestBulkExecuteRequest,
+    TestExecuteRequest,
+    TestListResponse,
+    TestResultResponse,
+)
 from app.workers.tasks import execute_test as execute_test_task
 
 router = APIRouter(prefix="/prompts", tags=["Tests"])
@@ -75,7 +80,7 @@ async def execute_test(
         cost_usd=0.0,
         status="queued",
         error_message=None,
-        created_at=datetime.utcnow(),
+        created_at=datetime.now(timezone.utc),
     )
 
     db.add(test_result)
@@ -95,6 +100,82 @@ async def execute_test(
         "celery_task_id": task.id,
         "status": "queued",
         "message": "Test queued for execution",
+    }
+
+
+@router.post("/{prompt_id}/versions/{version_num}/tests/bulk", status_code=status.HTTP_202_ACCEPTED)
+async def execute_bulk_tests(
+    prompt_id: UUID,
+    version_num: int,
+    bulk_data: TestBulkExecuteRequest,
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    """
+    Execute multiple tests for a specific prompt version in bulk.
+
+    Args:
+        prompt_id: ID of prompt
+        version_num: Version number
+        bulk_data: List of inputs
+        user: Current authenticated user
+        db: Database session
+
+    Returns:
+        Summary of queued tests
+    """
+    # Validate ownership
+    prompt = await get_user_prompt(prompt_id, user, db)
+
+    # Get version
+    stmt = select(PromptVersion).where(
+        and_(
+            PromptVersion.prompt_id == prompt_id,
+            PromptVersion.version == version_num,
+        )
+    )
+    result = await db.execute(stmt)
+    version = result.scalar_one_or_none()
+
+    if not version:
+        raise HTTPException(status_code=404, detail=f"Version {version_num} not found")
+
+    test_ids = []
+    batch_id = uuid4()
+
+    # Create all records first
+    for test_input in bulk_data.inputs:
+        test_id = uuid4()
+        test_result = TestResult(
+            id=test_id,
+            version_id=version.id,
+            batch_id=batch_id,
+            input=test_input,
+            status="queued",
+            expected=bulk_data.expected,
+            created_at=datetime.now(timezone.utc),
+        )
+        db.add(test_result)
+        test_ids.append(str(test_id))
+
+    await db.commit()
+
+    # Queue tasks in parallel after commit
+    task_ids = []
+    for t_id in test_ids:
+        task = execute_test_task.delay(
+            test_id=t_id,
+            prompt_content=version.content,
+            provider=version.provider,
+            model=version.model,
+        )
+        task_ids.append(task.id)
+
+    return {
+        "test_ids": test_ids,
+        "celery_task_ids": task_ids,
+        "total_queued": len(test_ids),
+        "message": f"Successfully queued {len(test_ids)} tests",
     }
 
 

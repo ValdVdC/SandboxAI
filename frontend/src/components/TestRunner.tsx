@@ -8,27 +8,21 @@ interface TestRunnerProps {
   versionId: string;
   versionNumber: number;
   onTestStarted: (testId: string) => void;
+  onBulkStarted?: (testIds: string[]) => void;
 }
 
-const TestRunner: React.FC<TestRunnerProps> = ({ promptId, versionId, versionNumber, onTestStarted }) => {
+const TestRunner: React.FC<TestRunnerProps> = ({ promptId, versionId, versionNumber, onTestStarted, onBulkStarted }) => {
   const [testInput, setTestInput] = useState('');
   const [expectedOutput, setExpectedOutput] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  // Debug log
-  console.log('TestRunner props:', { promptId, versionId, versionNumber });
+  const [mode, setMode] = useState<'single' | 'bulk'>('single');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    console.log('Submit handler called with:', { promptId, versionNumber, testInput, expectedOutput });
-    
-    // Validation: ensure versionNumber is valid
     if (!versionNumber || versionNumber <= 0) {
-      const errorMsg = 'Versão inválida. Selecione uma versão válida.';
-      console.error(errorMsg, { versionNumber });
-      setError(errorMsg);
+      setError('Versão inválida. Selecione uma versão válida.');
       return;
     }
     
@@ -36,68 +30,94 @@ const TestRunner: React.FC<TestRunnerProps> = ({ promptId, versionId, versionNum
     setError(null);
 
     try {
-      const payload = {
-        input: testInput,
-        expected: expectedOutput || undefined,
-      };
-      console.log('Executing test with:', { promptId, versionNumber, payload });
-      const test = await apiClient.executeTest(
-        promptId,
-        versionNumber,
-        payload
-      );
-      console.log('Test response:', test);
-      console.log('Test test_id:', test.test_id);
-      setTestInput('');
-      setExpectedOutput('');
-      if (test.test_id) {
-        console.log('Calling onTestStarted with:', test.test_id);
-        onTestStarted(test.test_id);
+      if (mode === 'single') {
+        const test = await apiClient.executeTest(promptId, versionNumber, {
+          input: testInput,
+          expected: expectedOutput || undefined,
+        });
+        setTestInput('');
+        setExpectedOutput('');
+        if (test.test_id) {
+          onTestStarted(test.test_id);
+        }
       } else {
-        throw new Error('No test_id in response');
+        // Bulk mode
+        const inputs = testInput.split('\n').map(i => i.trim()).filter(i => i.length > 0);
+        if (inputs.length === 0) {
+          throw new Error('Insira ao menos uma entrada válida por linha.');
+        }
+        
+        const response = await apiClient.executeBulkTests(promptId, versionNumber, {
+          inputs,
+          expected: expectedOutput || undefined,
+        });
+        
+        setTestInput('');
+        setExpectedOutput('');
+        if (onBulkStarted && response.test_ids) {
+          onBulkStarted(response.test_ids);
+        }
       }
     } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : 'Failed to start test';
-      console.error('Test execution error:', { error: err, errorMsg });
-      setError(errorMsg);
+      setError(err instanceof Error ? err.message : 'Falha ao iniciar teste(s)');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <form className="test-runner" onSubmit={handleSubmit}>
-      <h3>Executar Teste</h3>
-
-      {error && <Alert type="error" message={error} onClose={() => setError(null)} />}
-
-      <div className="form-group">
-        <label htmlFor="input">Entrada de Teste</label>
-        <textarea
-          id="input"
-          value={testInput}
-          onChange={(e) => setTestInput(e.target.value)}
-          placeholder="Digite o texto de entrada para testar o prompt"
-          required
-          rows={4}
-        />
+    <div className="test-runner-container">
+      <div className="runner-tabs">
+        <button 
+          className={`tab-btn ${mode === 'single' ? 'active' : ''}`}
+          onClick={() => setMode('single')}
+        >
+          Teste Único
+        </button>
+        <button 
+          className={`tab-btn ${mode === 'bulk' ? 'active' : ''}`}
+          onClick={() => setMode('bulk')}
+        >
+          Teste em Lote (Bulk)
+        </button>
       </div>
 
-      <div className="form-group">
-        <label htmlFor="expected">Saída Esperada (Opcional)</label>
-        <textarea
-          id="expected"
-          value={expectedOutput}
-          onChange={(e) => setExpectedOutput(e.target.value)}
-          placeholder="Se definido, será comparado com a saída real"
-          rows={3}
-        />
-      </div>
+      <form className="test-runner" onSubmit={handleSubmit}>
+        <h3>{mode === 'single' ? 'Executar Teste' : 'Executar Testes em Lote'}</h3>
 
-      <button type="submit" disabled={loading} className="btn btn-primary">
-        {loading ? 'Executando...' : 'Executar Teste'}
-      </button>
-    </form>
+        {error && <Alert type="error" message={error} onClose={() => setError(null)} />}
+
+        <div className="form-group">
+          <label htmlFor="input">
+            {mode === 'single' ? 'Entrada de Teste' : 'Entradas de Teste (uma por linha)'}
+          </label>
+          <textarea
+            id="input"
+            value={testInput}
+            onChange={(e) => setTestInput(e.target.value)}
+            placeholder={mode === 'single' ? "Digite o texto de entrada..." : "Entrada 1\nEntrada 2\nEntrada 3..."}
+            required
+            rows={mode === 'single' ? 4 : 8}
+          />
+          {mode === 'bulk' && <small className="text-muted">Cada linha será executada como um teste independente.</small>}
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="expected">Saída Esperada (Opcional)</label>
+          <textarea
+            id="expected"
+            value={expectedOutput}
+            onChange={(e) => setExpectedOutput(e.target.value)}
+            placeholder="Se definido, será comparado com a saída real"
+            rows={3}
+          />
+        </div>
+
+        <button type="submit" disabled={loading} className="btn btn-primary">
+          {loading ? 'Processando...' : mode === 'single' ? 'Executar Teste' : `Executar ${testInput.split('\n').filter(l => l.trim()).length} Testes`}
+        </button>
+      </form>
+    </div>
   );
 };
 

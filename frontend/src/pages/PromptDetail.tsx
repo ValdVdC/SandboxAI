@@ -6,6 +6,7 @@ import VersionList from '../components/VersionList';
 import TestRunner from '../components/TestRunner';
 import TestResults from '../components/TestResults';
 import TestHistory from '../components/TestHistory';
+import BulkResults from '../components/BulkResults';
 import CreateVersion from '../components/CreateVersion';
 import { usePromptDetail } from '../hooks/useApiData';
 import { PromptVersion } from '../types';
@@ -20,6 +21,7 @@ const PromptDetail: React.FC = () => {
   const [versions, setVersions] = useState<PromptVersion[]>([]);
   const [versionsLoading, setVersionsLoading] = useState(true);
   const [activeTest, setActiveTest] = useState<string | null>(null);
+  const [bulkTestIds, setBulkTestIds] = useState<string[] | null>(null);
   const [compareMode, setCompareMode] = useState(false);
   const [showCreateVersion, setShowCreateVersion] = useState(false);
   const [showTestHistory, setShowTestHistory] = useState(false);
@@ -103,7 +105,9 @@ const PromptDetail: React.FC = () => {
           </div>
 
           <div className="main-content">
-            {activeTest ? (
+            {bulkTestIds ? (
+              <BulkResults testIds={bulkTestIds} onBack={() => setBulkTestIds(null)} />
+            ) : activeTest ? (
               <TestResults testId={activeTest} autoRefresh={true} onBack={() => setActiveTest(null)} />
             ) : (
               <>
@@ -174,13 +178,19 @@ const PromptDetail: React.FC = () => {
                     onCancel={() => setShowCreateVersion(false)}
                   />
                 ) : showTestHistory && selectedVersion ? (
-                  <TestHistory key={`${id}-${selectedVersion.version}`} promptId={id} versionNumber={selectedVersion.version} />
+                  <TestHistory 
+                    key={`${id}-${selectedVersion.version}`} 
+                    promptId={id} 
+                    versionNumber={selectedVersion.version}
+                    onViewBatch={(ids) => setBulkTestIds(ids)}
+                  />
                 ) : (
                   <TestRunner
                     promptId={id}
                     versionId={selectedVersion?.id || ''}
                     versionNumber={selectedVersion?.version || prompt.current_version}
                     onTestStarted={setActiveTest}
+                    onBulkStarted={(ids) => setBulkTestIds(ids)}
                   />
                 )}
 
