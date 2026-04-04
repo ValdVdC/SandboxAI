@@ -63,9 +63,7 @@ async def startup_event():
             status_row = result.mappings().one()
 
             if not status_row["has_users"] or not status_row["has_alembic"]:
-                raise RuntimeError(
-                    "Critical database schema is missing (users/alembic_version)."
-                )
+                raise RuntimeError("Critical database schema is missing (users/alembic_version).")
         print("✅ Database connection validated")
     except Exception as e:
         print(f"❌ Database connection failed: {e}")

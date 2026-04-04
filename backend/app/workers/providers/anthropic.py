@@ -44,10 +44,8 @@ class AnthropicProvider(BaseProvider):
                 max_tokens=2048,
                 temperature=0.7,
                 system="You are a helpful assistant.",
-                messages=[
-                    {"role": "user", "content": prompt}
-                ],
-                timeout=timeout
+                messages=[{"role": "user", "content": prompt}],
+                timeout=timeout,
             )
 
             # Calculate metrics
@@ -59,7 +57,7 @@ class AnthropicProvider(BaseProvider):
             input_tokens = usage.input_tokens
             output_tokens = usage.output_tokens
             tokens_used = input_tokens + output_tokens
-            
+
             # Simple cost estimation (Claude 3.5 Sonnet pricing)
             # Input: $3 per 1M tokens | Output: $15 per 1M tokens
             cost_usd = (input_tokens * 3.00 + output_tokens * 15.00) / 1_000_000

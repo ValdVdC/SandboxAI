@@ -38,7 +38,7 @@ class OpenAIProvider(BaseProvider):
         start_time = time.time()
 
         try:
-            # Call OpenAI API (Sync call in async method - wrapped in loop.run_in_executor in production usually, 
+            # Call OpenAI API (Sync call in async method - wrapped in loop.run_in_executor in production usually,
             # but here it's running inside a worker's own event loop)
             # In a more robust implementation we'd use AsyncOpenAI
             response = self.client.chat.completions.create(
@@ -49,7 +49,7 @@ class OpenAIProvider(BaseProvider):
                 ],
                 max_tokens=2048,
                 temperature=0.7,
-                timeout=timeout
+                timeout=timeout,
             )
 
             # Calculate metrics
@@ -59,12 +59,12 @@ class OpenAIProvider(BaseProvider):
             # Extract token usage
             usage = response.usage
             tokens_used = usage.total_tokens if usage else 0
-            
+
             # Simple cost estimation (GPT-4o values - update as needed)
             # GPT-4o: ~$5.00 per 1M input, ~$15.00 per 1M output
             input_tokens = usage.prompt_tokens if usage else 0
             output_tokens = usage.completion_tokens if usage else 0
-            
+
             # Default to GPT-4o pricing
             cost_usd = (input_tokens * 5.00 + output_tokens * 15.00) / 1_000_000
 
