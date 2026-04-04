@@ -61,7 +61,6 @@ const TestExecution: React.FC = () => {
               <h1>Executar Teste - v{firstVersion.version}</h1>
               <TestRunner
                 promptId={promptId}
-                versionId={firstVersion.id}
                 versionNumber={firstVersion.version}
                 onTestStarted={setActiveTest}
               />
