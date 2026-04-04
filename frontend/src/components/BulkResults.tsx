@@ -12,7 +12,6 @@ const BulkResults: React.FC<BulkResultsProps> = ({ testIds, onBack }) => {
   const [results, setResults] = useState<TestResult[]>([]);
   const [loading, setLoading] = useState(true);
   const [polling, setPolling] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -41,7 +40,6 @@ const BulkResults: React.FC<BulkResultsProps> = ({ testIds, onBack }) => {
         }
       } catch (err) {
         console.error('Failed to fetch bulk results:', err);
-        // Don't crash the app, just stop polling if it's a serious error
         if (err instanceof Error && err.message.includes('401')) {
           setPolling(false);
         }
@@ -54,14 +52,15 @@ const BulkResults: React.FC<BulkResultsProps> = ({ testIds, onBack }) => {
     
     let interval: number | undefined;
     if (polling) {
-      interval = window.setInterval(fetchResults, 3000); // Increased to 3s for stability
+      interval = window.setInterval(fetchResults, 3000);
     }
     
     return () => {
       isMounted = false;
       if (interval) clearInterval(interval);
     };
-  }, [testIds, polling, results.length]); // Added results.length to trigger check correctly
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [testIds, polling]); 
 
   const completedCount = results.filter(r => r.status === 'completed').length;
   const failedCount = results.filter(r => r.status === 'failed').length;

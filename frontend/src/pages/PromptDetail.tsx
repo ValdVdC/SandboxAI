@@ -187,7 +187,6 @@ const PromptDetail: React.FC = () => {
                 ) : (
                   <TestRunner
                     promptId={id}
-                    versionId={selectedVersion?.id || ''}
                     versionNumber={selectedVersion?.version || prompt.current_version}
                     onTestStarted={setActiveTest}
                     onBulkStarted={(ids) => setBulkTestIds(ids)}

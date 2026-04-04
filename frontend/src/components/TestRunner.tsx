@@ -5,13 +5,12 @@ import '../styles/TestRunner.css';
 
 interface TestRunnerProps {
   promptId: string;
-  versionId: string;
   versionNumber: number;
   onTestStarted: (testId: string) => void;
   onBulkStarted?: (testIds: string[]) => void;
 }
 
-const TestRunner: React.FC<TestRunnerProps> = ({ promptId, versionId, versionNumber, onTestStarted, onBulkStarted }) => {
+const TestRunner: React.FC<TestRunnerProps> = ({ promptId, versionNumber, onTestStarted, onBulkStarted }) => {
   const [testInput, setTestInput] = useState('');
   const [expectedOutput, setExpectedOutput] = useState('');
   const [loading, setLoading] = useState(false);
