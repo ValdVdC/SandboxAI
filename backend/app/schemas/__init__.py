@@ -145,11 +145,28 @@ class TestExecuteRequest(BaseModel):
     expected: Optional[str] = None
 
 
+class TestBulkExecuteRequest(BaseModel):
+    """Schema for executing tests in bulk."""
+
+    inputs: list[str]
+    expected: Optional[str] = None
+
+
+class TestBulkResponse(BaseModel):
+    """Schema for bulk test execution response."""
+
+    test_ids: list[str]
+    celery_task_ids: list[str]
+    total_queued: int
+    message: str
+
+
 class TestResultResponse(BaseModel):
     """Schema for test result response."""
 
     id: UUID
     version_id: UUID
+    batch_id: Optional[UUID] = None
     input: str
     output: Optional[str]
     expected: Optional[str]

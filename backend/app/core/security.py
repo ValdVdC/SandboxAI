@@ -1,7 +1,7 @@
 """Security utilities for authentication and password handling."""
 
 import os
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 from uuid import UUID
 
@@ -10,7 +10,8 @@ from passlib.context import CryptContext
 from pydantic import ValidationError
 
 # Configuration
-JWT_SECRET = os.getenv("JWT_SECRET", "change-me-in-production-insecure-key")
+# Use a more secure placeholder or raise an error if not set in production
+JWT_SECRET = os.getenv("JWT_SECRET", "DEVELOPMENT_INSECURE_KEY_REPLACE_IN_PROD")
 JWT_EXPIRE_HOURS = int(os.getenv("JWT_EXPIRE_HOURS", "24"))
 ALGORITHM = "HS256"
 
@@ -66,7 +67,7 @@ def create_access_token(
     if expires_delta is None:
         expires_delta = timedelta(hours=JWT_EXPIRE_HOURS)
 
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     expire = now + expires_delta
 
     payload = {

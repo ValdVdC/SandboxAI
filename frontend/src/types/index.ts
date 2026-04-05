@@ -73,6 +73,7 @@ export interface TestExecution {
 export interface TestResult {
   id: string;
   version_id: string;
+  batch_id?: string;
   input: string;
   output?: string;
   expected?: string;

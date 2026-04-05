@@ -2,8 +2,7 @@
 
 import logging
 import os
-from datetime import datetime
-from typing import Optional
+from datetime import datetime, timezone
 from uuid import UUID
 
 from sqlalchemy import select, update
@@ -12,8 +11,10 @@ from sqlalchemy.orm import sessionmaker
 
 from app.models import TestResult
 from app.workers.config import celery_app
+from app.workers.providers.anthropic import AnthropicProvider
 from app.workers.providers.groq import GroqProvider
 from app.workers.providers.ollama import OllamaProvider
+from app.workers.providers.openai import OpenAIProvider
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -118,7 +119,7 @@ async def _execute_test_async(
             stmt = (
                 update(TestResult)
                 .where(TestResult.id == test_id)
-                .values(status="running", updated_at=datetime.utcnow())
+                .values(status="running", updated_at=datetime.now(timezone.utc))
             )
             await db.execute(stmt)
             await db.commit()
@@ -130,21 +131,12 @@ async def _execute_test_async(
 
     # Interpolate prompt with test input
     # Support both Python format style {input} and Jinja2 style {{input}}
-    if test_input:
-        try:
-            # Try Python format style: {input}
-            final_prompt = prompt_content.format(input=test_input)
-        except (KeyError, ValueError):
-            try:
-                # Try Jinja2 style: {{input}} → convert to {input} and format
-                final_prompt = prompt_content.replace("{{input}}", "{input}").format(
-                    input=test_input
-                )
-            except (KeyError, ValueError):
-                # If template doesn't have placeholders, use as-is
-                final_prompt = prompt_content
-    else:
-        final_prompt = prompt_content
+    # We use a safer approach to avoid KeyError with extra braces in the prompt
+    final_prompt = prompt_content
+    if test_input is not None:
+        # Replace both styles if present
+        final_prompt = final_prompt.replace("{{input}}", str(test_input))
+        final_prompt = final_prompt.replace("{input}", str(test_input))
 
     # Execute provider (outside database session to avoid conflicts)
     try:
@@ -162,7 +154,7 @@ async def _execute_test_async(
                     .values(
                         status="failed",
                         error_message=str(e)[:500],
-                        updated_at=datetime.utcnow(),
+                        updated_at=datetime.now(timezone.utc),
                     )
                 )
                 await db.execute(stmt)
@@ -185,7 +177,7 @@ async def _execute_test_async(
                     cost_usd=result.cost_usd,
                     status="completed",
                     error_message=None,
-                    updated_at=datetime.utcnow(),
+                    updated_at=datetime.now(timezone.utc),
                 )
             )
             await db.execute(stmt)
@@ -211,7 +203,7 @@ def _get_provider(provider_name: str):
     Factory function to get the appropriate provider instance.
 
     Args:
-        provider_name: Name of the provider ("groq" or "ollama")
+        provider_name: Name of the provider ("groq", "ollama", "openai", "anthropic")
 
     Returns:
         Provider instance
@@ -219,10 +211,15 @@ def _get_provider(provider_name: str):
     Raises:
         ValueError: If provider is not supported
     """
-    if provider_name.lower() == "groq":
+    provider_name = provider_name.lower()
+    if provider_name == "groq":
         return GroqProvider()
-    elif provider_name.lower() == "ollama":
+    elif provider_name == "ollama":
         return OllamaProvider()
+    elif provider_name == "openai":
+        return OpenAIProvider()
+    elif provider_name == "anthropic":
+        return AnthropicProvider()
     else:
         raise ValueError(f"Unsupported provider: {provider_name}")
 
@@ -269,7 +266,7 @@ async def _cleanup_stale_tests_async(hours: int):
 
     async with AsyncSessionLocal() as db:
         # Find tests stuck in "running" status
-        stale_threshold = datetime.utcnow() - timedelta(hours=hours)
+        stale_threshold = datetime.now(timezone.utc) - timedelta(hours=hours)
 
         # Update stale running tests to failed
         await db.execute(

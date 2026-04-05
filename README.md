@@ -125,6 +125,8 @@ cp .env.example .env
 
 Edite o arquivo `.env` com suas chaves de API (veja [ENVIRONMENT.md](./ENVIRONMENT.md)).
 
+Garanta que o `.env` contenha `COMPOSE_PROJECT_NAME=sandboxai` para manter nomes estáveis de volumes e evitar criação acidental de um banco "novo" em outro contexto.
+
 ### 3. Suba os cointainers e escolha a configuração de deployment
 
 **Sem Ollama Local (padrão - economiza CPU/storage)**
@@ -151,6 +153,11 @@ Use quando: quer testar prompts localmente sem API keys ou com modelos específi
 - Frontend (Vite): mudanças em TypeScript/React refletem em ~100ms
 - Backend (FastAPI): mudanças em Python refletem em ~1s
 - Use `--build` apenas se alterar Dockerfile, requirements.txt ou docker-compose.yml
+
+**Persistência de dados:**
+- `docker compose down` preserva o banco.
+- `docker compose down -v` remove volumes e apaga os dados.
+- `docker system prune` deve ser usado com cuidado e sempre com backup quando houver dados importantes.
 
 **Produção (APIs cloud apenas)**
 ```bash

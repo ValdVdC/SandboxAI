@@ -61,17 +61,14 @@ const PromptEditor: React.FC<PromptEditorProps> = ({
   useEffect(() => {
     const fetchProviderStatus = async () => {
       try {
-        const response = await fetch('http://localhost:8000/providers/status');
-        if (response.ok) {
-          const status = await response.json();
-          setProviderStatus(status);
-          
-          // If current provider is not available, switch to first available one
-          if (!status[provider]?.available) {
-            const firstAvailable = Object.keys(status).find(p => status[p].available);
-            if (firstAvailable) {
-              setProvider(firstAvailable);
-            }
+        const status = await apiClient.getProviderStatus();
+        setProviderStatus(status);
+        
+        // If current provider is not available, switch to first available one
+        if (!status[provider]?.available) {
+          const firstAvailable = Object.keys(status).find(p => status[p].available);
+          if (firstAvailable) {
+            setProvider(firstAvailable);
           }
         }
       } catch (err) {

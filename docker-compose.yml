@@ -155,4 +155,6 @@ networks:
 
 volumes:
   postgres_data:
+    name: sandboxai_postgres_data
   redis_data:
+    name: sandboxai_redis_data

@@ -1,6 +1,5 @@
 """Authentication endpoints — registration and login."""
 
-from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
@@ -14,7 +13,12 @@ from app.schemas import TokenResponse, UserLogin, UserRegister, UserResponse
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 
-@router.post("/register", response_model=TokenResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/register",
+    response_model=TokenResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Registrar novo usuário",
+)
 async def register(
     user_data: UserRegister,
     db: AsyncSession = Depends(get_db),
@@ -70,7 +74,7 @@ async def register(
     )
 
 
-@router.post("/login", response_model=TokenResponse)
+@router.post("/login", response_model=TokenResponse, summary="Login do usuário")
 async def login(
     credentials: UserLogin,
     db: AsyncSession = Depends(get_db),
@@ -145,7 +149,6 @@ async def get_current_user(
     Raises:
         HTTPException: If token is invalid or user not found
     """
-    from fastapi import Header
 
     from app.core.security import JWTError, extract_user_id_from_token
 

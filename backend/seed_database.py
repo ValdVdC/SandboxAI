@@ -10,7 +10,6 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 from app.models import User
 from app.core.security import hash_password
-from app.core.database import Base
 
 
 async def seed_database():

@@ -29,10 +29,8 @@ def run_migrations():
         print("✅ Migrations completed successfully!")
         return 0
     except Exception as e:
-        print(f"⚠️  Migration warning: {e}", file=sys.stderr)
-        # Don't fail completely, migrations might already be applied
-        # This is important for idempotency
-        return 0
+        print(f"❌ Migration failed: {e}", file=sys.stderr)
+        return 1
 
 if __name__ == "__main__":
     sys.exit(run_migrations())

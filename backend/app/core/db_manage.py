@@ -6,7 +6,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from app.core.database import dispose_engine, engine
+from app.core.database import engine
 from app.models import Base
 
 
@@ -18,7 +18,6 @@ async def init_database():
     """
     # Run Alembic upgrade to latest revision
     backend_dir = Path(__file__).parent.parent.parent
-    alembic_dir = backend_dir / "alembic"
 
     # Prepare environment for Alembic
     env = os.environ.copy()
@@ -41,8 +40,6 @@ async def init_database():
             await conn.run_sync(Base.metadata.create_all)
     else:
         print("Database migration completed successfully")
-
-    await dispose_engine()
 
 
 async def create_migration(message: str) -> None:

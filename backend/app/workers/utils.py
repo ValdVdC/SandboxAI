@@ -2,7 +2,7 @@
 
 import logging
 import os
-from typing import Optional, Tuple
+from typing import Optional
 from uuid import UUID
 
 from sqlalchemy import select

@@ -21,6 +21,7 @@ class TestResult(BaseModel):
         nullable=False,
         index=True,
     )
+    batch_id = Column(UUID(as_uuid=True), nullable=True, index=True)  # To group bulk tests
     input = Column(Text, nullable=False)
     output = Column(Text, nullable=True)
     expected = Column(Text, nullable=True)

@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import Loading from '../components/Loading';
 import VersionList from '../components/VersionList';
 import TestRunner from '../components/TestRunner';
 import TestResults from '../components/TestResults';
 import TestHistory from '../components/TestHistory';
+import BulkResults from '../components/BulkResults';
+import PromptAnalytics from '../components/PromptAnalytics';
 import CreateVersion from '../components/CreateVersion';
 import { usePromptDetail } from '../hooks/useApiData';
 import { PromptVersion } from '../types';
@@ -14,14 +16,17 @@ import '../styles/PromptDetail.css';
 
 const PromptDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const { prompt, loading, error } = usePromptDetail(id || '');
   const [selectedVersion, setSelectedVersion] = useState<PromptVersion | null>(null);
   const [versions, setVersions] = useState<PromptVersion[]>([]);
   const [versionsLoading, setVersionsLoading] = useState(true);
   const [activeTest, setActiveTest] = useState<string | null>(null);
+  const [bulkTestIds, setBulkTestIds] = useState<string[] | null>(null);
   const [compareMode, setCompareMode] = useState(false);
   const [showCreateVersion, setShowCreateVersion] = useState(false);
   const [showTestHistory, setShowTestHistory] = useState(false);
+  const [showAnalytics, setShowAnalytics] = useState(false);
   const [versionRefreshTrigger, setVersionRefreshTrigger] = useState(0);
 
   // Load versions and auto-select LATEST one
@@ -102,8 +107,27 @@ const PromptDetail: React.FC = () => {
           </div>
 
           <div className="main-content">
-            {activeTest ? (
-              <TestResults testId={activeTest} autoRefresh={true} onBack={() => setActiveTest(null)} />
+            {bulkTestIds ? (
+              <BulkResults 
+                promptId={id || ''} 
+                versionNumber={selectedVersion?.version || prompt.current_version}
+                testIds={bulkTestIds} 
+                onBack={() => setBulkTestIds(null)} 
+              />
+            ) : activeTest ? (
+              <TestResults 
+                promptId={id || ''}
+                versionNumber={selectedVersion?.version || prompt.current_version}
+                testId={activeTest} 
+                autoRefresh={true} 
+                onBack={() => setActiveTest(null)} 
+              />
+            ) : showAnalytics ? (
+              <PromptAnalytics 
+                promptId={id || ''} 
+                selectedVersionNumber={selectedVersion?.version}
+                onBack={() => setShowAnalytics(false)} 
+              />
             ) : (
               <>
                 {selectedVersion && (
@@ -131,10 +155,11 @@ const PromptDetail: React.FC = () => {
 
                 <div className="version-actions">
                   <button
-                    className={`tab-btn ${!showCreateVersion && !showTestHistory ? 'active' : ''}`}
+                    className={`tab-btn ${!showCreateVersion && !showTestHistory && !showAnalytics ? 'active' : ''}`}
                     onClick={() => {
                       setShowCreateVersion(false);
                       setShowTestHistory(false);
+                      setShowAnalytics(false);
                     }}
                   >
                     Executar Teste
@@ -144,18 +169,36 @@ const PromptDetail: React.FC = () => {
                     onClick={() => {
                       setShowTestHistory(true);
                       setShowCreateVersion(false);
+                      setShowAnalytics(false);
                     }}
                   >
                     Histórico de Testes
+                  </button>
+                  <button
+                    className={`tab-btn ${showAnalytics ? 'active' : ''}`}
+                    onClick={() => {
+                      setShowAnalytics(true);
+                      setShowTestHistory(false);
+                      setShowCreateVersion(false);
+                    }}
+                  >
+                    Analytics
                   </button>
                   <button
                     className={`tab-btn ${showCreateVersion ? 'active' : ''}`}
                     onClick={() => {
                       setShowCreateVersion(true);
                       setShowTestHistory(false);
+                      setShowAnalytics(false);
                     }}
                   >
                     + Nova Versão
+                  </button>
+                  <button
+                    className="tab-btn"
+                    onClick={() => navigate(`/prompts/${id}/compare`)}
+                  >
+                    Comparar Versões
                   </button>
                 </div>
 
@@ -167,13 +210,18 @@ const PromptDetail: React.FC = () => {
                     onCancel={() => setShowCreateVersion(false)}
                   />
                 ) : showTestHistory && selectedVersion ? (
-                  <TestHistory key={`${id}-${selectedVersion.version}`} promptId={id} versionNumber={selectedVersion.version} />
+                  <TestHistory 
+                    key={`${id}-${selectedVersion.version}`} 
+                    promptId={id} 
+                    versionNumber={selectedVersion.version}
+                    onViewBatch={(ids) => setBulkTestIds(ids)}
+                  />
                 ) : (
                   <TestRunner
                     promptId={id}
-                    versionId={selectedVersion?.id || ''}
                     versionNumber={selectedVersion?.version || prompt.current_version}
                     onTestStarted={setActiveTest}
+                    onBulkStarted={(ids) => setBulkTestIds(ids)}
                   />
                 )}
 

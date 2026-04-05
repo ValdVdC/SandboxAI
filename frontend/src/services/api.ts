@@ -65,7 +65,7 @@ class ApiClient {
   }
 
   async getProfile(): Promise<User> {
-    const response = await this.client.get<User>('/auth/profile');
+    const response = await this.client.get<User>('/auth/me');
     return response.data;
   }
 
@@ -75,9 +75,9 @@ class ApiClient {
     return response.data;
   }
 
-  async listPrompts(search?: string, skip: number = 0, limit: number = 20): Promise<PaginatedResponse<Prompt>> {
+  async listPrompts(search?: string, page: number = 1, per_page: number = 20): Promise<PaginatedResponse<Prompt>> {
     const response = await this.client.get<PaginatedResponse<Prompt>>('/prompts', {
-      params: { search, skip, limit },
+      params: { search, page, per_page },
     });
     return response.data;
   }
@@ -88,7 +88,7 @@ class ApiClient {
   }
 
   async updatePrompt(id: string, data: UpdatePromptRequest): Promise<Prompt> {
-    const response = await this.client.put<Prompt>(`/prompts/${id}`, data);
+    const response = await this.client.patch<Prompt>(`/prompts/${id}`, data);
     return response.data;
   }
 
@@ -145,6 +145,37 @@ class ApiClient {
     return response.data;
   }
 
+  async executeBulkTests(
+    promptId: string,
+    versionNum: number,
+    data: { inputs: string[]; expected?: string }
+  ): Promise<{ test_ids: string[]; celery_task_ids: string[]; total_queued: number; message: string }> {
+    const response = await this.client.post(
+      `/prompts/${promptId}/versions/${versionNum}/tests/bulk`,
+      data
+    );
+    return response.data;
+  }
+
+  async exportTests(promptId: string, versionNum: number, batchId?: string): Promise<void> {
+    const params = batchId ? { batch_id: batchId } : {};
+    const response = await this.client.get(
+      `/prompts/${promptId}/versions/${versionNum}/export`,
+      { params, responseType: 'blob' }
+    );
+    
+    // Create a link and trigger download
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement('a');
+    link.href = url;
+    
+    const filename = batchId ? `batch_${batchId}.csv` : `prompt_${promptId}_v${versionNum}.csv`;
+    link.setAttribute('download', filename);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  }
+
   async getTestExecution(id: string): Promise<TestExecution> {
     const response = await this.client.get<TestExecution>(`/prompts/tests/${id}`);
     return response.data;
@@ -158,7 +189,7 @@ class ApiClient {
   }
 
   async getTestResult(testId: string): Promise<TestResult> {
-    const response = await this.client.get<TestResult>(`/tests/${testId}/result`);
+    const response = await this.client.get<TestResult>(`/prompts/tests/${testId}`);
     return response.data;
   }
 
@@ -169,7 +200,36 @@ class ApiClient {
   }
 
   async getPromptMetrics(promptId: string): Promise<PromptMetrics> {
-    const response = await this.client.get<PromptMetrics>(`/prompts/${promptId}/metrics`);
+    const response = await this.client.get<PromptMetrics>(`/metrics/by-prompt/${promptId}`);
+    return response.data;
+  }
+
+  async compareVersions(v1Id: string, v2Id: string): Promise<{
+    v1: { total_tests: number; avg_latency: number; avg_tokens: number; avg_cost: number; success_rate: number };
+    v2: { total_tests: number; avg_latency: number; avg_tokens: number; avg_cost: number; success_rate: number };
+  }> {
+    const response = await this.client.get(`/metrics/compare-versions/${v1Id}/${v2Id}`);
+    return response.data;
+  }
+
+  async getPromptEvolution(promptId: string): Promise<Array<{
+    version: number;
+    avg_latency: number;
+    avg_cost: number;
+    avg_tokens: number;
+    test_count: number;
+    success_count: number;
+    fail_count: number;
+  }>> {
+    const response = await this.client.get(`/metrics/prompt-evolution/${promptId}`);
+    return response.data;
+  }
+
+  // Providers
+  async getProviderStatus(): Promise<Record<string, { available: boolean; reason: string }>> {
+    const response = await this.client.get<Record<string, { available: boolean; reason: string }>>(
+      '/providers/status'
+    );
     return response.data;
   }
 

@@ -68,7 +68,7 @@ const AppRoutes: React.FC = () => {
         }
       />
       <Route
-        path="/compare"
+        path="/prompts/:id/compare"
         element={
           <PrivateRoute>
             <VersionComparison />

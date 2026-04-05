@@ -1,5 +1,5 @@
 """
-🚀 SandboxAI — Backend FastAPI
+SandboxAI — Backend FastAPI
 
 Aplicação principal para versionamento e teste de prompts para LLMs.
 """

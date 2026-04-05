@@ -1,34 +1,111 @@
 """
-🚀 SandboxAI — Backend FastAPI
+SandboxAI — Backend FastAPI
 
 Aplicação principal para versionamento e teste de prompts para LLMs.
 """
 
-import asyncio
+import os
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.openapi.utils import get_openapi
 from fastapi.responses import JSONResponse
+from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy import text
 
 from app.api import auth, metrics, prompts, providers, tests, versions
 from app.core.database import dispose_engine, engine
 
+# Tags metadata for better organization
+tags_metadata = [
+    {
+        "name": "Authentication",
+        "description": "Autenticação de usuários e gerenciamento de tokens JWT.",
+    },
+    {
+        "name": "Prompts",
+        "description": "Gerenciamento dos projetos de prompts (CRUD).",
+    },
+    {
+        "name": "Versions",
+        "description": "Controle de versionamento histórico dos prompts.",
+    },
+    {
+        "name": "Tests",
+        "description": "Execução de testes individuais e em lote (Bulk Testing).",
+    },
+    {
+        "name": "Metrics",
+        "description": "Métricas de performance, custos e evolução histórica.",
+    },
+    {
+        "name": "providers",
+        "description": "Status e configuração de provedores de LLM (OpenAI, Groq, Ollama).",
+    },
+]
+
 # Criar aplicação FastAPI
 app = FastAPI(
     title="SandboxAI API",
-    description="Plataforma de versionamento, teste e comparação de prompts para LLMs",
+    description="""
+SandboxAI é uma plataforma avançada para engenharia de prompts.
+
+Utilize o botão **Authorize** para autenticar com seu token JWT.
+""",
     version="1.0.0",
+    openapi_tags=tags_metadata,
+    contact={
+        "name": "SandboxAI Support",
+        "url": "https://github.com/ValdVdC/SandboxAI",
+    },
+    license_info={
+        "name": "MIT",
+    },
     servers=[
         {"url": "http://localhost:8000", "description": "Local development"},
         {"url": "http://api:8000", "description": "Docker environment"},
     ],
 )
 
+
+# Enable Authorize button in Swagger UI
+def custom_openapi():
+    if app.openapi_schema:
+        return app.openapi_schema
+    openapi_schema = get_openapi(
+        title=app.title,
+        version=app.version,
+        description=app.description,
+        routes=app.routes,
+        tags=app.openapi_tags,
+    )
+    openapi_schema["components"]["securitySchemes"] = {
+        "BearerAuth": {
+            "type": "http",
+            "scheme": "bearer",
+            "bearerFormat": "JWT",
+        }
+    }
+    for path in openapi_schema["paths"]:
+        for method in openapi_schema["paths"][path]:
+            openapi_schema["paths"][path][method]["security"] = [{"BearerAuth": []}]
+    app.openapi_schema = openapi_schema
+    return app.openapi_schema
+
+
+app.openapi = custom_openapi
+
 # Middleware CORS
+allowed_origins = [
+    origin.strip()
+    for origin in os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:5173").split(
+        ","
+    )
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Em produção, configurar com variáveis de ambiente
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -47,14 +124,33 @@ app.include_router(providers.router)
 # Startup and shutdown events
 @app.on_event("startup")
 async def startup_event():
-    """Validate database connection on startup (migrations already run)."""
-    print("🚀 Validating database connection...")
+    """Validate database connection on startup."""
+    print("Validating database connection...")
     try:
         async with engine.begin() as conn:
             await conn.execute(text("SELECT 1"))
-        print("✅ Database connection validated")
+
+            # Check if tables exist
+            tables_stmt = text(
+                """
+                SELECT
+                    to_regclass('public.users') IS NOT NULL AS has_users,
+                    to_regclass('public.alembic_version') IS NOT NULL AS has_alembic
+                """
+            )
+            result = await conn.execute(tables_stmt)
+            status_row = result.mappings().one()
+
+            if not status_row["has_users"] or not status_row["has_alembic"]:
+                print("❌ Critical database schema is missing (users/alembic_version).")
+                print("Please run migrations manually: alembic upgrade head")
+                # We raise error here to stop startup without modifying anything
+                raise RuntimeError("Database schema missing. Manual intervention required.")
+
+            print("✅ Database connection validated")
     except Exception as e:
         print(f"❌ Database connection failed: {e}")
+        raise
 
 
 @app.on_event("shutdown")

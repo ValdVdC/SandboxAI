@@ -4,7 +4,7 @@ from decimal import Decimal
 from typing import List
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -16,7 +16,7 @@ from app.schemas import MetricsResponse, ProviderMetricsResponse
 router = APIRouter(prefix="/metrics", tags=["Metrics"])
 
 
-@router.get("", response_model=MetricsResponse)
+@router.get("/", response_model=MetricsResponse, summary="Obter métricas globais")
 async def get_metrics(
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
@@ -155,7 +155,7 @@ async def get_provider_metrics(
     return metrics
 
 
-@router.get("/by-prompt/{prompt_id}", response_model=MetricsResponse)
+@router.get("/by-prompt/{prompt_id}", response_model=MetricsResponse, summary="Métricas por prompt")
 async def get_prompt_metrics(
     prompt_id: UUID,
     user: User = Depends(get_current_user),
@@ -176,7 +176,7 @@ async def get_prompt_metrics(
         HTTPException: If prompt not found or user doesn't own it
     """
     # Validate ownership
-    prompt = await get_user_prompt(prompt_id, user, db)
+    await get_user_prompt(prompt_id, user, db)
 
     # Get versions count
     versions_stmt = (
@@ -236,3 +236,113 @@ async def get_prompt_metrics(
         tests_failed=tests_failed,
         tests_pending=tests_pending,
     )
+
+
+@router.get("/compare-versions/{v1_id}/{v2_id}", summary="Comparar duas versões")
+async def compare_versions(
+    v1_id: UUID,
+    v2_id: UUID,
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Compare performance metrics between two versions.
+
+    Args:
+        v1_id: ID of first version
+        v2_id: ID of second version
+        user: Current authenticated user
+        db: Database session
+
+    Returns:
+        Comparison metrics for both versions
+    """
+
+    async def get_version_stats(version_id: UUID):
+        stmt = (
+            select(
+                func.count(TestResult.id).label("count"),
+                func.avg(TestResult.latency_ms).label("avg_latency"),
+                func.avg(TestResult.tokens_used).label("avg_tokens"),
+                func.avg(TestResult.cost_usd).label("avg_cost"),
+                func.count(TestResult.id)
+                .filter(TestResult.status == "completed")
+                .label("success_count"),
+            )
+            .select_from(TestResult)
+            .where(TestResult.version_id == version_id)
+        )
+        result = await db.execute(stmt)
+        data = result.one()
+
+        return {
+            "total_tests": data.count or 0,
+            "avg_latency": float(data.avg_latency) if data.avg_latency else 0.0,
+            "avg_tokens": float(data.avg_tokens) if data.avg_tokens else 0.0,
+            "avg_cost": float(data.avg_cost) if data.avg_cost else 0.0,
+            "success_rate": (data.success_count / data.count * 100)
+            if data.count and data.count > 0
+            else 0.0,
+        }
+
+    # Fetch stats for both versions
+    v1_stats = await get_version_stats(v1_id)
+    v2_stats = await get_version_stats(v2_id)
+
+    return {
+        "v1": v1_stats,
+        "v2": v2_stats,
+    }
+
+
+@router.get("/prompt-evolution/{prompt_id}", summary="Evolução histórica do prompt")
+async def get_prompt_evolution(
+    prompt_id: UUID,
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Get historical metrics for all versions of a prompt.
+    Useful for trend analysis and charting.
+    """
+    # Validate ownership
+    await get_user_prompt(prompt_id, user, db)
+
+    # Get stats grouped by version number
+    stmt = (
+        select(
+            PromptVersion.version.label("version"),
+            func.avg(TestResult.latency_ms).label("avg_latency"),
+            func.avg(TestResult.cost_usd).label("avg_cost"),
+            func.avg(TestResult.tokens_used).label("avg_tokens"),
+            func.count(TestResult.id).label("test_count"),
+            func.count(TestResult.id)
+            .filter(TestResult.status == "completed")
+            .label("success_count"),
+            func.count(TestResult.id).filter(TestResult.status == "failed").label("fail_count"),
+        )
+        .select_from(PromptVersion)
+        .outerjoin(TestResult, PromptVersion.id == TestResult.version_id)
+        .where(PromptVersion.prompt_id == prompt_id)
+        .group_by(PromptVersion.version)
+        .order_by(PromptVersion.version.asc())
+    )
+
+    result = await db.execute(stmt)
+    rows = result.all()
+
+    evolution_data = []
+    for row in rows:
+        evolution_data.append(
+            {
+                "version": row.version,
+                "avg_latency": float(row.avg_latency) if row.avg_latency else 0.0,
+                "avg_cost": float(row.avg_cost) if row.avg_cost else 0.0,
+                "avg_tokens": float(row.avg_tokens) if row.avg_tokens else 0.0,
+                "test_count": row.test_count or 0,
+                "success_count": row.success_count or 0,
+                "fail_count": row.fail_count or 0,
+            }
+        )
+
+    return evolution_data
