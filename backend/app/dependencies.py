@@ -66,7 +66,7 @@ async def get_current_user(
     """
     try:
         user_id = extract_user_id_from_token(token)
-    except (JWTError, ValueError) as e:
+    except (JWTError, ValueError):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired token",

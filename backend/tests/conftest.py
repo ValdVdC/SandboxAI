@@ -6,7 +6,7 @@ import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from httpx import AsyncClient
 from app.main import app
-from app.models import Base, User, Prompt, PromptVersion, TestResult
+from app.models import Base, User, Prompt, PromptVersion
 from app.core.database import get_db
 
 

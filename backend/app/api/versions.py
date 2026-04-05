@@ -1,6 +1,5 @@
 """Prompt version management endpoints."""
 
-from typing import Optional
 from uuid import UUID, uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -9,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.dependencies import get_current_user, get_user_prompt
-from app.models import Prompt, PromptVersion, User
+from app.models import PromptVersion, User
 from app.schemas import VersionCreate, VersionListResponse, VersionResponse
 
 router = APIRouter(prefix="/prompts", tags=["Versions"])
@@ -145,6 +144,7 @@ async def get_version(
     await get_user_prompt(prompt_id, user, db)
 
     # Get the specific version
+
     stmt = select(PromptVersion).where(
         and_(
             PromptVersion.prompt_id == prompt_id,

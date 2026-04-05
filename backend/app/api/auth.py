@@ -1,6 +1,5 @@
 """Authentication endpoints — registration and login."""
 
-from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
@@ -145,7 +144,6 @@ async def get_current_user(
     Raises:
         HTTPException: If token is invalid or user not found
     """
-    from fastapi import Header
 
     from app.core.security import JWTError, extract_user_id_from_token
 

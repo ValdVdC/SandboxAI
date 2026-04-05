@@ -1,9 +1,7 @@
 """Tests for Celery worker and provider implementations."""
 
 import pytest
-import asyncio
-from unittest.mock import Mock, patch, AsyncMock
-from uuid import uuid4
+from unittest.mock import patch, AsyncMock
 
 from app.workers.providers.groq import GroqProvider
 from app.workers.providers.ollama import OllamaProvider

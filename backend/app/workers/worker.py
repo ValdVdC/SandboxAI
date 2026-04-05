@@ -64,7 +64,7 @@ def start_worker():
     celery_app.worker_main(
         [
             "worker",
-            f"--loglevel=info",
+            "--loglevel=info",
             f"--concurrency={concurrency}",
             "--queues=default,tests,priority",
             "--prefetch-multiplier=1",

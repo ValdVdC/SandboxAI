@@ -1,7 +1,6 @@
 """Test execution and result endpoints."""
 
 from datetime import datetime, timezone
-from typing import Optional
 from uuid import UUID, uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -49,7 +48,7 @@ async def execute_test(
         HTTPException: If prompt/version not found or user doesn't own prompt
     """
     # Validate ownership and get prompt
-    prompt = await get_user_prompt(prompt_id, user, db)
+    await get_user_prompt(prompt_id, user, db)
 
     # Get specific version
     stmt = select(PromptVersion).where(
@@ -125,7 +124,7 @@ async def execute_bulk_tests(
         Summary of queued tests
     """
     # Validate ownership
-    prompt = await get_user_prompt(prompt_id, user, db)
+    await get_user_prompt(prompt_id, user, db)
 
     # Get version
     stmt = select(PromptVersion).where(
@@ -206,7 +205,7 @@ async def list_tests(
         HTTPException: If prompt/version not found or user doesn't own prompt
     """
     # Validate ownership
-    prompt = await get_user_prompt(prompt_id, user, db)
+    await get_user_prompt(prompt_id, user, db)
 
     # Get version
     stmt = select(PromptVersion).where(

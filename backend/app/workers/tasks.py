@@ -3,7 +3,6 @@
 import logging
 import os
 from datetime import datetime, timezone
-from typing import Optional
 from uuid import UUID
 
 from sqlalchemy import select, update

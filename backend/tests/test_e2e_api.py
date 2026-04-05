@@ -1,8 +1,6 @@
 """E2E Tests for API Endpoints."""
 
 import pytest
-from sqlalchemy import select
-from app.models import User, Prompt
 
 
 @pytest.mark.asyncio

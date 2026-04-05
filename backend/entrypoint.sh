@@ -47,8 +47,8 @@ echo "🔄 Running database migrations..."
 python /app/run_migrations.py
 
 # Seed database with test data (development only)
-echo "Seeding database with test data..."
-python /app/seed_database.py
+# echo "Seeding database with test data..."
+# python /app/seed_database.py
 
 # Start the application
 echo "✅ Starting FastAPI server..."

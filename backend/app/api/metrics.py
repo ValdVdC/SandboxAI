@@ -4,7 +4,7 @@ from decimal import Decimal
 from typing import List
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -176,7 +176,7 @@ async def get_prompt_metrics(
         HTTPException: If prompt not found or user doesn't own it
     """
     # Validate ownership
-    prompt = await get_user_prompt(prompt_id, user, db)
+    await get_user_prompt(prompt_id, user, db)
 
     # Get versions count
     versions_stmt = (
@@ -293,3 +293,56 @@ async def compare_versions(
         "v1": v1_stats,
         "v2": v2_stats,
     }
+
+
+@router.get("/prompt-evolution/{prompt_id}")
+async def get_prompt_evolution(
+    prompt_id: UUID,
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Get historical metrics for all versions of a prompt.
+    Useful for trend analysis and charting.
+    """
+    # Validate ownership
+    await get_user_prompt(prompt_id, user, db)
+
+    # Get stats grouped by version number
+    stmt = (
+        select(
+            PromptVersion.version.label("version"),
+            func.avg(TestResult.latency_ms).label("avg_latency"),
+            func.avg(TestResult.cost_usd).label("avg_cost"),
+            func.avg(TestResult.tokens_used).label("avg_tokens"),
+            func.count(TestResult.id).label("test_count"),
+            func.count(TestResult.id)
+            .filter(TestResult.status == "completed")
+            .label("success_count"),
+            func.count(TestResult.id).filter(TestResult.status == "failed").label("fail_count"),
+        )
+        .select_from(PromptVersion)
+        .outerjoin(TestResult, PromptVersion.id == TestResult.version_id)
+        .where(PromptVersion.prompt_id == prompt_id)
+        .group_by(PromptVersion.version)
+        .order_by(PromptVersion.version.asc())
+    )
+
+    result = await db.execute(stmt)
+    rows = result.all()
+
+    evolution_data = []
+    for row in rows:
+        evolution_data.append(
+            {
+                "version": row.version,
+                "avg_latency": float(row.avg_latency) if row.avg_latency else 0.0,
+                "avg_cost": float(row.avg_cost) if row.avg_cost else 0.0,
+                "avg_tokens": float(row.avg_tokens) if row.avg_tokens else 0.0,
+                "test_count": row.test_count or 0,
+                "success_count": row.success_count or 0,
+                "fail_count": row.fail_count or 0,
+            }
+        )
+
+    return evolution_data

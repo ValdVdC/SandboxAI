@@ -26,9 +26,11 @@ Objetivo: entregar uma versão funcional para o seminário de Tópicos Integrado
 
 Objetivo: evoluir para um produto utilizável por outros desenvolvedores.
 
-- [ ] Comparação side-by-side de versões (Visual Diff)
-- [ ] Baterias de testes automatizados (Bulk Testing)
-- [ ] Exportação de resultados em CSV
+- [x] Comparação side-by-side de versões (Visual Diff)
+- [x] Baterias de testes automatizados (Bulk Testing)
+- [x] Comparação de respostas reais (A/B Testing)
+- [x] Dashboard de Analytics Avançado (Trend lines e Confiabilidade)
+- [ ] Exportação de resultados (CSV/JSON)
 - [ ] Documentação da API pública (Swagger/Redoc)
 - [ ] Sandbox Real (Docker-in-Docker para isolamento total)
 - [ ] Pipeline CI/CD completo com GitHub Actions
@@ -45,11 +47,4 @@ Objetivo: transformar em um serviço escalável e monetizável.
 - [ ] Integração com GitHub (importar prompts de repositórios)
 - [ ] Suporte a modelos customizados via fine-tuning
 
----
 
-## 🛠️ Dívida Técnica & Próximos Passos Imediatos
-
-1. **Refatoração de Datas:** Migrar de `utcnow()` para `now(timezone.utc)` (Concluído ✅)
-2. **Segurança JWT:** Remover segredos padrão do código (Concluído ✅)
-3. **Isolamento:** Implementar o runner em Docker conforme planejado originalmente na arquitetura.
-4. **UX:** Implementar o componente de comparação visual na página de `VersionComparison`.

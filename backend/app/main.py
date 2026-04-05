@@ -4,7 +4,6 @@
 Aplicação principal para versionamento e teste de prompts para LLMs.
 """
 
-import asyncio
 import os
 
 from fastapi import FastAPI
@@ -55,11 +54,13 @@ app.include_router(providers.router)
 # Startup and shutdown events
 @app.on_event("startup")
 async def startup_event():
-    """Validate database connection on startup (migrations already run)."""
+    """Validate database connection on startup."""
     print("🚀 Validating database connection...")
     try:
         async with engine.begin() as conn:
             await conn.execute(text("SELECT 1"))
+
+            # Check if tables exist
             tables_stmt = text(
                 """
                 SELECT
@@ -71,8 +72,12 @@ async def startup_event():
             status_row = result.mappings().one()
 
             if not status_row["has_users"] or not status_row["has_alembic"]:
-                raise RuntimeError("Critical database schema is missing (users/alembic_version).")
-        print("✅ Database connection validated")
+                print("❌ Critical database schema is missing (users/alembic_version).")
+                print("Please run migrations manually: alembic upgrade head")
+                # We raise error here to stop startup without modifying anything
+                raise RuntimeError("Database schema missing. Manual intervention required.")
+
+            print("✅ Database connection validated")
     except Exception as e:
         print(f"❌ Database connection failed: {e}")
         raise

@@ -2,7 +2,6 @@
 
 import os
 import time
-from typing import Optional
 
 from groq import Groq
 

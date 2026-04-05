@@ -193,6 +193,19 @@ class ApiClient {
     return response.data;
   }
 
+  async getPromptEvolution(promptId: string): Promise<Array<{
+    version: number;
+    avg_latency: number;
+    avg_cost: number;
+    avg_tokens: number;
+    test_count: number;
+    success_count: number;
+    fail_count: number;
+  }>> {
+    const response = await this.client.get(`/metrics/prompt-evolution/${promptId}`);
+    return response.data;
+  }
+
   // Providers
   async getProviderStatus(): Promise<Record<string, { available: boolean; reason: string }>> {
     const response = await this.client.get<Record<string, { available: boolean; reason: string }>>(
