@@ -157,6 +157,25 @@ class ApiClient {
     return response.data;
   }
 
+  async exportTests(promptId: string, versionNum: number, batchId?: string): Promise<void> {
+    const params = batchId ? { batch_id: batchId } : {};
+    const response = await this.client.get(
+      `/prompts/${promptId}/versions/${versionNum}/export`,
+      { params, responseType: 'blob' }
+    );
+    
+    // Create a link and trigger download
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement('a');
+    link.href = url;
+    
+    const filename = batchId ? `batch_${batchId}.csv` : `prompt_${promptId}_v${versionNum}.csv`;
+    link.setAttribute('download', filename);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  }
+
   async getTestExecution(id: string): Promise<TestExecution> {
     const response = await this.client.get<TestExecution>(`/prompts/tests/${id}`);
     return response.data;

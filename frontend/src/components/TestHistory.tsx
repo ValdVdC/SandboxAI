@@ -22,6 +22,18 @@ const TestHistory: React.FC<TestHistoryProps> = ({ promptId, versionNumber, onVi
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedTest, setSelectedTest] = useState<TestResult | null>(null);
+  const [exporting, setExporting] = useState(false);
+
+  const handleExport = async () => {
+    try {
+      setExporting(true);
+      await apiClient.exportTests(promptId, versionNumber);
+    } catch (err) {
+      console.error('Export failed', err);
+    } finally {
+      setExporting(false);
+    }
+  };
 
   useEffect(() => {
     const fetchTests = async () => {
@@ -85,9 +97,18 @@ const TestHistory: React.FC<TestHistoryProps> = ({ promptId, versionNumber, onVi
 
       {selectedTest ? (
         <div className="test-detail-view">
-          <button className="btn btn-secondary back-btn" onClick={() => setSelectedTest(null)}>
-            ← Voltar
-          </button>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--spacing-lg)' }}>
+            <button className="btn btn-secondary back-btn" style={{ marginBottom: 0 }} onClick={() => setSelectedTest(null)}>
+              ← Voltar
+            </button>
+            <button 
+              className="btn btn-primary btn-small" 
+              onClick={handleExport}
+              disabled={exporting}
+            >
+              {exporting ? 'Exportando...' : 'Exportar Versão'}
+            </button>
+          </div>
           <div className="test-detail">
             <h4>Detalhes do Teste</h4>
             <div className="detail-section">

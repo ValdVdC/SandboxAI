@@ -1,5 +1,5 @@
 """
-🚀 SandboxAI — Backend FastAPI
+SandboxAI — Backend FastAPI
 
 Aplicação principal para versionamento e teste de prompts para LLMs.
 """
@@ -8,22 +8,92 @@ import os
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.openapi.utils import get_openapi
 from fastapi.responses import JSONResponse
+from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy import text
 
 from app.api import auth, metrics, prompts, providers, tests, versions
 from app.core.database import dispose_engine, engine
 
+# Tags metadata for better organization
+tags_metadata = [
+    {
+        "name": "Authentication",
+        "description": "Autenticação de usuários e gerenciamento de tokens JWT.",
+    },
+    {
+        "name": "Prompts",
+        "description": "Gerenciamento dos projetos de prompts (CRUD).",
+    },
+    {
+        "name": "Versions",
+        "description": "Controle de versionamento histórico dos prompts.",
+    },
+    {
+        "name": "Tests",
+        "description": "Execução de testes individuais e em lote (Bulk Testing).",
+    },
+    {
+        "name": "Metrics",
+        "description": "Métricas de performance, custos e evolução histórica.",
+    },
+    {
+        "name": "providers",
+        "description": "Status e configuração de provedores de LLM (OpenAI, Groq, Ollama).",
+    },
+]
+
 # Criar aplicação FastAPI
 app = FastAPI(
     title="SandboxAI API",
-    description="Plataforma de versionamento, teste e comparação de prompts para LLMs",
+    description="""
+SandboxAI é uma plataforma avançada para engenharia de prompts.
+
+Utilize o botão **Authorize** para autenticar com seu token JWT.
+""",
     version="1.0.0",
+    openapi_tags=tags_metadata,
+    contact={
+        "name": "SandboxAI Support",
+        "url": "https://github.com/ValdVdC/SandboxAI",
+    },
+    license_info={
+        "name": "MIT",
+    },
     servers=[
         {"url": "http://localhost:8000", "description": "Local development"},
         {"url": "http://api:8000", "description": "Docker environment"},
     ],
 )
+
+
+# Enable Authorize button in Swagger UI
+def custom_openapi():
+    if app.openapi_schema:
+        return app.openapi_schema
+    openapi_schema = get_openapi(
+        title=app.title,
+        version=app.version,
+        description=app.description,
+        routes=app.routes,
+        tags=app.openapi_tags,
+    )
+    openapi_schema["components"]["securitySchemes"] = {
+        "BearerAuth": {
+            "type": "http",
+            "scheme": "bearer",
+            "bearerFormat": "JWT",
+        }
+    }
+    for path in openapi_schema["paths"]:
+        for method in openapi_schema["paths"][path]:
+            openapi_schema["paths"][path][method]["security"] = [{"BearerAuth": []}]
+    app.openapi_schema = openapi_schema
+    return app.openapi_schema
+
+
+app.openapi = custom_openapi
 
 # Middleware CORS
 allowed_origins = [
@@ -55,7 +125,7 @@ app.include_router(providers.router)
 @app.on_event("startup")
 async def startup_event():
     """Validate database connection on startup."""
-    print("🚀 Validating database connection...")
+    print("Validating database connection...")
     try:
         async with engine.begin() as conn:
             await conn.execute(text("SELECT 1"))

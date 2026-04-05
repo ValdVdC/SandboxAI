@@ -13,7 +13,12 @@ from app.schemas import TokenResponse, UserLogin, UserRegister, UserResponse
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 
-@router.post("/register", response_model=TokenResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/register",
+    response_model=TokenResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Registrar novo usuário",
+)
 async def register(
     user_data: UserRegister,
     db: AsyncSession = Depends(get_db),
@@ -69,7 +74,7 @@ async def register(
     )
 
 
-@router.post("/login", response_model=TokenResponse)
+@router.post("/login", response_model=TokenResponse, summary="Login do usuário")
 async def login(
     credentials: UserLogin,
     db: AsyncSession = Depends(get_db),

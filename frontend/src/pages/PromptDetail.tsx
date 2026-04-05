@@ -108,9 +108,20 @@ const PromptDetail: React.FC = () => {
 
           <div className="main-content">
             {bulkTestIds ? (
-              <BulkResults testIds={bulkTestIds} onBack={() => setBulkTestIds(null)} />
+              <BulkResults 
+                promptId={id || ''} 
+                versionNumber={selectedVersion?.version || prompt.current_version}
+                testIds={bulkTestIds} 
+                onBack={() => setBulkTestIds(null)} 
+              />
             ) : activeTest ? (
-              <TestResults testId={activeTest} autoRefresh={true} onBack={() => setActiveTest(null)} />
+              <TestResults 
+                promptId={id || ''}
+                versionNumber={selectedVersion?.version || prompt.current_version}
+                testId={activeTest} 
+                autoRefresh={true} 
+                onBack={() => setActiveTest(null)} 
+              />
             ) : showAnalytics ? (
               <PromptAnalytics 
                 promptId={id || ''} 

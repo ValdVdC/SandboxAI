@@ -4,21 +4,38 @@ import { TestResult } from '../types';
 import Loading from './Loading';
 
 interface BulkResultsProps {
+  promptId: string;
+  versionNumber: number;
   testIds: string[];
   onBack: () => void;
 }
 
-const BulkResults: React.FC<BulkResultsProps> = ({ testIds, onBack }) => {
+const BulkResults: React.FC<BulkResultsProps> = ({ promptId, versionNumber, testIds, onBack }) => {
   const [results, setResults] = useState<TestResult[]>([]);
   const [loading, setLoading] = useState(true);
   const [polling, setPolling] = useState(true);
+  const [exporting, setExporting] = useState(false);
+
+  const handleExport = async () => {
+    if (results.length === 0) return;
+    try {
+      setExporting(true);
+      // We use the batch_id of the first result since they all belong to the same batch
+      const batchId = results[0].batch_id;
+      await apiClient.exportTests(promptId, versionNumber, batchId);
+    } catch (err) {
+      console.error('Export failed', err);
+      alert('Falha ao exportar CSV. Tente novamente.');
+    } finally {
+      setExporting(false);
+    }
+  };
 
   useEffect(() => {
     let isMounted = true;
 
     const fetchResults = async () => {
       try {
-        // Only fetch results that are not yet finished to save resources
         const promises = testIds.map(async (id) => {
           const existing = results.find(r => r.id === id);
           if (existing && (existing.status === 'completed' || existing.status === 'failed')) {
@@ -28,21 +45,15 @@ const BulkResults: React.FC<BulkResultsProps> = ({ testIds, onBack }) => {
         });
 
         const data = await Promise.all(promises);
-        
         if (!isMounted) return;
-
         setResults(data);
         
-        // Check if all are finished
         const allFinished = data.every(r => r.status === 'completed' || r.status === 'failed');
         if (allFinished) {
           setPolling(false);
         }
       } catch (err) {
         console.error('Failed to fetch bulk results:', err);
-        if (err instanceof Error && err.message.includes('401')) {
-          setPolling(false);
-        }
       } finally {
         if (isMounted) setLoading(false);
       }
@@ -71,8 +82,18 @@ const BulkResults: React.FC<BulkResultsProps> = ({ testIds, onBack }) => {
   return (
     <div className="bulk-results">
       <div className="bulk-header">
-        <button className="btn btn-secondary" onClick={onBack}>← Voltar</button>
-        <h2>Resultados do Lote</h2>
+        <div style={{ display: 'flex', gap: 'var(--spacing-md)', alignItems: 'center' }}>
+          <button className="btn btn-secondary" onClick={onBack}>← Voltar</button>
+          <h2 style={{ margin: 0 }}>Resultados do Lote</h2>
+        </div>
+        <button 
+          className="btn btn-primary" 
+          onClick={handleExport}
+          disabled={exporting || polling}
+          title={polling ? "Aguarde os testes terminarem para exportar" : "Baixar resultados em CSV"}
+        >
+          {exporting ? 'Exportando...' : 'Exportar CSV'}
+        </button>
       </div>
 
       <div className="bulk-stats-summary">

@@ -1,9 +1,13 @@
 """Test execution and result endpoints."""
 
+import csv
+import io
 from datetime import datetime, timezone
+from typing import Optional
 from uuid import UUID, uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi.responses import StreamingResponse
 from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -176,6 +180,91 @@ async def execute_bulk_tests(
         "total_queued": len(test_ids),
         "message": f"Successfully queued {len(test_ids)} tests",
     }
+
+
+@router.get("/{prompt_id}/versions/{version_num}/export")
+async def export_tests_csv(
+    prompt_id: UUID,
+    version_num: int,
+    batch_id: Optional[UUID] = None,
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Export test results to a CSV file.
+    """
+    # Validate ownership
+    await get_user_prompt(prompt_id, user, db)
+
+    # Get version
+    stmt = select(PromptVersion).where(
+        and_(
+            PromptVersion.prompt_id == prompt_id,
+            PromptVersion.version == version_num,
+        )
+    )
+    result = await db.execute(stmt)
+    version = result.scalar_one_or_none()
+
+    if not version:
+        raise HTTPException(status_code=404, detail="Version not found")
+
+    # Fetch tests
+    query = select(TestResult).where(TestResult.version_id == version.id)
+    if batch_id:
+        query = query.where(TestResult.batch_id == batch_id)
+
+    query = query.order_by(TestResult.created_at.desc())
+    result = await db.execute(query)
+    tests = result.scalars().all()
+
+    # Generate CSV in memory
+    output = io.StringIO()
+    writer = csv.writer(output)
+
+    # Header
+    writer.writerow(
+        [
+            "ID",
+            "Input",
+            "Output",
+            "Expected",
+            "Status",
+            "Latency (ms)",
+            "Tokens",
+            "Cost ($)",
+            "Created At",
+        ]
+    )
+
+    # Rows
+    for t in tests:
+        writer.writerow(
+            [
+                str(t.id),
+                t.input,
+                t.output or "",
+                t.expected or "",
+                t.status,
+                t.latency_ms or 0,
+                t.tokens_used or 0,
+                f"{float(t.cost_usd or 0):.6f}",
+                t.created_at.strftime("%Y-%m-%d %H:%M:%S") if t.created_at else "",
+            ]
+        )
+
+    csv_content = output.getvalue()
+    output.close()
+
+    filename = f"tests_prompt_{prompt_id}_v{version_num}.csv"
+    if batch_id:
+        filename = f"tests_batch_{batch_id}.csv"
+
+    return StreamingResponse(
+        io.StringIO(csv_content),
+        media_type="text/csv",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
 
 
 @router.get("/{prompt_id}/versions/{version_num}/tests", response_model=TestListResponse)

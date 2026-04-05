@@ -5,22 +5,41 @@ import Loading from './Loading';
 import '../styles/TestResults.css';
 
 interface TestResultsProps {
+  promptId: string;
+  versionNumber: number;
   testId: string;
   autoRefresh?: boolean;
   onBack?: () => void;
 }
 
-const TestResults: React.FC<TestResultsProps> = ({ testId, autoRefresh = true, onBack }) => {
+const TestResults: React.FC<TestResultsProps> = ({ 
+  promptId, 
+  versionNumber, 
+  testId, 
+  autoRefresh = true, 
+  onBack 
+}) => {
   const [result, setResult] = useState<TestResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [exporting, setExporting] = useState(false);
+
+  const handleExport = async () => {
+    try {
+      setExporting(true);
+      await apiClient.exportTests(promptId, versionNumber);
+    } catch (err) {
+      console.error('Export failed', err);
+    } finally {
+      setExporting(false);
+    }
+  };
 
   useEffect(() => {
     const fetchResult = async () => {
       try {
         const resultData = await apiClient.getTestExecution(testId);
         setResult(resultData as TestResult);
-        console.log('Test result fetched:', resultData);
       } catch (err) {
         console.error('Error fetching test result:', err);
         setError(err instanceof Error ? err.message : 'Failed to fetch test result');
@@ -57,6 +76,15 @@ const TestResults: React.FC<TestResultsProps> = ({ testId, autoRefresh = true, o
           </button>
         )}
         <h2>Resultados do Teste</h2>
+        {result && (
+          <button 
+            className="btn btn-primary btn-small" 
+            onClick={handleExport}
+            disabled={exporting || result.status === 'queued' || result.status === 'running'}
+          >
+            {exporting ? 'Exportando...' : 'Exportar Versão'}
+          </button>
+        )}
       </div>
 
       <div className="test-status">

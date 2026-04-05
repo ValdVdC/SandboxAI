@@ -47,15 +47,13 @@ const TestExecution: React.FC = () => {
       <div className="test-execution-page">
         <div className="test-container">
           {activeTest ? (
-            <>
-              <button
-                className="btn btn-secondary back-btn"
-                onClick={() => setActiveTest(null)}
-              >
-                ← Voltar
-              </button>
-              <TestResults testId={activeTest} autoRefresh={true} />
-            </>
+            <TestResults 
+              promptId={promptId}
+              versionNumber={firstVersion.version}
+              testId={activeTest} 
+              autoRefresh={true} 
+              onBack={() => setActiveTest(null)}
+            />
           ) : (
             <>
               <h1>Executar Teste - v{firstVersion.version}</h1>

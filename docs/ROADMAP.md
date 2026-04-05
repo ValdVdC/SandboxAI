@@ -30,9 +30,11 @@ Objetivo: evoluir para um produto utilizável por outros desenvolvedores.
 - [x] Baterias de testes automatizados (Bulk Testing)
 - [x] Comparação de respostas reais (A/B Testing)
 - [x] Dashboard de Analytics Avançado (Trend lines e Confiabilidade)
-- [ ] Exportação de resultados (CSV/JSON)
-- [ ] Documentação da API pública (Swagger/Redoc)
+- [X] Exportação de resultados (CSV/JSON)
+- [X] Documentação da API pública (Swagger/Redoc)
+- [ ] Framework de Validação Inteligente:
 - [ ] Sandbox Real (Docker-in-Docker para isolamento total)
+- [ ] Gestão de Conta
 - [ ] Pipeline CI/CD completo com GitHub Actions
 
 ---

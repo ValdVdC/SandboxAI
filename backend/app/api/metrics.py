@@ -16,7 +16,7 @@ from app.schemas import MetricsResponse, ProviderMetricsResponse
 router = APIRouter(prefix="/metrics", tags=["Metrics"])
 
 
-@router.get("", response_model=MetricsResponse)
+@router.get("/", response_model=MetricsResponse, summary="Obter métricas globais")
 async def get_metrics(
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
@@ -155,7 +155,7 @@ async def get_provider_metrics(
     return metrics
 
 
-@router.get("/by-prompt/{prompt_id}", response_model=MetricsResponse)
+@router.get("/by-prompt/{prompt_id}", response_model=MetricsResponse, summary="Métricas por prompt")
 async def get_prompt_metrics(
     prompt_id: UUID,
     user: User = Depends(get_current_user),
@@ -238,7 +238,7 @@ async def get_prompt_metrics(
     )
 
 
-@router.get("/compare-versions/{v1_id}/{v2_id}")
+@router.get("/compare-versions/{v1_id}/{v2_id}", summary="Comparar duas versões")
 async def compare_versions(
     v1_id: UUID,
     v2_id: UUID,
@@ -295,7 +295,7 @@ async def compare_versions(
     }
 
 
-@router.get("/prompt-evolution/{prompt_id}")
+@router.get("/prompt-evolution/{prompt_id}", summary="Evolução histórica do prompt")
 async def get_prompt_evolution(
     prompt_id: UUID,
     user: User = Depends(get_current_user),
