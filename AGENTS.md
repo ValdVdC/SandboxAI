@@ -30,11 +30,19 @@
 
 ---
 
-## 💾 3. Git & Commit Protocol
-1. **Autonomous Commits**: Agents MUST commit their changes as soon as a sub-task is completed and verified.
-2. **Conventional Commits**: Only use `feat:`, `fix:`, `docs:`, `refactor:`, `chore:`, etc.
-3. **Validation First**: Before committing, agents MUST run `git status` and `git diff` to ensure no unintended changes (like secrets) are included.
-4. **Atomic Focus**: Each commit must be atomic, focusing on one single task or fix.
+## 💾 3. Git Branching & Commit Protocol (Professional Workflow)
+1. **Branch Hierarchy**:
+   - `main`: Production-ready, stable code only.
+   - `develop`: Integration branch. All features must be merged here first.
+   - `feature/*`, `fix/*`, `refactor/*`: Isolated branches for specific tasks.
+2. **The Lifecycle**:
+   - **Start**: @architect creates a new branch from `develop` for the current mission (e.g., `feature/semantic-validation`).
+   - **Work**: Agents commit atomic changes ONLY to the mission branch.
+   - **PR Preparation**: Once the mission is verified by @qa-engineer, @architect prepares the branch for a Pull Request to `develop`.
+   - **Merge**: A branch is only considered "Done" when merged into `develop` and verified by CI.
+3. **Atomic & Conventional Commits**:
+   - Commits must be small, frequent, and follow Conventional Commits (feat, fix, etc.).
+   - Use `git status` and `git diff` before every commit.
 
 ---
 
