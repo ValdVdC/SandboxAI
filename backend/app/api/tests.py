@@ -24,6 +24,8 @@ from app.workers.tasks import execute_test as execute_test_task
 
 router = APIRouter(prefix="/prompts", tags=["Tests"])
 
+MAX_BULK_TESTS = 50
+
 
 @router.post("/{prompt_id}/versions/{version_num}/tests", status_code=status.HTTP_202_ACCEPTED)
 async def execute_test(
@@ -129,6 +131,12 @@ async def execute_bulk_tests(
     """
     # Validate ownership
     await get_user_prompt(prompt_id, user, db)
+
+    if len(bulk_data.inputs) > MAX_BULK_TESTS:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Muitos testes em um único lote. Máximo permitido: {MAX_BULK_TESTS}",
+        )
 
     # Get version
     stmt = select(PromptVersion).where(

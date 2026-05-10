@@ -173,6 +173,8 @@ class TestResultResponse(BaseModel):
     latency_ms: Optional[int]
     tokens_used: Optional[int]
     cost_usd: Optional[Decimal]
+    score: Optional[float] = None
+    is_correct: Optional[bool] = None
     status: str  # "pending", "completed", "failed"
     error_message: Optional[str]
     created_at: datetime

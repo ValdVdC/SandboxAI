@@ -167,6 +167,22 @@ async def _execute_test_async(
     # Update with results in new session
     async with AsyncSessionLocal() as db:
         try:
+            # Basic validation if expected output is provided
+            is_correct = None
+            score = None
+            
+            stmt = select(TestResult).where(TestResult.id == test_id)
+            result_obj = await db.execute(stmt)
+            test_result = result_obj.scalar_one_or_none()
+            
+            if test_result and test_result.expected and result.output:
+                expected_norm = test_result.expected.lower().strip()
+                output_norm = result.output.lower().strip()
+                
+                # Check if expected is in output or vice-versa
+                is_correct = expected_norm in output_norm or output_norm in expected_norm
+                score = 1.0 if is_correct else 0.0
+
             stmt = (
                 update(TestResult)
                 .where(TestResult.id == test_id)
@@ -175,6 +191,8 @@ async def _execute_test_async(
                     latency_ms=result.latency_ms,
                     tokens_used=result.tokens_used,
                     cost_usd=result.cost_usd,
+                    is_correct=is_correct,
+                    score=score,
                     status="completed",
                     error_message=None,
                     updated_at=datetime.now(timezone.utc),

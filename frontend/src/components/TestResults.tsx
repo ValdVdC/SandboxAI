@@ -89,6 +89,11 @@ const TestResults: React.FC<TestResultsProps> = ({
 
       <div className="test-status">
         <span className={`status-badge status-${result.status}`}>{result.status}</span>
+        {result.status === 'completed' && result.is_correct !== null && result.is_correct !== undefined && (
+          <span className={`validation-badge ${result.is_correct ? 'pass' : 'fail'}`}>
+            {result.is_correct ? '✅ PASS' : '❌ FAIL'}
+          </span>
+        )}
         {result.created_at && (
           <span className="test-date">{new Date(result.created_at).toLocaleString('pt-BR')}</span>
         )}

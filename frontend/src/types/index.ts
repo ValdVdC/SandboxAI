@@ -80,6 +80,8 @@ export interface TestResult {
   latency_ms?: number;
   tokens_used?: number;
   cost_usd?: number;
+  score?: number;
+  is_correct?: boolean;
   status: 'queued' | 'pending' | 'running' | 'completed' | 'failed';
   error_message?: string;
   created_at?: string;
