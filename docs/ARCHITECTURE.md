@@ -281,14 +281,14 @@ O SandboxAI utiliza Alembic para versionamento e execução de migrações de ba
 - `001_initial.py` — Schema inicial (users, prompts, prompt_versions, test_results)
 - `002_add_change_description.py` — Adição do campo `change_description` em `prompt_versions`
 
-**Localização:** `backend/app/migrations/versions/`
+**Localização:** `backend/migrations/versions/`
 
 ### Execução Programática de Migrações
 
 Em vez de usar CLI do Alembic (que causa conflitos de import com ambientes containerizados), o SandboxAI executa migrações programaticamente:
 
 ```python
-# backend/app/run_migrations.py
+# backend/run_migrations.py
 async def run_migrations():
     """Executa todas as migrações pendentes ao iniciar a API."""
     config = Config("alembic.ini")

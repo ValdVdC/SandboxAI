@@ -7,7 +7,7 @@ Alembic is used for database schema versioning and migrations. All database chan
 ## Files Structure
 
 ```
-alembic/
+migrations/
 ├── versions/          # Migration scripts
 │   ├── 001_initial.py      # Initial schema creation
 │   └── __init__.py
@@ -37,13 +37,13 @@ cd backend
 python -m alembic revision --autogenerate -m "Add new column to users"
 ```
 
-This creates a new file in `alembic/versions/` with the schema changes.
+This creates a new file in `migrations/versions/` with the schema changes.
 
 ### 3. Review Migration
 
 Before applying, check the generated migration file:
 ```bash
-cat alembic/versions/XXX_add_new_column_to_users.py
+cat migrations/versions/XXX_add_new_column_to_users.py
 ```
 
 Make sure the `upgrade()` and `downgrade()` functions are correct.
