@@ -3,10 +3,6 @@
 
 import os
 import sys
-
-# Ensure we import alembic from venv, not from local alembic/ directory
-sys.path.insert(0, '/opt/venv/lib/python3.11/site-packages')
-
 from alembic import command
 from alembic.config import Config
 

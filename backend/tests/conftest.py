@@ -11,8 +11,10 @@ from app.core.database import get_db
 
 
 # PostgreSQL database for testing
+# Use TEST_DATABASE_URL if available, otherwise fallback to a default test DB
+# DO NOT fallback to DATABASE_URL as it points to the main DB in the docker container
 TEST_DATABASE_URL = os.getenv(
-    "DATABASE_URL", "postgresql+asyncpg://test:test@postgres:5432/test_sandboxai"
+    "TEST_DATABASE_URL", "postgresql+asyncpg://test:test@postgres:5432/test_sandboxai"
 )
 
 

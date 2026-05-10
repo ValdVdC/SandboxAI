@@ -45,7 +45,7 @@ ENV PATH="/opt/venv/bin:$PATH"
 
 # Copiar código da aplicação
 COPY app/ ./app/
-COPY alembic/ ./alembic/
+COPY migrations/ ./migrations/
 COPY alembic.ini ./
 COPY run_migrations.py ./
 COPY entrypoint.sh ./
