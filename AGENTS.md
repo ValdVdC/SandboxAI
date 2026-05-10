@@ -15,6 +15,7 @@
 4. **Dependency Management**: 
    - Backend: Add new libs to `backend/requirements.txt` with pinned versions.
    - Frontend: Use `npm install --save` to ensure `package.json` is updated.
+5. **Environment Consistency (Docker-Only)**: Host-level installs (pip/npm) are allowed ONLY for IDE Intellisense. Official verification, testing, and execution MUST always happen inside Docker containers (e.g., via `docker compose up --build`).
 
 ---
 
