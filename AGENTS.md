@@ -27,23 +27,27 @@
    - **Frontend**: MUST sync with the `app/schemas/` definitions in the backend.
 4. **STATUS UPDATES**: Agents MUST update their task status in `MISSION.md` after every successful sub-task.
 5. **PEER REVIEW & QA**: @qa-engineer validates the implementation before mission closure.
-6. **MISSION CLOSE**: @architect performs a final audit and notifies the Human.
+6. **MISSION CLOSE (Mandatory Finality Check)**: 
+   - @architect MUST run `git status` to ensure the branch is clean.
+   - @architect MUST provide the commit hashes or PR link in the final message to the Human.
+   - A mission is NOT closed until all code is committed and the status in `MISSION.md` is `Done`.
 
 ---
 
-## 💾 3. Git Branching & Commit Protocol (Professional Workflow)
+## 💾 3. Git Branching & PR Orchestration (Professional Workflow)
 1. **Branch Hierarchy**:
    - `main`: Production-ready, stable code only.
    - `develop`: Integration branch. All features must be merged here first.
    - `feature/*`, `fix/*`, `refactor/*`: Isolated branches for specific tasks.
 2. **The Lifecycle**:
-   - **Start**: @architect creates a new branch from `develop` for the current mission (e.g., `feature/semantic-validation`).
-   - **Work**: Agents commit atomic changes ONLY to the mission branch.
-   - **PR Preparation**: Once the mission is verified by @qa-engineer, @architect prepares the branch for a Pull Request to `develop`.
-   - **Merge**: A branch is only considered "Done" when merged into `develop` and verified by CI.
+   - **Start**: @architect creates a new branch from `develop` for the current mission.
+   - **Work**: Agents commit atomic changes ONLY to the mission branch. Agents MUST `git push` to origin regularly to sync with the cloud.
+   - **PR Preparation**: Once verified by @qa-engineer, @architect uses `gh pr create --base develop` to open the Pull Request.
+   - **CI Monitoring**: @qa-engineer MUST use `gh pr checks` to monitor GitHub Actions status. If it fails, the squad must fix the code on the same branch.
+   - **Merge**: A mission is only "Done" after Human approval and `gh pr merge --merge --delete-branch`.
 3. **Atomic & Conventional Commits**:
    - Commits must be small, frequent, and follow Conventional Commits (feat, fix, etc.).
-   - Use `git status` and `git diff` before every commit.
+   - Use `git status` and `git diff` before every commit to ensure quality and security.
 
 ---
 
