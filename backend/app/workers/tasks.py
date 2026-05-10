@@ -5,6 +5,9 @@ import os
 from datetime import datetime, timezone
 from uuid import UUID
 
+import numpy as np
+from fastembed import TextEmbedding
+
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
@@ -20,7 +23,9 @@ from app.workers.providers.openai import OpenAIProvider
 logger = logging.getLogger(__name__)
 
 # Database setup
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://user:password@postgres:5432/db")
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql+asyncpg://user:password@postgres:5432/db")
+if DATABASE_URL.startswith("postgresql://"):
+    DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://", 1)
 engine = create_async_engine(
     DATABASE_URL,
     echo=False,
@@ -36,6 +41,26 @@ AsyncSessionLocal = sessionmaker(
     autoflush=False,
     autocommit=False,
 )
+
+# Global TextEmbedding instance
+_embedding_model = None
+
+def get_embedding_model():
+    """Lazily load and return the TextEmbedding model."""
+    global _embedding_model
+    if _embedding_model is None:
+        logger.info("Initializing TextEmbedding model (intfloat/multilingual-e5-small)...")
+        _embedding_model = TextEmbedding(model_name="intfloat/multilingual-e5-small")
+    return _embedding_model
+
+def cosine_similarity(vec1, vec2):
+    """Calculate cosine similarity between two vectors."""
+    dot_product = np.dot(vec1, vec2)
+    norm1 = np.linalg.norm(vec1)
+    norm2 = np.linalg.norm(vec2)
+    if norm1 == 0 or norm2 == 0:
+        return 0.0
+    return float(dot_product / (norm1 * norm2))
 
 
 @celery_app.task(bind=True, max_retries=3, default_retry_delay=10)
@@ -179,9 +204,32 @@ async def _execute_test_async(
                 expected_norm = test_result.expected.lower().strip()
                 output_norm = result.output.lower().strip()
                 
-                # Check if expected is in output or vice-versa
-                is_correct = expected_norm in output_norm or output_norm in expected_norm
-                score = 1.0 if is_correct else 0.0
+                # Semantic Similarity validation via fastembed
+                try:
+                    model = get_embedding_model()
+                    
+                    # Generate embeddings for both texts
+                    # embed() returns a generator, so we convert it to a list
+                    embeddings = list(model.embed([expected_norm, output_norm]))
+                    
+                    if len(embeddings) == 2:
+                        similarity = cosine_similarity(embeddings[0], embeddings[1])
+                        
+                        threshold = float(os.getenv("SEMANTIC_THRESHOLD", "0.8"))
+                        # Ensure score is bound between 0.0 and 1.0
+                        score = max(0.0, min(1.0, similarity)) 
+                        is_correct = score >= threshold
+                        
+                        logger.info(f"Semantic validation for {test_id}: Score={score:.4f}, Threshold={threshold}, Correct={is_correct}")
+                    else:
+                        logger.warning(f"Embedding generation failed for {test_id}. Fallback to exact match.")
+                        is_correct = expected_norm in output_norm or output_norm in expected_norm
+                        score = 1.0 if is_correct else 0.0
+                except Exception as eval_err:
+                    logger.error(f"Error during semantic validation for {test_id}: {eval_err}")
+                    # Fallback to exact match on error
+                    is_correct = expected_norm in output_norm or output_norm in expected_norm
+                    score = 1.0 if is_correct else 0.0
 
             stmt = (
                 update(TestResult)
