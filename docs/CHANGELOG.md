@@ -6,7 +6,7 @@ O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/), e e
 
 ---
 
-## [Não lançado]
+## [1.0.0] - 2026-05-09
 
 ### Adicionado
 

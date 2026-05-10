@@ -95,14 +95,12 @@ api:
 
 ### 3. Worker (Python + Celery)
 
-Responsável pela execução isolada dos testes de prompts. Cada teste é executado em um container Docker dedicado.
+Responsável pela execução assíncrona dos testes de prompts.
 
 ```yaml
 worker:
   build: ./backend
-  command: celery -A app.worker worker
-  volumes:
-    - /var/run/docker.sock:/var/run/docker.sock
+  command: celery -A app.workers.worker worker
   depends_on:
     - redis
     - postgres
@@ -110,9 +108,8 @@ worker:
 
 **Responsabilidades:**
 - Consumir fila de testes do Redis
-- Criar containers Docker isolados por teste
-- Chamar providers de LLM (Groq, OpenAI, Ollama)
-- Destruir containers após execução
+- Processar templates e variáveis do prompt
+- Chamar providers de LLM via chamadas HTTP/API (Groq, OpenAI, Ollama)
 - Persistir resultados e métricas no banco
 
 **Fluxo de execução de um teste:**
@@ -124,19 +121,13 @@ Redis Queue
 Worker recebe tarefa
     │
     ▼
-Cria container Docker isolado
-    │
-    ▼
 Injeta prompt + variáveis
     │
     ▼
-Chama provider LLM
+Chama provider LLM (API HTTP)
     │
     ▼
 Coleta resultado + métricas
-    │
-    ▼
-Destrói container
     │
     ▼
 Persiste no PostgreSQL
@@ -247,13 +238,12 @@ ollama:
 
 ## Decisões de Arquitetura
 
-### Por que Docker para cada teste?
+### Por que processamento em Background (Worker)?
 
-Cada teste de prompt roda em um container isolado para garantir:
-- **Reprodutibilidade** — mesmo ambiente sempre
-- **Isolamento** — falha em um teste não afeta outros
-- **Segurança** — código de terceiros não acessa o host
-- **Paralelismo** — múltiplos testes simultâneos sem conflito
+Testes de prompts via API podem sofrer com timeouts e alta latência. Utilizar um worker Celery garante:
+- **Resiliência** — retry automático em caso de falha do provider de LLM
+- **Desacoplamento** — a API principal não é bloqueada
+- **Escalabilidade** — múltiplos workers podem ser instanciados paralelamente
 
 ### Por que Redis como fila?
 
@@ -395,8 +385,8 @@ Redis garante que cada tarefa seja processada uma única vez, distribuindo entre
 
 - Comunicação entre serviços via rede Docker interna (não exposta)
 - API Keys de LLMs armazenadas apenas em variáveis de ambiente
-- Containers de teste sem acesso à rede do host
 - Autenticação JWT em todos os endpoints protegidos
+- Isolamento lógico por usuário (nenhum usuário acessa prompts de outros)
 
 ---
 
