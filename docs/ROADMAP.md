@@ -29,10 +29,12 @@ Objetivo: evoluir para um produto utilizável por outros desenvolvedores.
 - [x] Comparação side-by-side de versões (Visual Diff)
 - [x] Baterias de testes automatizados (Bulk Testing)
 - [x] Comparação de respostas reais (A/B Testing)
-- [x] Dashboard de Analytics Avançado (Trend lines e Confiabilidade)
+- [X] Dashboard de Analytics Avançado (Trend lines e Confiabilidade)
 - [X] Exportação de resultados (CSV/JSON)
 - [X] Documentação da API pública (Swagger/Redoc)
 - [ ] Framework de Validação Inteligente:
+    - [x] Validação automática básica (Exact/Contains match)
+    - [ ] Avaliação por similaridade semântica (NLP)
 - [ ] Sandbox Real (Docker-in-Docker para isolamento total)
 - [ ] Gestão de Conta
 - [ ] Pipeline CI/CD completo com GitHub Actions
