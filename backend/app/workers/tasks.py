@@ -155,13 +155,25 @@ async def _execute_test_async(
             raise
 
     # Interpolate prompt with test input
-    # Support both Python format style {input} and Jinja2 style {{input}}
-    # We use a safer approach to avoid KeyError with extra braces in the prompt
     final_prompt = prompt_content
     if test_input is not None:
-        # Replace both styles if present
-        final_prompt = final_prompt.replace("{{input}}", str(test_input))
-        final_prompt = final_prompt.replace("{input}", str(test_input))
+        import json
+        from jinja2 import Template
+
+        try:
+            # Try to parse test_input as JSON to support multiple variables
+            input_data = json.loads(test_input)
+            if isinstance(input_data, dict):
+                template = Template(prompt_content)
+                final_prompt = template.render(**input_data)
+            else:
+                # If it's a JSON but not a dictionary, fallback
+                final_prompt = final_prompt.replace("{{input}}", str(test_input))
+                final_prompt = final_prompt.replace("{input}", str(test_input))
+        except (json.JSONDecodeError, TypeError):
+            # Not valid JSON, fallback to simple string replacement
+            final_prompt = final_prompt.replace("{{input}}", str(test_input))
+            final_prompt = final_prompt.replace("{input}", str(test_input))
 
     # Execute provider (outside database session to avoid conflicts)
     try:
