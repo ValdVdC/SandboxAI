@@ -2,13 +2,14 @@
 
 import os
 import uuid
-import pytest_asyncio
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
-from httpx import AsyncClient
-from app.main import app
-from app.models import Base, User, Prompt, PromptVersion
-from app.core.database import get_db
 
+import pytest_asyncio
+from httpx import AsyncClient
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+
+from app.core.database import get_db
+from app.main import app
+from app.models import Base, Prompt, PromptVersion, User
 
 # PostgreSQL database for testing
 # Use TEST_DATABASE_URL if available, otherwise fallback to a default test DB

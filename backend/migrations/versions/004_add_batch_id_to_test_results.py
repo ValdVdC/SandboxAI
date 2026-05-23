@@ -9,7 +9,6 @@ Create Date: 2026-04-04 18:00:00.000000
 from alembic import op
 import sqlalchemy as sa
 
-
 # revision identifiers, used by Alembic.
 revision = "004_add_batch_id_to_test_results"
 down_revision = "003_expand_users_hashed_password"

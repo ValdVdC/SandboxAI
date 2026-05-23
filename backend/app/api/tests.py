@@ -109,7 +109,10 @@ async def execute_test(
     }
 
 
-@router.post("/{prompt_id}/versions/{version_num}/tests/bulk", status_code=status.HTTP_202_ACCEPTED)
+@router.post(
+    "/{prompt_id}/versions/{version_num}/tests/bulk",
+    status_code=status.HTTP_202_ACCEPTED,
+)
 async def execute_bulk_tests(
     prompt_id: UUID,
     version_num: int,
@@ -192,7 +195,8 @@ async def execute_bulk_tests(
 
 
 @router.post(
-    "/{prompt_id}/versions/{version_num}/tests/bulk/upload", status_code=status.HTTP_202_ACCEPTED
+    "/{prompt_id}/versions/{version_num}/tests/bulk/upload",
+    status_code=status.HTTP_202_ACCEPTED,
 )
 async def execute_bulk_tests_upload(
     prompt_id: UUID,

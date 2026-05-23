@@ -5,6 +5,7 @@ import pytest
 
 from app.workers.tasks import cosine_similarity
 
+
 class TestSemanticValidation:
     """Test semantic validation logic."""
 

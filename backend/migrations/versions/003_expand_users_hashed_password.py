@@ -9,7 +9,6 @@ Create Date: 2026-03-25 00:00:00.000000
 from alembic import op
 import sqlalchemy as sa
 
-
 # revision identifiers, used by Alembic.
 revision = "003_expand_users_hashed_password"
 down_revision = "002_add_change_description"
