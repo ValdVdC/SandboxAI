@@ -280,9 +280,9 @@ async def compare_versions(
             "avg_latency": float(data.avg_latency) if data.avg_latency else 0.0,
             "avg_tokens": float(data.avg_tokens) if data.avg_tokens else 0.0,
             "avg_cost": float(data.avg_cost) if data.avg_cost else 0.0,
-            "success_rate": (data.success_count / data.count * 100)
-            if data.count and data.count > 0
-            else 0.0,
+            "success_rate": (
+                (data.success_count / data.count * 100) if data.count and data.count > 0 else 0.0
+            ),
         }
 
     # Fetch stats for both versions

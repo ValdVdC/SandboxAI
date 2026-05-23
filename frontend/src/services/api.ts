@@ -157,6 +157,26 @@ class ApiClient {
     return response.data;
   }
 
+  async executeBulkTestsUpload(
+    promptId: string,
+    versionNum: number,
+    file: File
+  ): Promise<{ test_ids: string[]; celery_task_ids: string[]; total_queued: number; message: string }> {
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    const response = await this.client.post(
+      `/prompts/${promptId}/versions/${versionNum}/tests/bulk/upload`,
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }
+    );
+    return response.data;
+  }
+
   async exportTests(promptId: string, versionNum: number, batchId?: string): Promise<void> {
     const params = batchId ? { batch_id: batchId } : {};
     const response = await this.client.get(

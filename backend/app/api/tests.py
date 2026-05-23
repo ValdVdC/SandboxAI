@@ -2,11 +2,12 @@
 
 import csv
 import io
+import json
 from datetime import datetime, timezone
 from typing import Optional
 from uuid import UUID, uuid4
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
 from fastapi.responses import StreamingResponse
 from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -187,6 +188,108 @@ async def execute_bulk_tests(
         "celery_task_ids": task_ids,
         "total_queued": len(test_ids),
         "message": f"Successfully queued {len(test_ids)} tests",
+    }
+
+
+@router.post(
+    "/{prompt_id}/versions/{version_num}/tests/bulk/upload", status_code=status.HTTP_202_ACCEPTED
+)
+async def execute_bulk_tests_upload(
+    prompt_id: UUID,
+    version_num: int,
+    file: UploadFile = File(...),
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    """
+    Upload a CSV or JSON file to execute tests in bulk.
+    """
+    import codecs
+
+    # Validate ownership
+    await get_user_prompt(prompt_id, user, db)
+
+    # Get version
+    stmt = select(PromptVersion).where(
+        and_(
+            PromptVersion.prompt_id == prompt_id,
+            PromptVersion.version == version_num,
+        )
+    )
+    result = await db.execute(stmt)
+    version = result.scalar_one_or_none()
+
+    if not version:
+        raise HTTPException(status_code=404, detail=f"Version {version_num} not found")
+
+    filename = file.filename or ""
+    rows = []
+    try:
+        if filename.endswith(".csv"):
+            csv_reader = csv.DictReader(codecs.iterdecode(file.file, "utf-8"))
+            for row in csv_reader:
+                rows.append(row)
+        elif filename.endswith(".json"):
+            data = json.load(file.file)
+            if not isinstance(data, list):
+                raise ValueError("JSON must be a list of objects")
+            rows = data
+        else:
+            raise ValueError("Unsupported file format. Use CSV or JSON.")
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Error parsing file: {e}")
+
+    if len(rows) > MAX_BULK_TESTS:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Muitos testes em um único lote. Máximo permitido: {MAX_BULK_TESTS}",
+        )
+
+    test_ids = []
+    batch_id = uuid4()
+
+    for row in rows:
+        # Extract expected
+        expected = None
+        # Case insensitive search for 'expected' key
+        expected_key = next((k for k in row.keys() if k.lower() == "expected"), None)
+        if expected_key:
+            expected = str(row.pop(expected_key))
+
+        # Rest of the row is input variables
+        test_input_json = json.dumps(row)
+
+        test_id = uuid4()
+        test_result = TestResult(
+            id=test_id,
+            version_id=version.id,
+            batch_id=batch_id,
+            input=test_input_json,
+            status="queued",
+            expected=expected,
+            created_at=datetime.now(timezone.utc),
+        )
+        db.add(test_result)
+        test_ids.append(str(test_id))
+
+    await db.commit()
+
+    # Queue tasks in parallel after commit
+    task_ids = []
+    for t_id in test_ids:
+        task = execute_test_task.delay(
+            test_id=t_id,
+            prompt_content=version.content,
+            provider=version.provider,
+            model=version.model,
+        )
+        task_ids.append(task.id)
+
+    return {
+        "test_ids": test_ids,
+        "celery_task_ids": task_ids,
+        "total_queued": len(test_ids),
+        "message": f"Successfully queued {len(test_ids)} tests from file",
     }
 
 

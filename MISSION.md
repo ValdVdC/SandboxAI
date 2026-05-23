@@ -1,32 +1,33 @@
-# 🎯 Mission: Avaliação por similaridade semântica (NLP) via Embeddings
+# 🎯 Mission: Gestão Dinâmica de Datasets (Upload de CSV/JSON para testes em lote)
 
 *Status: Done - Mission Completed.*
 
 ---
 
 ## 🏛️ Architect's Vision
-*Objective: Implementar validação semântica baseada em similaridade de embeddings (Fase 2 do Roadmap) para testes do SandboxAI, substituindo a verificação de "exact match".*
+*Objective: Implementar upload de arquivos CSV/JSON com múltiplas variáveis para popular prompt templates via Jinja2 no Bulk Testing.*
 
 ### Proposed Strategy
-1. [x] Adicionar dependências `fastembed` e `numpy` ao backend.
-2. [x] Instanciar o modelo de embedding no escopo dos workers do Celery para evitar carregamento repetitivo.
-3. [x] Substituir a lógica de validação (`is_correct` e `score`) em `_execute_test_async` para usar Cosine Similarity entre a saída real e a esperada.
-4. [x] Garantir que o valor fracionado do score (0.0 a 1.0) seja salvo corretamente no banco de dados.
-5. [x] Escrever/atualizar testes unitários para a nova lógica de avaliação.
+1. [ ] Atualizar o Worker (`tasks.py`) para renderizar os prompts usando `jinja2` e aceitar inputs em formato JSON para lidar com múltiplas variáveis dinâmicas.
+2. [ ] Adicionar dependências `python-multipart`, `jinja2` e `pandas` (ou nativo) ao backend.
+3. [ ] Criar um novo endpoint no backend (`POST /api/v1/prompt-versions/{version_id}/test/bulk/upload`) para processar arquivos `.csv` e `.json`.
+4. [ ] Extrair dinamicamente a coluna `expected` (se existir) dos datasets para uso na avaliação semântica.
+5. [ ] No Frontend, adicionar uma aba de "Upload Dataset" no modal de Bulk Testing com parsing preview (usando `papaparse` para CSV) e submissão via `FormData`.
 
 ---
 
 ## 📋 Active Tasks
-- [x] @architect: Define the mission and sub-tasks, created implementation plan.
-- [x] @backend-lead: Implementar lógica de `fastembed` no `tasks.py` e atualizar `requirements.txt`.
-- [x] @frontend-lead: N/A (Frontend já exibe o score corretamente como definido nos schemas).
-- [x] @qa-engineer: Adicionar/atualizar testes de validação semântica.
+- [x] @architect: Definição da missão, branch criada (`feature/dynamic-datasets-upload`), plano de implementação aprovado pelo humano.
+- [x] @backend-lead: Implementar renderização Jinja2 no `tasks.py` e novo endpoint de upload. Adicionar dependências.
+- [x] @frontend-lead: Adicionar lib `papaparse` e implementar nova UI de upload no modal de Bulk Testing.
+- [x] @qa-engineer: Adicionar testes unitários para a rota de upload e renderização Jinja2. Realizar testes end-to-end do fluxo no Frontend.
+- [x] @architect & @frontend-lead: Corrigir erros de TypeScript em TestRunner.tsx, remover explicit/implicit any de PapaParse e JSON parsing, e validar o type-check.
+- [x] @architect: Commit, push e abertura de Pull Request para a branch `develop` via `gh pr create`.
 
 ## 🚧 Blockers
 - None.
 
 ## 📝 Recent Decisions
-- Nova branch `feature/semantic-validation` criada.
-- Optamos pelo uso da biblioteca `fastembed` por ser leve e rodar offline.
-- Threshold de similaridade configurável via `.env` (default: 0.8).
-- Modelo escolhido: `intfloat/multilingual-e5-small`.
+- Nova branch `feature/dynamic-datasets-upload` criada a partir de `develop`.
+- A engine de templates de prompts passa a ser Jinja2 no backend.
+- A coluna com nome `expected` no CSV/JSON enviado será mapeada como a "Expected Output" para a validação semântica. O restante das colunas será tratado como variáveis dinâmicas do prompt.

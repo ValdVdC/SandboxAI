@@ -7,7 +7,6 @@ from uuid import UUID
 
 import numpy as np
 from fastembed import TextEmbedding
-
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
@@ -45,6 +44,7 @@ AsyncSessionLocal = sessionmaker(
 # Global TextEmbedding instance
 _embedding_model = None
 
+
 def get_embedding_model():
     """Lazily load and return the TextEmbedding model."""
     global _embedding_model
@@ -52,6 +52,7 @@ def get_embedding_model():
         logger.info("Initializing TextEmbedding model (intfloat/multilingual-e5-small)...")
         _embedding_model = TextEmbedding(model_name="intfloat/multilingual-e5-small")
     return _embedding_model
+
 
 def cosine_similarity(vec1, vec2):
     """Calculate cosine similarity between two vectors."""
@@ -155,13 +156,26 @@ async def _execute_test_async(
             raise
 
     # Interpolate prompt with test input
-    # Support both Python format style {input} and Jinja2 style {{input}}
-    # We use a safer approach to avoid KeyError with extra braces in the prompt
     final_prompt = prompt_content
     if test_input is not None:
-        # Replace both styles if present
-        final_prompt = final_prompt.replace("{{input}}", str(test_input))
-        final_prompt = final_prompt.replace("{input}", str(test_input))
+        import json
+
+        from jinja2 import Template
+
+        try:
+            # Try to parse test_input as JSON to support multiple variables
+            input_data = json.loads(test_input)
+            if isinstance(input_data, dict):
+                template = Template(prompt_content)
+                final_prompt = template.render(**input_data)
+            else:
+                # If it's a JSON but not a dictionary, fallback
+                final_prompt = final_prompt.replace("{{input}}", str(test_input))
+                final_prompt = final_prompt.replace("{input}", str(test_input))
+        except (json.JSONDecodeError, TypeError):
+            # Not valid JSON, fallback to simple string replacement
+            final_prompt = final_prompt.replace("{{input}}", str(test_input))
+            final_prompt = final_prompt.replace("{input}", str(test_input))
 
     # Execute provider (outside database session to avoid conflicts)
     try:
@@ -195,34 +209,38 @@ async def _execute_test_async(
             # Basic validation if expected output is provided
             is_correct = None
             score = None
-            
+
             stmt = select(TestResult).where(TestResult.id == test_id)
             result_obj = await db.execute(stmt)
             test_result = result_obj.scalar_one_or_none()
-            
+
             if test_result and test_result.expected and result.output:
                 expected_norm = test_result.expected.lower().strip()
                 output_norm = result.output.lower().strip()
-                
+
                 # Semantic Similarity validation via fastembed
                 try:
                     model = get_embedding_model()
-                    
+
                     # Generate embeddings for both texts
                     # embed() returns a generator, so we convert it to a list
                     embeddings = list(model.embed([expected_norm, output_norm]))
-                    
+
                     if len(embeddings) == 2:
                         similarity = cosine_similarity(embeddings[0], embeddings[1])
-                        
+
                         threshold = float(os.getenv("SEMANTIC_THRESHOLD", "0.8"))
                         # Ensure score is bound between 0.0 and 1.0
-                        score = max(0.0, min(1.0, similarity)) 
+                        score = max(0.0, min(1.0, similarity))
                         is_correct = score >= threshold
-                        
-                        logger.info(f"Semantic validation for {test_id}: Score={score:.4f}, Threshold={threshold}, Correct={is_correct}")
+
+                        logger.info(
+                            f"Semantic validation for {test_id}: Score={score:.4f}, Threshold={threshold}, Correct={is_correct}"
+                        )
                     else:
-                        logger.warning(f"Embedding generation failed for {test_id}. Fallback to exact match.")
+                        logger.warning(
+                            f"Embedding generation failed for {test_id}. Fallback to exact match."
+                        )
                         is_correct = expected_norm in output_norm or output_norm in expected_norm
                         score = 1.0 if is_correct else 0.0
                 except Exception as eval_err:

@@ -163,3 +163,39 @@
 .status-badge.completed { background-color: rgba(63, 185, 80, 0.15); color: var(--color-success); }
 .status-badge.failed { background-color: rgba(248, 81, 73, 0.15); color: var(--color-danger); }
 .status-badge.queued, .status-badge.running { background-color: rgba(210, 153, 34, 0.15); color: var(--color-warning); }
+
+/* Dataset Preview */
+.dataset-preview {
+  margin-top: var(--spacing-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-md);
+  padding: var(--spacing-md);
+  background-color: var(--color-bg-tertiary);
+}
+
+.dataset-preview h4 {
+  margin-top: 0;
+  margin-bottom: var(--spacing-sm);
+  font-size: 14px;
+}
+
+.preview-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  font-family: var(--font-family-mono);
+  margin-bottom: var(--spacing-sm);
+}
+
+.preview-table th, .preview-table td {
+  padding: var(--spacing-sm);
+  text-align: left;
+  border-bottom: 1px solid var(--color-border);
+  white-space: nowrap;
+}
+
+.preview-table th {
+  background-color: var(--color-bg-secondary);
+  color: var(--color-text-secondary);
+  font-weight: 600;
+}
