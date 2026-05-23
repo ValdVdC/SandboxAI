@@ -26,7 +26,7 @@
 ## 📋 Active Tasks
 - [x] **@architect**: Definição da missão, criação da branch (`feature/ci-cd-and-governance-hardening`) e Technical Design no `MISSION.md` (Aprovado).
 - [x] **@architect**: Criação do arquivo `.github/dependabot.yml`.
-- [x] **@architect**: Criação do guia de integração do CodeRabbit (`docs/CODERABBIT.md`).
+- [x] **@architect**: Criação e posterior remoção (para limpeza da base de código) do guia de integração do CodeRabbit (`docs/CODERABBIT.md`).
 - [x] **@architect**: Atualização das regras do squad no `AGENTS.md`.
 - [x] **@qa-engineer**: Validação do YAML de dependabot, revisão de conformidade geral e garantia do DoD.
 - [x] **@architect**: Revisão de código final, execução de `gh pr checks`, e preparação da mensagem de encerramento da missão com o checklist 100% verde e link da PR.
