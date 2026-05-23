@@ -1,11 +1,12 @@
 """Tests for Celery worker and provider implementations."""
 
-import pytest
-from unittest.mock import patch, AsyncMock
+from unittest.mock import AsyncMock, patch
 
+import pytest
+
+from app.workers.config import celery_app
 from app.workers.providers.groq import GroqProvider
 from app.workers.providers.ollama import OllamaProvider
-from app.workers.config import celery_app
 
 
 class TestGroqProvider:

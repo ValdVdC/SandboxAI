@@ -1,9 +1,11 @@
 """E2E Tests for Models — Test database operations."""
 
-import pytest
 import uuid
+
+import pytest
 from sqlalchemy import select
-from app.models import User, Prompt, PromptVersion, TestResult
+
+from app.models import Prompt, PromptVersion, TestResult, User
 
 
 @pytest.mark.asyncio

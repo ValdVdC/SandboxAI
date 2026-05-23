@@ -120,3 +120,33 @@ export interface PaginatedResponse<T> {
   page_size: number;
   total_pages: number;
 }
+
+// Playground
+export interface PlaygroundConfig {
+  provider: string;
+  model: string;
+}
+
+export interface PlaygroundRunRequest {
+  prompt_content: string;
+  input: string;
+  expected?: string;
+  configs: PlaygroundConfig[];
+}
+
+export interface PlaygroundColumnResult {
+  provider: string;
+  model: string;
+  output?: string;
+  latency_ms: number;
+  tokens_used: number;
+  cost_usd: number;
+  score?: number;
+  is_correct?: boolean;
+  status: 'completed' | 'failed';
+  error_message?: string;
+}
+
+export interface PlaygroundRunResponse {
+  results: PlaygroundColumnResult[];
+}

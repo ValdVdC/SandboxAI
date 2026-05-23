@@ -45,7 +45,7 @@ jobs:
       
       - name: Format check with black
         run: |
-          black --check backend/app --line-length=100
+          black --check --diff backend/app --line-length=100
       
       - name: Import sort check with isort
         run: |

@@ -155,7 +155,11 @@ async def get_provider_metrics(
     return metrics
 
 
-@router.get("/by-prompt/{prompt_id}", response_model=MetricsResponse, summary="Métricas por prompt")
+@router.get(
+    "/by-prompt/{prompt_id}",
+    response_model=MetricsResponse,
+    summary="Métricas por prompt",
+)
 async def get_prompt_metrics(
     prompt_id: UUID,
     user: User = Depends(get_current_user),

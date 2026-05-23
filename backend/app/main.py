@@ -10,10 +10,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
 from fastapi.responses import JSONResponse
-from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy import text
 
-from app.api import auth, metrics, prompts, providers, tests, versions
+from app.api import auth, metrics, playground, prompts, providers, tests, versions
 from app.core.database import dispose_engine, engine
 
 # Tags metadata for better organization
@@ -119,6 +118,7 @@ app.include_router(versions.router)
 app.include_router(tests.router)
 app.include_router(metrics.router)
 app.include_router(providers.router)
+app.include_router(playground.router)
 
 
 # Startup and shutdown events
@@ -131,13 +131,12 @@ async def startup_event():
             await conn.execute(text("SELECT 1"))
 
             # Check if tables exist
-            tables_stmt = text(
-                """
+            sql_query = """
                 SELECT
                     to_regclass('public.users') IS NOT NULL AS has_users,
                     to_regclass('public.alembic_version') IS NOT NULL AS has_alembic
                 """
-            )
+            tables_stmt = text(sql_query)
             result = await conn.execute(tables_stmt)
             status_row = result.mappings().one()
 

@@ -11,7 +11,7 @@ import sys
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 # Import models and Base
-from app.models import Base
+from app.models import Base  # noqa: E402
 
 config = context.config
 
@@ -25,10 +25,7 @@ target_metadata = Base.metadata
 
 def get_database_url():
     """Get database URL from environment."""
-    return os.getenv(
-        "DATABASE_URL",
-        "postgresql://sandboxai:sandboxai@localhost:5432/sandboxai"
-    )
+    return os.getenv("DATABASE_URL", "postgresql://sandboxai:sandboxai@localhost:5432/sandboxai")
 
 
 def run_migrations_offline() -> None:
@@ -49,11 +46,11 @@ def run_migrations_online() -> None:
     """Run migrations in 'online' mode."""
     # Convert async URL to sync for Alembic
     sqlalchemy_url = get_database_url()
-    
+
     # Replace asyncpg driver with psycopg for Alembic (which is sync)
     if "+asyncpg" in sqlalchemy_url:
         sqlalchemy_url = sqlalchemy_url.replace("+asyncpg", "")
-    
+
     configuration = config.get_section(config.config_ini_section)
     configuration["sqlalchemy.url"] = sqlalchemy_url
 
