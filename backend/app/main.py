@@ -95,12 +95,16 @@ def custom_openapi():
 app.openapi = custom_openapi
 
 # Middleware CORS
-allowed_origins = [
-    origin.strip()
-    for origin in os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:5173").split(
-        ","
-    )
-]
+allowed_origins_env = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:5173")
+if allowed_origins_env.strip() == "*":
+    print("⚠️ WARNING: ALLOWED_ORIGINS='*' is incompatible with allow_credentials=True. Falling back to localhost.")
+    allowed_origins = ["http://localhost:3000", "http://localhost:5173"]
+else:
+    allowed_origins = [
+        origin.strip()
+        for origin in allowed_origins_env.split(",")
+        if origin.strip()
+    ]
 
 app.add_middleware(
     CORSMiddleware,
