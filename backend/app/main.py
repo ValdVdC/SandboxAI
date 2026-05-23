@@ -131,11 +131,12 @@ async def startup_event():
             await conn.execute(text("SELECT 1"))
 
             # Check if tables exist
-            tables_stmt = text("""
+            sql_query = """
                 SELECT
                     to_regclass('public.users') IS NOT NULL AS has_users,
                     to_regclass('public.alembic_version') IS NOT NULL AS has_alembic
-                """)
+                """
+            tables_stmt = text(sql_query)
             result = await conn.execute(tables_stmt)
             status_row = result.mappings().one()
 
