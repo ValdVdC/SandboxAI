@@ -193,6 +193,48 @@ class TestListResponse(BaseModel):
 
 
 # ════════════════════════════════════════════════════════════════════════════
+# Playground Schemas
+# ════════════════════════════════════════════════════════════════════════════
+
+
+class PlaygroundConfig(BaseModel):
+    """Configuration for a single provider and model in the playground."""
+
+    provider: str  # "openai", "groq", "ollama", "anthropic"
+    model: str
+
+
+class PlaygroundRunRequest(BaseModel):
+    """Request schema for executing a prompt in the playground against multiple providers."""
+
+    prompt_content: str
+    input: str
+    expected: Optional[str] = None
+    configs: list[PlaygroundConfig]
+
+
+class PlaygroundColumnResult(BaseModel):
+    """Result of a single provider and model execution in the playground."""
+
+    provider: str
+    model: str
+    output: Optional[str] = None
+    latency_ms: float
+    tokens_used: int
+    cost_usd: float
+    score: Optional[float] = None
+    is_correct: Optional[bool] = None
+    status: str  # "completed", "failed"
+    error_message: Optional[str] = None
+
+
+class PlaygroundRunResponse(BaseModel):
+    """Response schema containing results from all playground executions."""
+
+    results: list[PlaygroundColumnResult]
+
+
+# ════════════════════════════════════════════════════════════════════════════
 # Metrics Schemas
 # ════════════════════════════════════════════════════════════════════════════
 

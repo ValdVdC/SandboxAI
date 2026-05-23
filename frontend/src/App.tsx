@@ -12,6 +12,7 @@ import CreatePrompt from './pages/CreatePrompt';
 import PromptDetail from './pages/PromptDetail';
 import TestExecution from './pages/TestExecution';
 import VersionComparison from './pages/VersionComparison';
+import Playground from './pages/Playground';
 import './styles/global.css';
 
 const AppRoutes: React.FC = () => {
@@ -74,6 +75,14 @@ const AppRoutes: React.FC = () => {
         element={
           <PrivateRoute>
             <VersionComparison />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/prompts/:id/playground"
+        element={
+          <PrivateRoute>
+            <Playground />
           </PrivateRoute>
         }
       />

@@ -13,7 +13,7 @@ from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy import text
 
-from app.api import auth, metrics, prompts, providers, tests, versions
+from app.api import auth, metrics, playground, prompts, providers, tests, versions
 from app.core.database import dispose_engine, engine
 
 # Tags metadata for better organization
@@ -119,6 +119,7 @@ app.include_router(versions.router)
 app.include_router(tests.router)
 app.include_router(metrics.router)
 app.include_router(providers.router)
+app.include_router(playground.router)
 
 
 # Startup and shutdown events

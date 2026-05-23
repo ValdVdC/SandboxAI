@@ -15,6 +15,8 @@ import {
   UpdatePromptRequest,
   User,
   PaginatedResponse,
+  PlaygroundRunRequest,
+  PlaygroundRunResponse,
 } from '../types';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
@@ -142,6 +144,11 @@ class ApiClient {
       `/prompts/${promptId}/versions/${versionNum}/tests`,
       data
     );
+    return response.data;
+  }
+
+  async executePlayground(data: PlaygroundRunRequest): Promise<PlaygroundRunResponse> {
+    const response = await this.client.post<PlaygroundRunResponse>('/playground/run', data);
     return response.data;
   }
 

@@ -200,6 +200,12 @@ const PromptDetail: React.FC = () => {
                   >
                     Comparar Versões
                   </button>
+                  <button
+                    className="tab-btn"
+                    onClick={() => navigate(`/prompts/${id}/playground`)}
+                  >
+                    Playground A/B/C
+                  </button>
                 </div>
 
                 {showCreateVersion ? (
