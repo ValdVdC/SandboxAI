@@ -21,6 +21,8 @@
 - [x] @backend-lead: Implementar renderização Jinja2 no `tasks.py` e novo endpoint de upload. Adicionar dependências.
 - [x] @frontend-lead: Adicionar lib `papaparse` e implementar nova UI de upload no modal de Bulk Testing.
 - [x] @qa-engineer: Adicionar testes unitários para a rota de upload e renderização Jinja2. Realizar testes end-to-end do fluxo no Frontend.
+- [x] @architect & @frontend-lead: Corrigir erros de TypeScript em TestRunner.tsx, remover explicit/implicit any de PapaParse e JSON parsing, e validar o type-check.
+- [x] @architect: Commit, push e abertura de Pull Request para a branch `develop` via `gh pr create`.
 
 ## 🚧 Blockers
 - None.
