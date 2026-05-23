@@ -5,6 +5,11 @@ reviews:
   profile: "chill"
   collapse_draft_pr_reviews: true
   
+  # Habilita revisões automáticas para PRs com alvo em develop e main
+  base_branches:
+    - "main"
+    - "develop"
+  
   # Custom guidelines mapped to specific paths
   path_instructions:
     - path: "backend/app/**"
