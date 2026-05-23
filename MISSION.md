@@ -1,6 +1,6 @@
 # 🎯 Mission: CI/CD and Governance Hardening (Blindagem da Infraestrutura de CI/CD e Governança)
 
-*Status: In Progress - Awaiting Plan Approval.*
+*Status: In Progress - Awaiting CI/CD Verification.*
 
 ---
 
@@ -24,12 +24,12 @@
 ---
 
 ## 📋 Active Tasks
-- [x] **@architect**: Definição da missão, criação da branch (`feature/ci-cd-and-governance-hardening`) e Technical Design no `MISSION.md` (Aguardando Aprovação).
-- [ ] **@architect**: Criação do arquivo `.github/dependabot.yml`.
-- [ ] **@architect**: Criação do guia de integração do CodeRabbit (`docs/CODERABBIT.md`).
-- [ ] **@architect**: Atualização das regras do squad no `AGENTS.md`.
-- [ ] **@qa-engineer**: Validação do YAML de dependabot, revisão de conformidade geral e garantia do DoD.
-- [ ] **@architect**: Revisão de código final, execução de `gh pr checks`, e preparação da mensagem de encerramento da missão com o checklist 100% verde e link da PR.
+- [x] **@architect**: Definição da missão, criação da branch (`feature/ci-cd-and-governance-hardening`) e Technical Design no `MISSION.md` (Aprovado).
+- [x] **@architect**: Criação do arquivo `.github/dependabot.yml`.
+- [x] **@architect**: Criação do guia de integração do CodeRabbit (`docs/CODERABBIT.md`).
+- [x] **@architect**: Atualização das regras do squad no `AGENTS.md`.
+- [x] **@qa-engineer**: Validação do YAML de dependabot, revisão de conformidade geral e garantia do DoD.
+- [/] **@architect**: Revisão de código final, execução de `gh pr checks`, e preparação da mensagem de encerramento da missão com o checklist 100% verde e link da PR.
 
 ---
 
