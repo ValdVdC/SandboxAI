@@ -19,7 +19,7 @@ const TestRunner: React.FC<TestRunnerProps> = ({ promptId, versionNumber, onTest
   const [mode, setMode] = useState<'single' | 'bulk' | 'upload'>('single');
   const [file, setFile] = useState<File | null>(null);
   const [previewHeaders, setPreviewHeaders] = useState<string[]>([]);
-  const [previewRows, setPreviewRows] = useState<any[][]>([]);
+  const [previewRows, setPreviewRows] = useState<string[][]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -33,10 +33,10 @@ const TestRunner: React.FC<TestRunnerProps> = ({ promptId, versionNumber, onTest
       Papa.parse(selectedFile, {
         header: true,
         preview: 3,
-        complete: (results) => {
+        complete: (results: Papa.ParseResult<Record<string, string>>) => {
           if (results.meta.fields) {
             setPreviewHeaders(results.meta.fields);
-            setPreviewRows(results.data.map((row: any) => results.meta.fields!.map(f => row[f])));
+            setPreviewRows(results.data.map((row) => results.meta.fields!.map(f => row[f] ?? '')));
           }
         }
       });
@@ -44,13 +44,13 @@ const TestRunner: React.FC<TestRunnerProps> = ({ promptId, versionNumber, onTest
       const reader = new FileReader();
       reader.onload = (event) => {
         try {
-          const json = JSON.parse(event.target?.result as string);
+          const json = JSON.parse(event.target?.result as string) as Record<string, unknown>[];
           if (Array.isArray(json) && json.length > 0) {
             const headers = Object.keys(json[0]);
             setPreviewHeaders(headers);
-            setPreviewRows(json.slice(0, 3).map(obj => headers.map(h => obj[h])));
+            setPreviewRows(json.slice(0, 3).map((obj) => headers.map(h => String(obj[h] ?? ''))));
           }
-        } catch (e) {
+        } catch (errorParse) {
           setError('Failed to parse JSON for preview');
         }
       };
