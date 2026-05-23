@@ -38,10 +38,10 @@ Objetivo: evoluir para um produto utilizável por engenheiros de IA e DevOps.
 - [x] Documentação da API pública (Swagger/Redoc)
 - [ ] **Framework de Validação Inteligente:**
     - [x] Validação automática básica (Exact/Contains match)
-    - [ ] Avaliação por similaridade semântica (NLP) via Embeddings
+    - [x] Avaliação por similaridade semântica (NLP) via Embeddings
     - [ ] Human-in-the-loop: Sistema de "Double Check" manual para calibrar validações automáticas
-- [ ] **Gestão Dinâmica de Datasets:**
-    - [ ] Upload de CSV/JSON com centenas de variáveis para testes em lote
+- [x] **Gestão Dinâmica de Datasets:**
+    - [x] Upload de CSV/JSON com centenas de variáveis para testes em lote
 - [ ] **Playground Multi-Provider em Tempo Real:**
     - [ ] Interface com múltiplas colunas para rodar 1 prompt em 3 modelos simultaneamente (A/B/C testing)
 - [ ] **Integração CI/CD (DevOps):**
