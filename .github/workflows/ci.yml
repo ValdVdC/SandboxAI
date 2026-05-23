@@ -1,4 +1,5 @@
 name: CI — Tests & Linting
+# Triggered on changes to backend, frontend, docker-compose, requirements, package.json, or this workflow file
 
 on:
   push:
