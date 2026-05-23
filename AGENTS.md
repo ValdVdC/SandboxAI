@@ -29,8 +29,10 @@
 5. **PEER REVIEW & QA**: @qa-engineer validates the implementation before mission closure.
 6. **MISSION CLOSE (Mandatory Finality Check)**: 
    - @architect MUST run `git status` to ensure the branch is clean.
+   - @architect MUST run the command `gh pr checks` to verify that all CI/CD checks/workflows are 100% green and passing.
+   - @architect MUST annex the 100% green checks checklist directly in the final delivery message to the Human.
    - @architect MUST provide the commit hashes or PR link in the final message to the Human.
-   - A mission is NOT closed until all code is committed and the status in `MISSION.md` is `Done`.
+   - A mission is NOT closed until all code is committed, CI is green, and the status in `MISSION.md` is `Done`.
 
 ---
 
@@ -65,6 +67,7 @@ A task is only "Done" when:
 - [ ] At least one unit or integration test covers the change.
 - [ ] Documentation is updated if behavior changes.
 - [ ] A clean, verified commit is pushed to the repository.
+- [ ] All CI/CD checks are passing, verified via `gh pr checks` by the `@architect`.
 
 ---
 
