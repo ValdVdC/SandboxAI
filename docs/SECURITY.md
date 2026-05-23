@@ -32,7 +32,7 @@ Você receberá uma resposta em até 48 horas.
 - Apenas as portas necessárias são expostas ao host
 
 ### Autenticação
-- Senhas armazenadas com **hash bcrypt**
+- Senhas armazenadas com **hash PBKDF2-SHA256 com 260.000 rounds** (fornecendo forte resistência a ataques de força bruta acelerados por GPU)
 - Autenticação via **JWT** com expiração configurável
 - Tokens expiram em no máximo 24 horas por padrão
 
