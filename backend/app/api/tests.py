@@ -2,12 +2,12 @@
 
 import csv
 import io
+import json
 from datetime import datetime, timezone
 from typing import Optional
 from uuid import UUID, uuid4
 
-import json
-from fastapi import APIRouter, Depends, HTTPException, Query, status, UploadFile, File
+from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
 from fastapi.responses import StreamingResponse
 from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -191,7 +191,9 @@ async def execute_bulk_tests(
     }
 
 
-@router.post("/{prompt_id}/versions/{version_num}/tests/bulk/upload", status_code=status.HTTP_202_ACCEPTED)
+@router.post(
+    "/{prompt_id}/versions/{version_num}/tests/bulk/upload", status_code=status.HTTP_202_ACCEPTED
+)
 async def execute_bulk_tests_upload(
     prompt_id: UUID,
     version_num: int,
@@ -224,7 +226,7 @@ async def execute_bulk_tests_upload(
     rows = []
     try:
         if filename.endswith(".csv"):
-            csv_reader = csv.DictReader(codecs.iterdecode(file.file, 'utf-8'))
+            csv_reader = csv.DictReader(codecs.iterdecode(file.file, "utf-8"))
             for row in csv_reader:
                 rows.append(row)
         elif filename.endswith(".json"):
@@ -250,7 +252,7 @@ async def execute_bulk_tests_upload(
         # Extract expected
         expected = None
         # Case insensitive search for 'expected' key
-        expected_key = next((k for k in row.keys() if k.lower() == 'expected'), None)
+        expected_key = next((k for k in row.keys() if k.lower() == "expected"), None)
         if expected_key:
             expected = str(row.pop(expected_key))
 

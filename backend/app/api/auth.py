@@ -1,6 +1,5 @@
 """Authentication endpoints — registration and login."""
 
-
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
