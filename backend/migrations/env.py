@@ -11,7 +11,7 @@ import sys
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 # Import models and Base
-from app.models import Base
+from app.models import Base  # noqa: E402
 
 config = context.config
 

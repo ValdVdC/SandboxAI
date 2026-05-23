@@ -94,7 +94,7 @@ async def list_versions(
         Paginated list of versions
     """
     # Validate ownership
-    prompt = await get_user_prompt(prompt_id, user, db)
+    await get_user_prompt(prompt_id, user, db)
 
     # Count total versions
     count_stmt = (
