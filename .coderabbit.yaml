@@ -2,7 +2,7 @@
 language: "pt-BR"
 
 reviews:
-  profile: "chill"
+  profile: "assertive"
   collapse_draft_pr_reviews: true
   
   # Habilita revisões automáticas para PRs com alvo em develop e main
@@ -13,10 +13,25 @@ reviews:
   # Custom guidelines mapped to specific paths
   path_instructions:
     - path: "backend/app/**"
-      instructions: "Certifique-se de que toda a lógica siga o padrão Python 3.11+, PEP 8 e Ruff. Verifique rigorosamente o uso de tipagem estrita; não é permitido o uso de tipos implícitos como `Any` ou `any`. Garanta que todos os novos schemas Pydantic ou modelos SQLModel estejam declarados de forma explícita e modular."
-    
+      instructions: |
+        Certifique-se de que toda a lógica siga o padrão Python 3.11+, PEP 8 e Ruff.
+        Verifique rigorosamente o uso de tipagem estrita; não é permitido `Any` implícito.
+        Garanta que todos os novos schemas Pydantic ou modelos SQLModel estejam declarados de forma explícita e modular.
+        Toda operação de banco de dados deve estar envolvida em try/except com rollback explícito.
+        Novos providers de LLM devem seguir o Factory Pattern estabelecido em app/workers/tasks.py.
+        Todos os novos endpoints devem ter docstrings claras.
+
     - path: "frontend/src/**"
-      instructions: "Garanta a conformidade estrita com o React 18+ e TypeScript (strict mode). Tipagens como `any` não são permitidas em nenhuma circunstância. Verifique se o estilo adota as variáveis de CSS globais da aplicação para garantir consistência estética e responsividade móvel."
-    
+      instructions: |
+        Garanta conformidade estrita com React 18+ e TypeScript strict mode. Sem `any`.
+        Verifique se o estilo adota as variáveis CSS globais para consistência e responsividade.
+        Todas as respostas de API devem ser tipadas via interfaces em src/types/index.ts.
+        Busca de dados deve usar o hook useApiData — não fetch/axios direto.
+        Novos componentes devem ser acessíveis (atributos ARIA onde necessário).
+
     - path: "**"
-      instructions: "Valide a segurança e integridade operacional. Nunca permita a inclusão de segredos, tokens ou arquivos `.env` no histórico de commits. Assegure que qualquer nova dependência adicionada esteja devidamente registrada em `backend/requirements.txt` (com versão fixada) ou `frontend/package.json` (via npm)."
+      instructions: |
+        Nunca permitir segredos, tokens ou arquivos .env no histórico de commits.
+        Novas dependências devem estar em requirements.txt (versão fixada) ou package.json.
+        Cobertura mínima de 70% para qualquer nova funcionalidade.
+        Mensagens de commit devem seguir Conventional Commits.
