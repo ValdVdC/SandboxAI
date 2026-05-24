@@ -4,7 +4,6 @@ SandboxAI — Backend FastAPI
 Aplicação principal para versionamento e teste de prompts para LLMs.
 """
 
-import logging
 import os
 
 from fastapi import FastAPI
