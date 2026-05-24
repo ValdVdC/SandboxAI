@@ -66,9 +66,7 @@ async def get_provider_status():
         async with httpx.AsyncClient(timeout=2.0) as client:
             response = await client.get(f"{ollama_url}/api/tags", follow_redirects=True)
             ollama_available = response.status_code == 200
-            ollama_reason = (
-                "Service is running" if ollama_available else "Service returned error"
-            )
+            ollama_reason = "Service is running" if ollama_available else "Service returned error"
     except (httpx.TimeoutException, httpx.ConnectError):
         ollama_available = False
         ollama_reason = "Service not running (disabled in this deployment)"

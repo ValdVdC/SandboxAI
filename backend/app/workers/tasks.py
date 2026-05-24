@@ -22,9 +22,7 @@ from app.workers.providers.openai import OpenAIProvider
 logger = logging.getLogger(__name__)
 
 # Database setup
-DATABASE_URL = os.getenv(
-    "DATABASE_URL", "postgresql+asyncpg://user:password@postgres:5432/db"
-)
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql+asyncpg://user:password@postgres:5432/db")
 if DATABASE_URL.startswith("postgresql://"):
     DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://", 1)
 engine = create_async_engine(
@@ -51,9 +49,7 @@ def get_embedding_model():
     """Lazily load and return the TextEmbedding model."""
     global _embedding_model
     if _embedding_model is None:
-        logger.info(
-            "Initializing TextEmbedding model (intfloat/multilingual-e5-small)..."
-        )
+        logger.info("Initializing TextEmbedding model (intfloat/multilingual-e5-small)...")
         _embedding_model = TextEmbedding(model_name="intfloat/multilingual-e5-small")
     return _embedding_model
 
@@ -247,18 +243,12 @@ async def _execute_test_async(
                         logger.warning(
                             f"Embedding generation failed for {test_id}. Fallback to exact match."
                         )
-                        is_correct = (
-                            expected_norm in output_norm or output_norm in expected_norm
-                        )
+                        is_correct = expected_norm in output_norm or output_norm in expected_norm
                         score = 1.0 if is_correct else 0.0
                 except Exception as eval_err:
-                    logger.error(
-                        f"Error during semantic validation for {test_id}: {eval_err}"
-                    )
+                    logger.error(f"Error during semantic validation for {test_id}: {eval_err}")
                     # Fallback to exact match on error
-                    is_correct = (
-                        expected_norm in output_norm or output_norm in expected_norm
-                    )
+                    is_correct = expected_norm in output_norm or output_norm in expected_norm
                     score = 1.0 if is_correct else 0.0
 
             stmt = (
@@ -367,10 +357,7 @@ async def _cleanup_stale_tests_async(hours: int):
         # Update stale running tests to failed
         await db.execute(
             update(TestResult)
-            .where(
-                (TestResult.status == "running")
-                & (TestResult.created_at < stale_threshold)
-            )
+            .where((TestResult.status == "running") & (TestResult.created_at < stale_threshold))
             .values(
                 status="failed",
                 error_message=f"Stale test cleaned up after {hours} hours",
