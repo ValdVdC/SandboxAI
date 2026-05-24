@@ -6,7 +6,16 @@ O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/), e e
 
 ---
 
-## [1.0.0] - 2026-05-09
+## [1.0.0] - SandboxAI Enterprise Edition
+
+Este é o nosso primeiro Release Oficial consolidado contendo todas as features avançadas de testes e orquestração de LLMs para deploy na VPS.
+
+### Épicas Entregues (Fase 2)
+- Validação Semântica
+- Gestão de Datasets
+- Playground Multi-Provider (A/B/C)
+- Motor DevOps (CI/CD Action)
+- Human-in-the-loop
 
 ### Adicionado
 
