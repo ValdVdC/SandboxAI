@@ -27,7 +27,7 @@ Objetivo: entregar uma versão funcional para o seminário de Tópicos Integrado
 
 ---
 
-## Fase 2 — Produto: Consolidação & Testes Avançados (Em andamento)
+## Fase 2 — Produto: Consolidação & Testes Avançados (Concluída)
 
 Objetivo: evoluir para um produto utilizável por engenheiros de IA e DevOps.
 
@@ -44,9 +44,9 @@ Objetivo: evoluir para um produto utilizável por engenheiros de IA e DevOps.
     - [x] Upload de CSV/JSON com centenas de variáveis para testes em lote
 - [x] **Playground Multi-Provider em Tempo Real:**
     - [x] Interface com múltiplas colunas para rodar 1 prompt em 3 modelos simultaneamente (A/B/C testing)
-- [ ] **Integração CI/CD (DevOps):**
-    - [ ] CLI/GitHub Action do SandboxAI para rodar "Prompt Unit Tests" no Pull Request
-    - [ ] Trava de CI/CD: falhar build se o custo de um prompt aumentar >20% ou a precisão cair
+- [x] **Integração CI/CD (DevOps):**
+    - [x] CLI/GitHub Action do SandboxAI para rodar "Prompt Unit Tests" no Pull Request
+    - [x] Trava de CI/CD: falhar build se o custo de um prompt aumentar >20% ou a precisão cair
 
 ---
 

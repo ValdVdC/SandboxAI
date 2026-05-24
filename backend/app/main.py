@@ -4,6 +4,7 @@ SandboxAI — Backend FastAPI
 Aplicação principal para versionamento e teste de prompts para LLMs.
 """
 
+import logging
 import os
 
 from fastapi import FastAPI
@@ -14,6 +15,9 @@ from sqlalchemy import text
 
 from app.api import auth, ci, metrics, playground, prompts, providers, tests, versions
 from app.core.database import dispose_engine, engine
+
+# Trigger CIs
+
 
 # Tags metadata for better organization
 tags_metadata = [
