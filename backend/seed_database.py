@@ -59,7 +59,7 @@ async def seed_database():
         except Exception as e:
             print(f"❌ Seed failed: {e}")
             await session.rollback()
-            raise e
+            raise
         finally:
             await engine.dispose()
 

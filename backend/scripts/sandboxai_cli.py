@@ -4,12 +4,13 @@ SandboxAI CI/CD CLI Client
 Trigger tests and poll for Rule Engine evaluation.
 """
 
+import json
 import os
 import sys
 import time
-import urllib.request
 import urllib.error
-import json
+import urllib.request
+
 import yaml
 
 
@@ -46,6 +47,12 @@ def main():
         sys.exit(1)
 
     base_url = os.getenv("SANDBOXAI_API_URL", "http://localhost:8000")
+    from urllib.parse import urlparse
+
+    parsed = urlparse(base_url)
+    if parsed.scheme not in ["http", "https"] or not parsed.netloc:
+        base_url = "http://localhost:8000"
+
     run_url = f"{base_url}/api/v1/ci/run"
 
     headers = {
@@ -76,7 +83,13 @@ def main():
 
     status_url = f"{base_url}/api/v1/ci/run/{job_id}"
 
+    timeout_seconds = 600
+    start_time = time.time()
+
     while True:
+        if time.time() - start_time > timeout_seconds:
+            print("ERROR: Timeout waiting for CI tests to complete.")
+            sys.exit(1)
         try:
             req = urllib.request.Request(status_url, headers=headers, method="GET")
             with urllib.request.urlopen(req, timeout=10) as response:

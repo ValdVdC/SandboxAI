@@ -57,8 +57,8 @@ button:focus-visible {
 .overflow-x-auto { overflow-x: auto; }
 
 .validation-badge-inline { font-size: 0.75rem; padding: 2px 4px; }
-.override-badge-inline { background-color: #ffc107; color: #000; padding: 2px 4px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; }
-.override-badge-lg { background-color: #ffc107; color: #000; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: bold; margin-left: 8px; }
+.override-badge-inline { background-color: var(--color-warning-bg, #ffc107); color: var(--color-on-warning, #000); padding: 2px 4px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; }
+.override-badge-lg { background-color: var(--color-warning-bg, #ffc107); color: var(--color-on-warning, #000); padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: bold; margin-left: 8px; }
 .action-buttons { margin-top: 4px; display: flex; gap: 4px; }
 .btn-micro { padding: 0 4px; font-size: 0.8rem; }
 .btn-small-actions { padding: 2px 6px; margin-right: 4px; }

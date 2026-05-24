@@ -76,7 +76,9 @@ async def list_prompts(
         query = query.where(Prompt.name.ilike(f"%{search}%"))
 
     # Count total before pagination
-    count_stmt = select(func.count()).select_from(Prompt).where(Prompt.user_id == user.id)
+    count_stmt = (
+        select(func.count()).select_from(Prompt).where(Prompt.user_id == user.id)
+    )
     if search:
         count_stmt = count_stmt.where(Prompt.name.ilike(f"%{search}%"))
 
@@ -218,9 +220,9 @@ async def duplicate_prompt(
 
         await db.commit()
         await db.refresh(new_prompt)
-    except Exception:
+    except Exception as e:
         await db.rollback()
-        raise HTTPException(status_code=500, detail="Failed to duplicate prompt")
+        raise HTTPException(status_code=500, detail="Failed to duplicate prompt") from e
 
     return PromptResponse.from_orm(new_prompt)
 

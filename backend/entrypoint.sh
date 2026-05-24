@@ -16,8 +16,8 @@ echo "⏳ Waiting for database to be ready..."
 echo "   Target: ${DB_USER}@${DB_HOST}:${DB_PORT}/${DB_NAME}"
 max_attempts=30
 attempt=1
-export PGPASSWORD="$POSTGRES_PASSWORD"
-while ! psql -h "$POSTGRES_HOST" -p "$POSTGRES_PORT" -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c '\q' > /dev/null 2>&1
+export PGPASSWORD="$DB_PASSWORD"
+while ! psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -c '\q' > /dev/null 2>&1
 do
     if [ $attempt -ge $max_attempts ]; then
         echo "❌ Database failed to start after $max_attempts attempts"

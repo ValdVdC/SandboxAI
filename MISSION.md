@@ -1,6 +1,6 @@
 # Mission: Release Orchestration (Fase 2)
 
-**Status:** Done 🏁
+**Status:** In Progress
 **Branch**: release/v1.0.0
 
 ## Technical Design

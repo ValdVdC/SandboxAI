@@ -203,7 +203,7 @@ actions/setup-python) to use the verified SHA references.
 
 In @.validation_user.txt:
 - Line 1: O arquivo .validation_user.txt contém credenciais em texto claro
-("persist.20260325003630@example.com|Valida123!"); remova essa linha
+("user@example.test|Password1!"); remova essa linha
 imediatamente e substitua por uma fixture sintética não sensível (por exemplo um
 placeholder like user@example.test|Password1!), ou delete o arquivo se não for
 necessário; depois de ajustar o repo, purgue a credencial do histórico (use git

@@ -14,7 +14,9 @@ from app.models import PromptVersion, TestResult
 logger = logging.getLogger(__name__)
 
 # Database setup
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql+asyncpg://user:password@postgres:5432/db")
+DATABASE_URL = os.getenv(
+    "DATABASE_URL", "postgresql+asyncpg://user:password@postgres:5432/db"
+)
 if DATABASE_URL.startswith("postgresql://"):
     DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://", 1)
 engine = create_async_engine(DATABASE_URL, echo=False)
@@ -47,7 +49,9 @@ async def get_prompt_version(version_id: UUID) -> Optional[PromptVersion]:
         PromptVersion instance or None if not found
     """
     async with AsyncSessionLocal() as db:
-        result = await db.execute(select(PromptVersion).where(PromptVersion.id == version_id))
+        result = await db.execute(
+            select(PromptVersion).where(PromptVersion.id == version_id)
+        )
         return result.scalars().first()
 
 
@@ -195,7 +199,9 @@ async def get_test_statistics() -> dict:
         # Count by status
         stats = {}
         for status in ["queued", "running", "completed", "failed"]:
-            result = await db.execute(select(TestResult).where(TestResult.status == status))
+            result = await db.execute(
+                select(TestResult).where(TestResult.status == status)
+            )
             stats[status] = len(result.scalars().all())
 
         return stats

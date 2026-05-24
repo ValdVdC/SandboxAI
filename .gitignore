@@ -30,4 +30,5 @@ dist/
 build/
 
 # Cache
-.mypy_cache/
+.mypy_cache/.validation_user.txt 
+mypy_cache/
