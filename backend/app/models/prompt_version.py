@@ -22,13 +22,9 @@ class PromptVersion(BaseModel):
     )
     version = Column(Integer, nullable=False)
     content = Column(Text, nullable=False)
-    provider = Column(
-        String(50), nullable=False
-    )  # "ollama", "groq", "openai", "anthropic"
+    provider = Column(String(50), nullable=False)  # "ollama", "groq", "openai", "anthropic"
     model = Column(String(100), nullable=False)  # "llama2:7b", "gpt-4", etc
-    change_description = Column(
-        Text, nullable=True
-    )  # Description of changes in this version
+    change_description = Column(Text, nullable=True)  # Description of changes in this version
 
     # Relationships
     prompt = relationship("Prompt", back_populates="versions", foreign_keys=[prompt_id])

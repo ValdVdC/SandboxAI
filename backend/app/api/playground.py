@@ -51,16 +51,12 @@ async def run_single_config(
                     score = max(0.0, min(1.0, similarity))
                     is_correct = score >= threshold
                 else:
-                    is_correct = (
-                        expected_norm in output_norm or output_norm in expected_norm
-                    )
+                    is_correct = expected_norm in output_norm or output_norm in expected_norm
                     score = 1.0 if is_correct else 0.0
             except Exception as eval_err:
                 logger.error(f"Semantic evaluation failed in playground: {eval_err}")
                 # Fallback to exact match substring
-                is_correct = (
-                    expected_norm in output_norm or output_norm in expected_norm
-                )
+                is_correct = expected_norm in output_norm or output_norm in expected_norm
                 score = 1.0 if is_correct else 0.0
 
         latency_ms = (time.time() - start_time) * 1000
@@ -125,9 +121,7 @@ async def run_playground(
                 template = Template(request_data.prompt_content)
                 final_prompt = template.render(**input_data)
             else:
-                final_prompt = final_prompt.replace(
-                    "{{input}}", str(request_data.input)
-                )
+                final_prompt = final_prompt.replace("{{input}}", str(request_data.input))
                 final_prompt = final_prompt.replace("{input}", str(request_data.input))
         except (json.JSONDecodeError, TypeError):
             final_prompt = final_prompt.replace("{{input}}", str(request_data.input))
