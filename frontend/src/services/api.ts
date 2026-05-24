@@ -220,6 +220,13 @@ class ApiClient {
     return response.data;
   }
 
+  async overrideTestResult(testId: string, isCorrect: boolean): Promise<TestResult> {
+    const response = await this.client.patch<TestResult>(`/prompts/tests/${testId}/override`, {
+      is_correct: isCorrect,
+    });
+    return response.data;
+  }
+
   // Metrics
   async getMetrics(): Promise<Metrics> {
     const response = await this.client.get<Metrics>('/metrics');

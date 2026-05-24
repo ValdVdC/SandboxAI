@@ -82,6 +82,7 @@ export interface TestResult {
   cost_usd?: number;
   score?: number;
   is_correct?: boolean;
+  is_human_overridden?: boolean;
   status: 'queued' | 'pending' | 'running' | 'completed' | 'failed';
   error_message?: string;
   created_at?: string;
