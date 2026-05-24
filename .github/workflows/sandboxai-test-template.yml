@@ -13,9 +13,10 @@ name: SandboxAI Continuous Prompt Testing
 # ==============================================================================
 
 on:
-  pull_request:
-    # O workflow será disparado em PRs direcionados à branch principal.
-    branches: [ "main" ] 
+  workflow_dispatch:
+    # O workflow será disparado manualmente (template)
+    # pull_request:
+    #   branches: [ "main" ] 
 
 jobs:
   sandboxai-tests:
