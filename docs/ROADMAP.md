@@ -36,10 +36,10 @@ Objetivo: evoluir para um produto utilizável por engenheiros de IA e DevOps.
 - [x] Dashboard de Analytics Avançado (Trend lines e Confiabilidade)
 - [x] Exportação de resultados (CSV/JSON)
 - [x] Documentação da API pública (Swagger/Redoc)
-- [ ] **Framework de Validação Inteligente:**
+- [x] **Framework de Validação Inteligente:**
     - [x] Validação automática básica (Exact/Contains match)
     - [x] Avaliação por similaridade semântica (NLP) via Embeddings
-    - [ ] Human-in-the-loop: Sistema de "Double Check" manual para calibrar validações automáticas
+    - [x] Human-in-the-loop: Sistema de "Double Check" manual para calibrar validações automáticas
 - [x] **Gestão Dinâmica de Datasets:**
     - [x] Upload de CSV/JSON com centenas de variáveis para testes em lote
 - [x] **Playground Multi-Provider em Tempo Real:**
