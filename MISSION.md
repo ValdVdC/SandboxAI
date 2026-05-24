@@ -22,4 +22,4 @@ Consolidação e lançamento do **SandboxAI Enterprise Edition (v1.0.0)** para a
 - [x] Sobrescrever o arquivo `MISSION.md` documentando o fechamento do Release.
 - [x] Realizar o commit atômico (`chore(release): prepare v1.0.0`) e enviar as modificações para a nuvem.
 - [x] Criar a Pull Request apontando explicitamente para a branch `main`.
-- [ ] Rodar `gh pr checks` garantindo a integridade dos pipelines CI/CD.
+- [x] Rodar `gh pr checks` garantindo a integridade dos pipelines CI/CD.
