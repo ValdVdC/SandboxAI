@@ -1,6 +1,6 @@
 # Mission: Human-in-the-loop: Sistema de Double Check
 
-**Status**: In Progress
+**Status**: Done
 **Branch**: feature/human-in-the-loop
 
 ## Technical Design
@@ -33,4 +33,4 @@ A última grande Épica da Fase 2 do nosso Roadmap introduz o sistema "Human-in-
 ### @architect
 - [x] Iniciar a branch `feature/human-in-the-loop` a partir da `develop`.
 - [x] Elaborar o Technical Design no `MISSION.md` detalhando as duas decisões de arquitetura e montar as Active Tasks para o squad.
-- [ ] Validar a implementação, realizar o PR via `gh pr create` e garantir que o `gh pr checks` passe 100% verde antes de fechar a missão.
+- [x] Validar a implementação, realizar o PR via `gh pr create` e garantir que o `gh pr checks` passe 100% verde antes de fechar a missão.
