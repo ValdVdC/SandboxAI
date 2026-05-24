@@ -42,8 +42,8 @@ Objetivo: evoluir para um produto utilizável por engenheiros de IA e DevOps.
     - [ ] Human-in-the-loop: Sistema de "Double Check" manual para calibrar validações automáticas
 - [x] **Gestão Dinâmica de Datasets:**
     - [x] Upload de CSV/JSON com centenas de variáveis para testes em lote
-- [ ] **Playground Multi-Provider em Tempo Real:**
-    - [ ] Interface com múltiplas colunas para rodar 1 prompt em 3 modelos simultaneamente (A/B/C testing)
+- [x] **Playground Multi-Provider em Tempo Real:**
+    - [x] Interface com múltiplas colunas para rodar 1 prompt em 3 modelos simultaneamente (A/B/C testing)
 - [ ] **Integração CI/CD (DevOps):**
     - [ ] CLI/GitHub Action do SandboxAI para rodar "Prompt Unit Tests" no Pull Request
     - [ ] Trava de CI/CD: falhar build se o custo de um prompt aumentar >20% ou a precisão cair

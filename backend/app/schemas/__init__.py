@@ -275,3 +275,30 @@ class ErrorResponse(BaseModel):
     detail: str
     error_code: str
     timestamp: datetime
+
+
+# ════════════════════════════════════════════════════════════════════════════
+# CI/CD Schemas
+# ════════════════════════════════════════════════════════════════════════════
+
+class CIRunRequest(BaseModel):
+    """Schema for triggering CI run."""
+
+    prompt_ids: list[UUID]
+
+
+class CIRunResponse(BaseModel):
+    """Schema for CI run response."""
+
+    job_id: UUID
+    status: str
+    message: str
+
+
+class CIJobStatusResponse(BaseModel):
+    """Schema for CI job status."""
+
+    job_id: UUID
+    status: str
+    final_status: Optional[str] = None
+    justification: Optional[str] = None

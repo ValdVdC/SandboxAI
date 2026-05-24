@@ -12,7 +12,7 @@ from fastapi.openapi.utils import get_openapi
 from fastapi.responses import JSONResponse
 from sqlalchemy import text
 
-from app.api import auth, metrics, playground, prompts, providers, tests, versions
+from app.api import auth, metrics, playground, prompts, providers, tests, versions, ci
 from app.core.database import dispose_engine, engine
 
 # Tags metadata for better organization
@@ -124,6 +124,7 @@ app.include_router(tests.router)
 app.include_router(metrics.router)
 app.include_router(providers.router)
 app.include_router(playground.router)
+app.include_router(ci.router)
 
 
 # Startup and shutdown events
