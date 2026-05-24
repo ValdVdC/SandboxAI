@@ -1,43 +1,40 @@
-# 🎯 Mission: CI/CD and Governance Hardening (Blindagem da Infraestrutura de CI/CD e Governança)
+# 🚀 MISSION: Real-Time Multi-Provider Playground
 
-*Status: Done - Mission Completed.*
+## 🎯 Goal
+Desenvolver a feature 'Playground Multi-Provider em Tempo Real'. Esta funcionalidade permitirá aos usuários interagir com múltiplos provedores de LLMs simultaneamente, visualizando as respostas lado a lado em tempo real.
 
----
+## 🏗️ Technical Design
+A arquitetura deve seguir rigorosamente estas 3 decisões arquiteturais inegociáveis:
 
-## 🏛️ Architect's Vision
-*Objective: Solidificar a governança do squad e blindar a infraestrutura de CI/CD de forma definitiva, assegurando que atualizações de dependências ocorram de forma automatizada e segura (Dependabot), que revisões por IA de PRs sejam de fácil ativação (CodeRabbit), e que nenhuma entrega ao Humano ocorra sem a validação verde total de workflows via GitHub CLI (`gh pr checks`).*
+1. **UI Layout (Colunas Paralelas)**
+   - Layout de colunas paralelas contendo um Editor central.
+   - 3 colunas dispostas lado a lado para exibição das respostas dos diferentes LLMs.
 
-### Technical Design & Strategy
-1. **Dependabot Configuration**: 
-   - Arquivo `.github/dependabot.yml` configurado na versão `2`.
-   - Monitoramento semanal de atualizações de dependências:
-     - Backend (`pip` em `/backend`)
-     - Frontend (`npm` em `/frontend`)
-     - Dockerfiles e compose files (`docker` em `/backend`, `/frontend`, e `/`)
-2. **CodeRabbit Integration Guide**:
-   - Criação do documento `docs/CODERABBIT.md` de fácil leitura para o time.
-   - Detalhamento passo-a-passo simples para ativação no link `app.coderabbit.ai/wizard`.
-3. **Hardening of Squad Rules (`AGENTS.md`)**:
-   - Modificação da etapa **6. MISSION CLOSE (Mandatory Finality Check)** em `AGENTS.md` para exigir explicitamente que toda missão ou Pull Request só seja finalizada após o `@architect` rodar o comando `gh pr checks` e anexar o checklist 100% verde no relatório ao Humano.
-   - Atualização do **Definition of Done (DoD)** para garantir que "Toda verificação de CI via `gh pr checks` está verde e validada pelo `@architect`".
+2. **Concurrency (Execução Paralela no Cliente)**
+   - A execução e orquestração da concorrência ocorrerão no cliente (React).
+   - O frontend fará requisições HTTP simultâneas e paralelas para garantir que a UI não seja bloqueada durante a espera pelas respostas.
 
----
+3. **Version Control (Edição Live e Salvamento Manual)**
+   - Suporte para Edição Live com salvamento manual.
+   - Inclusão de um botão 'Salvar como Nova Versão', que será responsável por registrar as novas versões dos prompts no banco de dados, compondo o Histórico de Prompts.
 
 ## 📋 Active Tasks
-- [x] **@architect**: Definição da missão, criação da branch (`feature/ci-cd-and-governance-hardening`) e Technical Design no `MISSION.md` (Aprovado).
-- [x] **@architect**: Criação do arquivo `.github/dependabot.yml`.
-- [x] **@architect**: Criação e posterior remoção (para limpeza da base de código) do guia de integração do CodeRabbit (`docs/CODERABBIT.md`).
-- [x] **@architect**: Configuração de regras do squad e revisões em português via `.coderabbit.yaml`.
-- [x] **@architect**: Atualização das regras do squad no `AGENTS.md`.
-- [x] **@qa-engineer**: Validação do YAML de dependabot, revisão de conformidade geral e garantia do DoD.
-- [x] **@architect**: Revisão de código final, execução de `gh pr checks`, e preparação da mensagem de encerramento da missão com o checklist 100% verde e link da PR.
 
----
+### 👷‍♂️ @architect (Mission Planning & Coordination)
+- [x] Criar a branch `feature/realtime-multiprovider-playground` a partir da `develop`.
+- [x] Substituir e reescrever o arquivo `MISSION.md` com os objetivos, design técnico e as tarefas iniciais.
+- [ ] Validar a integração final, verificar status do Git (`git status`) e garantir que a CI/CD esteja 100% verde (`gh pr checks`) antes do fechamento da missão.
 
-## 🚧 Blockers
-- None.
+### 🔌 @backend-lead (API & Database Integration)
+- [x] Criar endpoint assíncrono genérico e não-bloqueante (FastAPI) capaz de receber requisições do frontend e repassá-las aos provedores de LLM suportados.
+- [x] Criar a migração de banco de dados (SQLModel) para implementar a tabela de Histórico de Prompts (suportando o botão 'Salvar como Nova Versão').
+- [x] Atualizar os esquemas Pydantic (`app/schemas/`) para garantir que o @frontend-lead possa se sincronizar adequadamente.
 
----
+### 🎨 @frontend-lead (React UI & State Management)
+- [x] Implementar os componentes React para o Layout de Colunas (Editor central + 3 colunas de respostas).
+- [x] Implementar a lógica e o estado paralelo (React State/Hooks) para disparar e gerenciar requisições HTTP simultâneas sem bloquear a UI.
+- [x] Integrar a funcionalidade de "Salvar como Nova Versão" com o backend (Console Log isolado no topo).
 
-## 📝 Recent Decisions
-- Centralizar o monitoramento do Dependabot de forma semanal, garantindo atualizações regulares sem sobrecarregar o fluxo de desenvolvimento do time.
+## 🚦 Status
+- **Fase Atual:** Finalizada (Pronto para QA).
+- **Status:** Concluído. Todas as integrações (UI, Rotas e Banco de Dados) foram validadas.
