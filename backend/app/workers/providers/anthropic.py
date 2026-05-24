@@ -11,7 +11,7 @@ from app.workers.providers import BaseProvider, ProviderResult
 class AnthropicProvider(BaseProvider):
     """Anthropic API provider for executing prompts."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize Anthropic provider."""
         api_key = os.getenv("ANTHROPIC_API_KEY")
         if not api_key:

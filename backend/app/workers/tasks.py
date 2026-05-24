@@ -160,13 +160,15 @@ async def _execute_test_async(
     if test_input is not None:
         import json
 
-        from jinja2 import Template
+        from jinja2 import StrictUndefined
+        from jinja2.sandbox import SandboxedEnvironment
 
         try:
             # Try to parse test_input as JSON to support multiple variables
             input_data = json.loads(test_input)
             if isinstance(input_data, dict):
-                template = Template(prompt_content)
+                env = SandboxedEnvironment(undefined=StrictUndefined)
+                template = env.from_string(prompt_content)
                 final_prompt = template.render(**input_data)
             else:
                 # If it's a JSON but not a dictionary, fallback

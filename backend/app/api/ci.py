@@ -113,7 +113,17 @@ async def get_ci_run_status(
     Polling endpoint for CI/CD run.
     When tests are done, evaluates if there's a >20% cost increase or semantic precision drop.
     """
-    stmt = select(TestResult).where(TestResult.batch_id == job_id)
+    stmt = (
+        select(TestResult)
+        .join(PromptVersion, TestResult.version_id == PromptVersion.id)
+        .join(Prompt, PromptVersion.prompt_id == Prompt.id)
+        .where(
+            and_(
+                TestResult.batch_id == job_id,
+                Prompt.user_id == user.id
+            )
+        )
+    )
     result = await db.execute(stmt)
     current_tests = result.scalars().all()
 
@@ -132,7 +142,16 @@ async def get_ci_run_status(
     # Get previous runs for these prompts to compare
     version_ids = list(set(t.version_id for t in current_tests))
 
-    stmt = select(PromptVersion.prompt_id).where(PromptVersion.id.in_(version_ids))
+    stmt = (
+        select(PromptVersion.prompt_id)
+        .join(Prompt, PromptVersion.prompt_id == Prompt.id)
+        .where(
+            and_(
+                PromptVersion.id.in_(version_ids),
+                Prompt.user_id == user.id
+            )
+        )
+    )
     result = await db.execute(stmt)
     prompt_ids = result.scalars().all()
 
@@ -140,11 +159,13 @@ async def get_ci_run_status(
     stmt = (
         select(TestResult)
         .join(PromptVersion, TestResult.version_id == PromptVersion.id)
+        .join(Prompt, PromptVersion.prompt_id == Prompt.id)
         .where(
             and_(
                 PromptVersion.prompt_id.in_(prompt_ids),
                 TestResult.batch_id != job_id,
                 TestResult.status == "completed",
+                Prompt.user_id == user.id,
             )
         )
     )

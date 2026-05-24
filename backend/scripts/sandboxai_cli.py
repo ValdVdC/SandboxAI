@@ -27,6 +27,9 @@ def main():
     with open(config_path, "r") as f:
         try:
             config = yaml.safe_load(f)
+            if not isinstance(config, dict) or "prompts" not in config or not isinstance(config["prompts"], list):
+                print(f"ERROR: {config_path} has an invalid structure. Expected a dictionary with a 'prompts' list.")
+                sys.exit(1)
         except yaml.YAMLError as e:
             print(f"ERROR parsing {config_path}: {e}")
             sys.exit(1)
@@ -50,7 +53,7 @@ def main():
     print(f"Triggering CI tests for prompts: {prompt_ids}")
     try:
         req = urllib.request.Request(run_url, data=data, headers=headers, method="POST")
-        with urllib.request.urlopen(req) as response:
+        with urllib.request.urlopen(req, timeout=10) as response:
             resp_body = response.read().decode("utf-8")
             resp_data = json.loads(resp_body)
             job_id = resp_data["job_id"]
@@ -70,7 +73,7 @@ def main():
     while True:
         try:
             req = urllib.request.Request(status_url, headers=headers, method="GET")
-            with urllib.request.urlopen(req) as response:
+            with urllib.request.urlopen(req, timeout=10) as response:
                 resp_body = response.read().decode("utf-8")
                 data = json.loads(resp_body)
 

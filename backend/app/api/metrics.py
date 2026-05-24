@@ -4,8 +4,8 @@ from decimal import Decimal
 from typing import List
 from uuid import UUID
 
-from fastapi import APIRouter, Depends
-from sqlalchemy import func, select
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
@@ -261,6 +261,24 @@ async def compare_versions(
     Returns:
         Comparison metrics for both versions
     """
+
+    async def validate_version_ownership(version_id: UUID):
+        stmt = (
+            select(PromptVersion)
+            .join(Prompt, PromptVersion.prompt_id == Prompt.id)
+            .where(
+                and_(
+                    PromptVersion.id == version_id,
+                    Prompt.user_id == user.id
+                )
+            )
+        )
+        result = await db.execute(stmt)
+        if not result.scalar_one_or_none():
+            raise HTTPException(status_code=403, detail="Not authorized to access this version")
+
+    await validate_version_ownership(v1_id)
+    await validate_version_ownership(v2_id)
 
     async def get_version_stats(version_id: UUID):
         stmt = (

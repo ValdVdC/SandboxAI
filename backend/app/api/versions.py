@@ -214,9 +214,13 @@ async def restore_version(
     # Update prompt
     prompt.version_count = next_version
 
-    db.add(new_version)
-    db.add(prompt)
-    await db.commit()
-    await db.refresh(new_version)
+    try:
+        db.add(new_version)
+        db.add(prompt)
+        await db.commit()
+        await db.refresh(new_version)
+    except Exception as e:
+        await db.rollback()
+        raise HTTPException(status_code=500, detail="Failed to restore version")
 
     return VersionResponse.from_orm(new_version)

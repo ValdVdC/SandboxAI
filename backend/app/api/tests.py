@@ -159,22 +159,26 @@ async def execute_bulk_tests(
     test_ids = []
     batch_id = uuid4()
 
-    # Create all records first
-    for test_input in bulk_data.inputs:
-        test_id = uuid4()
-        test_result = TestResult(
-            id=test_id,
-            version_id=version.id,
-            batch_id=batch_id,
-            input=test_input,
-            status="queued",
-            expected=bulk_data.expected,
-            created_at=datetime.now(timezone.utc),
-        )
-        db.add(test_result)
-        test_ids.append(str(test_id))
+    try:
+        # Create all records first
+        for test_input in bulk_data.inputs:
+            test_id = uuid4()
+            test_result = TestResult(
+                id=test_id,
+                version_id=version.id,
+                batch_id=batch_id,
+                input=test_input,
+                status="queued",
+                expected=bulk_data.expected,
+                created_at=datetime.now(timezone.utc),
+            )
+            db.add(test_result)
+            test_ids.append(str(test_id))
 
-    await db.commit()
+        await db.commit()
+    except Exception as e:
+        await db.rollback()
+        raise HTTPException(status_code=500, detail="Failed to queue bulk tests")
 
     # Queue tasks in parallel after commit
     task_ids = []
@@ -241,8 +245,8 @@ async def execute_bulk_tests_upload(
             rows = data
         else:
             raise ValueError("Unsupported file format. Use CSV or JSON.")
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Error parsing file: {e}")
+    except (csv.Error, json.JSONDecodeError, UnicodeDecodeError, ValueError) as e:
+        raise HTTPException(status_code=400, detail=f"Error parsing file: {e}") from e
 
     if len(rows) > MAX_BULK_TESTS:
         raise HTTPException(
@@ -257,7 +261,7 @@ async def execute_bulk_tests_upload(
         # Extract expected
         expected = None
         # Case insensitive search for 'expected' key
-        expected_key = next((k for k in row.keys() if k.lower() == "expected"), None)
+        expected_key = next((k for k in row if k.lower() == "expected"), None)
         if expected_key:
             expected = str(row.pop(expected_key))
 
@@ -305,9 +309,22 @@ async def export_tests_csv(
     batch_id: Optional[UUID] = None,
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
-):
+) -> StreamingResponse:
     """
     Export test results to a CSV file.
+
+    Retrieves tests for a specific prompt version (and optionally a batch ID)
+    and returns a downloadable CSV stream. Requires authentication via get_current_user.
+
+    Args:
+        prompt_id: ID of the prompt
+        version_num: Version number
+        batch_id: Optional ID to filter by batch
+        user: Current authenticated user
+        db: Database session
+
+    Returns:
+        CSV file stream via StreamingResponse
     """
     # Validate ownership
     await get_user_prompt(prompt_id, user, db)

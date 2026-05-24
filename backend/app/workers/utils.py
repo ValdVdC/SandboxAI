@@ -83,7 +83,7 @@ def validate_provider(provider: str) -> bool:
     Returns:
         True if provider is valid, False otherwise
     """
-    valid_providers = ["groq", "ollama"]
+    valid_providers = ["groq", "ollama", "openai", "anthropic"]
     return provider.lower() in valid_providers
 
 
@@ -101,6 +101,8 @@ def validate_model(provider: str, model: str) -> bool:
     valid_models = {
         "groq": ["llama-3.3-70b-versatile", "gemma2-9b-it", "llama-3.1-8b-instant"],
         "ollama": ["mistral", "llama2", "neural-chat"],  # Common local models
+        "openai": ["gpt-4o", "gpt-4-turbo", "gpt-3.5-turbo"],
+        "anthropic": ["claude-3-5-sonnet-20240620", "claude-3-opus-20240229"],
     }
 
     if provider.lower() not in valid_models:

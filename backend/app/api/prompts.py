@@ -193,31 +193,27 @@ async def duplicate_prompt(
     result = await db.execute(stmt)
     latest_version = result.scalar_one_or_none()
 
-    # Create new prompt
-    new_prompt = Prompt(
-        id=uuid4(),
-        user_id=user.id,
-        name=f"{original.name} (Copy)",
-        description=original.description,
-        version_count=1 if latest_version else 0,
-    )
-    db.add(new_prompt)
+    try:
+        db.add(new_prompt)
 
-    # Duplicate version if exists
-    if latest_version:
-        new_version = PromptVersion(
-            id=uuid4(),
-            prompt_id=new_prompt.id,
-            version=1,
-            content=latest_version.content,
-            provider=latest_version.provider,
-            model=latest_version.model,
-            change_description=f"Initial version duplicated from {original.name} v{latest_version.version}",
-        )
-        db.add(new_version)
+        # Duplicate version if exists
+        if latest_version:
+            new_version = PromptVersion(
+                id=uuid4(),
+                prompt_id=new_prompt.id,
+                version=1,
+                content=latest_version.content,
+                provider=latest_version.provider,
+                model=latest_version.model,
+                change_description=f"Initial version duplicated from {original.name} v{latest_version.version}",
+            )
+            db.add(new_version)
 
-    await db.commit()
-    await db.refresh(new_prompt)
+        await db.commit()
+        await db.refresh(new_prompt)
+    except Exception as e:
+        await db.rollback()
+        raise HTTPException(status_code=500, detail="Failed to duplicate prompt")
 
     return PromptResponse.from_orm(new_prompt)
 

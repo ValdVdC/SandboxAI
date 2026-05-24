@@ -88,8 +88,11 @@ def custom_openapi():
             "bearerFormat": "JWT",
         }
     }
+    PUBLIC_PATHS = {"/", "/health"}
     for path in openapi_schema["paths"]:
         for method in openapi_schema["paths"][path]:
+            if path in PUBLIC_PATHS or openapi_schema["paths"][path][method].get("security"):
+                continue
             openapi_schema["paths"][path][method]["security"] = [{"BearerAuth": []}]
     app.openapi_schema = openapi_schema
     return app.openapi_schema
@@ -211,9 +214,11 @@ async def global_exception_handler(request, exc):
     Returns:
         JSONResponse: Resposta com erro
     """
+    import logging
+    logging.exception("Unhandled exception:")
     return JSONResponse(
         status_code=500,
-        content={"detail": "Erro interno do servidor", "type": type(exc).__name__},
+        content={"detail": "Erro interno do servidor"},
     )
 
 

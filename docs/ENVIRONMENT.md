@@ -111,19 +111,23 @@ VITE_API_URL=http://localhost:8000
 ## Obtendo as chaves de API
 
 ### Groq (Gratuito)
+
 1. Acesse [console.groq.com](https://console.groq.com)
 2. Crie uma conta gratuita
 3. Vá em **API Keys** e gere uma nova chave
 
 ### Ollama (Sem chave necessária)
+
 O Ollama roda localmente e não exige API Key. Basta ter o container rodando.
 
 ### OpenAI
+
 1. Acesse [platform.openai.com](https://platform.openai.com)
 2. Vá em **API Keys**
 3. Gere uma nova chave secreta
 
 ### Anthropic
+
 1. Acesse [console.anthropic.com](https://console.anthropic.com)
 2. Vá em **API Keys**
 3. Gere uma nova chave

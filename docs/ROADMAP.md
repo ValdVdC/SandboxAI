@@ -5,6 +5,7 @@ Este documento descreve o planejamento de desenvolvimento do SandboxAI, organiza
 ---
 
 ## Metodologia de Desenvolvimento (Antigravity Squad)
+
 O SandboxAI é desenvolvido utilizando um paradigma "Agent-First". A orquestração Multi-Agente (AGENTS.md, MISSION.md) **não é uma funcionalidade do produto final**, mas sim a estrutura de times virtuais (`@architect`, `@backend-lead`, `@frontend-lead`, `@qa-engineer`) que constrói o código.
 
 ---
@@ -37,16 +38,16 @@ Objetivo: evoluir para um produto utilizável por engenheiros de IA e DevOps.
 - [x] Exportação de resultados (CSV/JSON)
 - [x] Documentação da API pública (Swagger/Redoc)
 - [x] **Framework de Validação Inteligente:**
-    - [x] Validação automática básica (Exact/Contains match)
-    - [x] Avaliação por similaridade semântica (NLP) via Embeddings
-    - [x] Human-in-the-loop: Sistema de "Double Check" manual para calibrar validações automáticas
+  - [x] Validação automática básica (Exact/Contains match)
+  - [x] Avaliação por similaridade semântica (NLP) via Embeddings
+  - [x] Human-in-the-loop: Sistema de "Double Check" manual para calibrar validações automáticas
 - [x] **Gestão Dinâmica de Datasets:**
-    - [x] Upload de CSV/JSON com centenas de variáveis para testes em lote
+  - [x] Upload de CSV/JSON com centenas de variáveis para testes em lote
 - [x] **Playground Multi-Provider em Tempo Real:**
-    - [x] Interface com múltiplas colunas para rodar 1 prompt em 3 modelos simultaneamente (A/B/C testing)
+  - [x] Interface com múltiplas colunas para rodar 1 prompt em 3 modelos simultaneamente (A/B/C testing)
 - [x] **Integração CI/CD (DevOps):**
-    - [x] CLI/GitHub Action do SandboxAI para rodar "Prompt Unit Tests" no Pull Request
-    - [x] Trava de CI/CD: falhar build se o custo de um prompt aumentar >20% ou a precisão cair
+  - [x] CLI/GitHub Action do SandboxAI para rodar "Prompt Unit Tests" no Pull Request
+  - [x] Trava de CI/CD: falhar build se o custo de um prompt aumentar >20% ou a precisão cair
 
 ---
 
@@ -55,14 +56,14 @@ Objetivo: evoluir para um produto utilizável por engenheiros de IA e DevOps.
 Objetivo: transformar em um serviço corporativo escalável, monetizável e seguro.
 
 - [ ] **Observabilidade Avançada:**
-    - [ ] Implementação de Semantic Caching (Redis) para economizar tokens em testes repetidos
-    - [ ] Tracing com OpenTelemetry (Gargalos de rede vs latência de IA)
+  - [ ] Implementação de Semantic Caching (Redis) para economizar tokens em testes repetidos
+  - [ ] Tracing com OpenTelemetry (Gargalos de rede vs latência de IA)
 - [ ] **Gestão de Infraestrutura:**
-    - [ ] Sandbox Real (Docker-in-Docker para isolamento total da rede)
-    - [ ] Gestão de Conta (Workspaces Multi-tenant para times)
-    - [ ] Quotas financeiras rigorosas e Circuit Breakers por usuário/organização
+  - [ ] Sandbox Real (Docker-in-Docker para isolamento total da rede)
+  - [ ] Gestão de Conta (Workspaces Multi-tenant para times)
+  - [ ] Quotas financeiras rigorosas e Circuit Breakers por usuário/organização
 - [ ] **Ecossistema:**
-    - [ ] Sistema de planos (Free, Pro, Teams)
-    - [ ] Compartilhamento de prompts entre usuários (Template Hub)
-    - [ ] Webhooks para notificações externas (ex: Slack quando um teste em lote termina)
-    - [ ] Integração nativa bidirecional com GitHub (sincronizar prompts com repositórios)
+  - [ ] Sistema de planos (Free, Pro, Teams)
+  - [ ] Compartilhamento de prompts entre usuários (Template Hub)
+  - [ ] Webhooks para notificações externas (ex: Slack quando um teste em lote termina)
+  - [ ] Integração nativa bidirecional com GitHub (sincronizar prompts com repositórios)

@@ -3,7 +3,7 @@
 import uuid
 from decimal import Decimal
 
-from sqlalchemy import UUID, Boolean, Column, ForeignKey, Integer, Numeric, String, Text
+from sqlalchemy import UUID, Boolean, CheckConstraint, Column, ForeignKey, Integer, Numeric, String, Text
 from sqlalchemy.orm import relationship
 
 from .base import BaseModel
@@ -13,6 +13,10 @@ class TestResult(BaseModel):
     """TestResult model representing results of prompt tests."""
 
     __tablename__ = "test_results"
+
+    __table_args__ = (
+        CheckConstraint('score >= 0.0 AND score <= 1.0', name='check_score_range'),
+    )
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     version_id = Column(

@@ -11,7 +11,11 @@ from pydantic import ValidationError
 
 # Configuration
 # Use a more secure placeholder or raise an error if not set in production
-JWT_SECRET = os.getenv("JWT_SECRET", "DEVELOPMENT_INSECURE_KEY_REPLACE_IN_PROD")
+JWT_SECRET = os.environ.get("JWT_SECRET")
+if not JWT_SECRET:
+    if os.environ.get("ENVIRONMENT") == "production":
+        raise RuntimeError("JWT_SECRET is required in production environment.")
+    JWT_SECRET = "DEVELOPMENT_INSECURE_KEY_REPLACE_IN_PROD"
 JWT_EXPIRE_HOURS = int(os.getenv("JWT_EXPIRE_HOURS", "24"))
 ALGORITHM = "HS256"
 

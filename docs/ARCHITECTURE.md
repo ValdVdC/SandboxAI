@@ -49,6 +49,7 @@ frontend:
 ```
 
 **Responsabilidades:**
+
 - Interface para criação e versionamento de prompts
 - Visualização de resultados e métricas
 - Comparação side-by-side de versões
@@ -74,6 +75,7 @@ api:
 ```
 
 **Responsabilidades:**
+
 - Autenticação e autorização
 - CRUD de prompts e versões
 - Enfileiramento de testes no Redis
@@ -107,6 +109,7 @@ worker:
 ```
 
 **Responsabilidades:**
+
 - Consumir fila de testes do Redis
 - Processar templates e variáveis do prompt
 - Chamar providers de LLM via chamadas HTTP/API (Groq, OpenAI, Ollama)
@@ -198,6 +201,7 @@ redis:
 ```
 
 **Responsabilidades:**
+
 - Fila de execução de testes
 - Cache de resultados frequentes
 - Controle de rate limiting por usuário
@@ -218,6 +222,7 @@ ollama:
 ```
 
 **Modelos suportados:**
+
 - `llama3:8b` — uso geral, equilibrado
 - `mistral:7b` — rápido e eficiente
 - `gemma:7b` — bom para tarefas estruturadas
@@ -241,6 +246,7 @@ ollama:
 ### Por que processamento em Background (Worker)?
 
 Testes de prompts via API podem sofrer com timeouts e alta latência. Utilizar um worker Celery garante:
+
 - **Resiliência** — retry automático em caso de falha do provider de LLM
 - **Desacoplamento** — a API principal não é bloqueada
 - **Escalabilidade** — múltiplos workers podem ser instanciados paralelamente
@@ -248,6 +254,7 @@ Testes de prompts via API podem sofrer com timeouts e alta latência. Utilizar u
 ### Por que Redis como fila?
 
 Testes de LLM são operações lentas (1-30 segundos). Usar uma fila assíncrona permite:
+
 - API responde imediatamente sem bloquear
 - Worker processa em background
 - Frontend consulta status via polling ou WebSocket
@@ -268,6 +275,7 @@ Testes de LLM são operações lentas (1-30 segundos). Usar uma fila assíncrona
 O SandboxAI utiliza Alembic para versionamento e execução de migrações de banco de dados. Cada mudança no schema é registrada como uma migração SQL reutilizável.
 
 **Migrações existentes:**
+
 - `001_initial.py` — Schema inicial (users, prompts, prompt_versions, test_results)
 - `002_add_change_description.py` — Adição do campo `change_description` em `prompt_versions`
 
@@ -287,6 +295,7 @@ async def run_migrations():
 ```
 
 Isso garante:
+
 - ✅ Migrations executam automaticamente no startup do container
 - ✅ Sem conflitos de CLI em ambientes isolados
 - ✅ Sem necessidade de comandos manuais pós-deployment
@@ -339,11 +348,13 @@ API/Worker inicia (pronto para requisições)
 O Worker é um consumer Celery que processa testes em background:
 
 1. **Enfileiramento** — API coloca tarefa no Redis
+
    ```python
    execute_test.delay(version_id, test_input)
    ```
 
 2. **Pickup** — Worker consome tarefa da fila
+
    ```python
    @app.task(bind=True)
    def execute_test(self, version_id, test_input):
@@ -351,12 +362,14 @@ O Worker é um consumer Celery que processa testes em background:
    ```
 
 3. **Execução** — Worker chama o provedor configurado
+
    ```python
    provider = _get_provider(provider_name)
    result = await provider.execute(final_prompt, model, timeout)
    ```
 
 4. **Persistência** — Resultados salvos no PostgreSQL
+
    ```python
    test_result = TestResult(
        version_id=version_id,
@@ -402,6 +415,7 @@ docker compose up --scale worker=4
 O Redis garante que cada tarefa seja processada por apenas um worker, sem duplicação.
 mais testes em paralelo
 docker compose up --scale worker=4
+
 ```
 
 O Redis garante que cada tarefa seja processada por apenas um worker, sem duplicação.

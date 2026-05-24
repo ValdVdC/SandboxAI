@@ -111,14 +111,14 @@ async def run_playground(
     # 1. Jinja2 Prompt Interpolation
     final_prompt = request_data.prompt_content
     if request_data.input:
-        import json
-
-        from jinja2 import Template
+        from jinja2 import StrictUndefined
+        from jinja2.sandbox import SandboxedEnvironment
 
         try:
             input_data = json.loads(request_data.input)
             if isinstance(input_data, dict):
-                template = Template(request_data.prompt_content)
+                env = SandboxedEnvironment(undefined=StrictUndefined)
+                template = env.from_string(request_data.prompt_content)
                 final_prompt = template.render(**input_data)
             else:
                 final_prompt = final_prompt.replace("{{input}}", str(request_data.input))

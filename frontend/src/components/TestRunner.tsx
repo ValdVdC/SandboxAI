@@ -152,12 +152,12 @@ const TestRunner: React.FC<TestRunnerProps> = ({ promptId, versionNumber, onTest
               onChange={handleFileChange} 
               ref={fileInputRef}
               required 
-              style={{ display: 'block', marginBottom: '1rem' }}
+              className="d-block-mb-1"
             />
             {file && previewHeaders.length > 0 && (
               <div className="dataset-preview">
                 <h4>Preview ({file.name})</h4>
-                <div style={{ overflowX: 'auto' }}>
+                <div className="overflow-x-auto">
                   <table className="preview-table">
                     <thead>
                       <tr>

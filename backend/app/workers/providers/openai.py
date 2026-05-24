@@ -11,7 +11,7 @@ from app.workers.providers import BaseProvider, ProviderResult
 class OpenAIProvider(BaseProvider):
     """OpenAI API provider for executing prompts."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize OpenAI provider."""
         api_key = os.getenv("OPENAI_API_KEY")
         if not api_key:

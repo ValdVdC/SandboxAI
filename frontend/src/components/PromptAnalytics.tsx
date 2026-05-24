@@ -127,11 +127,11 @@ const PromptAnalytics: React.FC<PromptAnalyticsProps> = ({ promptId, selectedVer
 
   return (
     <div className="prompt-analytics">
-      <div className="analytics-header" style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-lg)', marginBottom: 'var(--spacing-md)' }}>
-        <button className="btn btn-secondary back-btn" style={{ marginBottom: 0 }} onClick={onBack}>
+      <div className="analytics-header header-container">
+        <button className="btn btn-secondary back-btn mb-0" onClick={onBack} aria-label="Voltar">
           ← Voltar
         </button>
-        <h2 style={{ margin: 0 }}>Analytics: v{activeVersionNumber}</h2>
+        <h2 className="m-0">Analytics: v{activeVersionNumber}</h2>
       </div>
 
       <div className="analytics-summary-cards">

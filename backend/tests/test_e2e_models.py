@@ -4,6 +4,7 @@ import uuid
 
 import pytest
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 
 from app.models import Prompt, PromptVersion, TestResult, User
 
@@ -57,7 +58,7 @@ async def test_user_email_unique_constraint(db_session):
     db_session.add(user2)
 
     # Should raise integrity error
-    with pytest.raises(Exception):  # IntegrityError
+    with pytest.raises(IntegrityError):
         await db_session.commit()
 
 

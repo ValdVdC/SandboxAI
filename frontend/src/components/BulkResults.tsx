@@ -92,9 +92,9 @@ const BulkResults: React.FC<BulkResultsProps> = ({ promptId, versionNumber, test
   return (
     <div className="bulk-results">
       <div className="bulk-header">
-        <div style={{ display: 'flex', gap: 'var(--spacing-md)', alignItems: 'center' }}>
-          <button className="btn btn-secondary" onClick={onBack}>← Voltar</button>
-          <h2 style={{ margin: 0 }}>Resultados do Lote</h2>
+        <div className="flex-center-md">
+          <button className="btn btn-secondary" onClick={onBack} aria-label="Voltar">← Voltar</button>
+          <h2 className="m-0">Resultados do Lote</h2>
         </div>
         <button 
           className="btn btn-primary" 
@@ -160,23 +160,23 @@ const BulkResults: React.FC<BulkResultsProps> = ({ promptId, versionNumber, test
                 <td className="col-status">
                   <span className={`status-badge ${result.status}`}>{result.status}</span>
                   {result.status === 'completed' && result.is_correct !== null && result.is_correct !== undefined && (
-                    <div style={{ marginTop: '4px' }}>
-                      <span className={`validation-badge ${result.is_correct ? 'pass' : 'fail'}`} style={{ fontSize: '0.75rem', padding: '2px 4px' }}>
+                    <div className="mt-4">
+                      <span className={`validation-badge validation-badge-inline ${result.is_correct ? 'pass' : 'fail'}`}>
                         {result.is_correct ? '✅' : '❌'}
                       </span>
                     </div>
                   )}
                   {result.is_human_overridden && (
-                    <div style={{ marginTop: '4px' }}>
-                      <span className="override-badge" style={{ backgroundColor: '#ffc107', color: '#000', padding: '2px 4px', borderRadius: '4px', fontSize: '0.7rem', fontWeight: 'bold' }}>
+                    <div className="mt-4">
+                      <span className="override-badge override-badge-inline">
                         ⚠️ Override
                       </span>
                     </div>
                   )}
                   {result.status === 'completed' && (
-                    <div style={{ marginTop: '4px', display: 'flex', gap: '4px' }}>
-                      <button className="btn btn-secondary btn-small" style={{ padding: '0 4px', fontSize: '0.8rem' }} onClick={() => handleOverride(result.id, true)} title="Aprovar">👍</button>
-                      <button className="btn btn-secondary btn-small" style={{ padding: '0 4px', fontSize: '0.8rem' }} onClick={() => handleOverride(result.id, false)} title="Reprovar">👎</button>
+                    <div className="action-buttons">
+                      <button className="btn btn-secondary btn-micro" onClick={() => handleOverride(result.id, true)} title="Aprovar" aria-label="Aprovar">👍</button>
+                      <button className="btn btn-secondary btn-micro" onClick={() => handleOverride(result.id, false)} title="Reprovar" aria-label="Reprovar">👎</button>
                     </div>
                   )}
                 </td>

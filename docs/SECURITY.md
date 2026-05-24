@@ -18,25 +18,30 @@ Você receberá uma resposta em até 48 horas.
 ## Práticas de Segurança do Projeto
 
 ### Credenciais e Segredos
+
 - API Keys e senhas são armazenadas **apenas em variáveis de ambiente**
 - O arquivo `.env` está no `.gitignore` e nunca é commitado
 - O arquivo `.env.example` contém apenas chaves, sem valores reais
 
 ### Containers Docker
+
 - Containers de execução de testes **não têm acesso à rede do host**
 - Cada container de teste é destruído imediatamente após a execução
 - Containers rodam com usuário não-root sempre que possível
 
 ### Comunicação entre Serviços
+
 - Serviços se comunicam pela **rede interna Docker**, não exposta externamente
 - Apenas as portas necessárias são expostas ao host
 
 ### Autenticação
+
 - Senhas armazenadas com **hash PBKDF2-SHA256 com 260.000 rounds** (fornecendo forte resistência a ataques de força bruta acelerados por GPU)
 - Autenticação via **JWT** com expiração configurável
 - Tokens expiram em no máximo 24 horas por padrão
 
 ### CI/CD
+
 - Scan automático de vulnerabilidades em todas as imagens Docker via **Trivy**
 - Pull Requests bloqueados se vulnerabilidades críticas forem encontradas
 

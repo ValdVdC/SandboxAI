@@ -106,14 +106,14 @@ const TestResults: React.FC<TestResultsProps> = ({
           </span>
         )}
         {result.is_human_overridden && (
-          <span className="override-badge" style={{ backgroundColor: '#ffc107', color: '#000', padding: '2px 8px', borderRadius: '4px', fontSize: '0.8rem', fontWeight: 'bold', marginLeft: '8px' }}>
+          <span className="override-badge override-badge-lg">
             ⚠️ Override Manual
           </span>
         )}
         {result.status === 'completed' && (
-          <span className="override-actions" style={{ marginLeft: '8px' }}>
-            <button className="btn btn-secondary btn-small" style={{ padding: '2px 6px', marginRight: '4px' }} onClick={() => handleOverride(true)} title="Aprovar">👍</button>
-            <button className="btn btn-secondary btn-small" style={{ padding: '2px 6px' }} onClick={() => handleOverride(false)} title="Reprovar">👎</button>
+          <span className="override-actions ml-8">
+            <button className="btn btn-secondary btn-small-actions" onClick={() => handleOverride(true)} title="Aprovar" aria-label="Aprovar">👍</button>
+            <button className="btn btn-secondary btn-small-action" onClick={() => handleOverride(false)} title="Reprovar" aria-label="Reprovar">👎</button>
           </span>
         )}
         {result.created_at && (

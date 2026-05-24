@@ -97,8 +97,8 @@ const TestHistory: React.FC<TestHistoryProps> = ({ promptId, versionNumber, onVi
 
       {selectedTest ? (
         <div className="test-detail-view">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--spacing-lg)' }}>
-            <button className="btn btn-secondary back-btn" style={{ marginBottom: 0 }} onClick={() => setSelectedTest(null)}>
+          <div className="header-container-sb">
+            <button className="btn btn-secondary back-btn mb-0" onClick={() => setSelectedTest(null)} aria-label="Voltar">
               ← Voltar
             </button>
             <button 
@@ -175,7 +175,7 @@ const TestHistory: React.FC<TestHistoryProps> = ({ promptId, versionNumber, onVi
                       <span className={`status-badge status-${test.status}`}>{test.status}</span>
                       <span className="test-date">{new Date(test.created_at || '').toLocaleString('pt-BR')}</span>
                     </div>
-                    <div className="test-preview" style={{marginTop: 'var(--spacing-sm)'}}>
+                    <div className="test-preview mt-sm">
                       <p className="input-preview">
                         <strong>Entrada:</strong> {test.input.substring(0, 120)}{test.input.length > 120 ? '...' : ''}
                       </p>

@@ -15,10 +15,12 @@ def run_migrations():
 
     # Create Alembic config
     alembic_cfg = Config(os.path.join(script_dir, "alembic.ini"))
-    alembic_cfg.set_main_option(
-        "sqlalchemy.url",
-        os.environ.get("DATABASE_URL", "postgresql://user:password@localhost/dbname"),
-    )
+    db_url = os.environ.get("DATABASE_URL")
+    if not db_url:
+        print("❌ DATABASE_URL environment variable is required", file=sys.stderr)
+        return 1
+
+    alembic_cfg.set_main_option("sqlalchemy.url", db_url)
 
     # Run migrations
     print("🔄 Running database migrations...")

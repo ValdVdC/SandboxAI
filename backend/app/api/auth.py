@@ -1,6 +1,6 @@
 """Authentication endpoints — registration and login."""
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, Header, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -132,7 +132,7 @@ async def login(
 
 @router.get("/me", response_model=UserResponse)
 async def get_current_user(
-    token: str = None,
+    token: str = Header(None),
     db: AsyncSession = Depends(get_db),
 ) -> UserResponse:
     """
