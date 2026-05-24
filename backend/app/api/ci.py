@@ -31,7 +31,9 @@ async def trigger_ci_run(
 
     for prompt_id in request.prompt_ids:
         # Verify ownership
-        stmt = select(Prompt).where(and_(Prompt.id == prompt_id, Prompt.user_id == user.id))
+        stmt = select(Prompt).where(
+            and_(Prompt.id == prompt_id, Prompt.user_id == user.id)
+        )
         result = await db.execute(stmt)
         prompt = result.scalar_one_or_none()
         if not prompt:
@@ -117,12 +119,7 @@ async def get_ci_run_status(
         select(TestResult)
         .join(PromptVersion, TestResult.version_id == PromptVersion.id)
         .join(Prompt, PromptVersion.prompt_id == Prompt.id)
-        .where(
-            and_(
-                TestResult.batch_id == job_id,
-                Prompt.user_id == user.id
-            )
-        )
+        .where(and_(TestResult.batch_id == job_id, Prompt.user_id == user.id))
     )
     result = await db.execute(stmt)
     current_tests = result.scalars().all()
@@ -145,12 +142,7 @@ async def get_ci_run_status(
     stmt = (
         select(PromptVersion.prompt_id)
         .join(Prompt, PromptVersion.prompt_id == Prompt.id)
-        .where(
-            and_(
-                PromptVersion.id.in_(version_ids),
-                Prompt.user_id == user.id
-            )
-        )
+        .where(and_(PromptVersion.id.in_(version_ids), Prompt.user_id == user.id))
     )
     result = await db.execute(stmt)
     prompt_ids = result.scalars().all()
@@ -180,9 +172,9 @@ async def get_ci_run_status(
             justification="No historical data to compare. First run passed.",
         )
 
-    hist_cost_per_test = sum((float(t.cost_usd) if t.cost_usd else 0.0) for t in hist_tests) / len(
-        hist_tests
-    )
+    hist_cost_per_test = sum(
+        (float(t.cost_usd) if t.cost_usd else 0.0) for t in hist_tests
+    ) / len(hist_tests)
     hist_scores = [float(t.score) for t in hist_tests if t.score is not None]
     hist_avg_score = sum(hist_scores) / len(hist_scores) if hist_scores else 0.0
 
