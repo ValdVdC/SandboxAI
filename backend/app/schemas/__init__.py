@@ -281,6 +281,7 @@ class ErrorResponse(BaseModel):
 # CI/CD Schemas
 # ════════════════════════════════════════════════════════════════════════════
 
+
 class CIRunRequest(BaseModel):
     """Schema for triggering CI run."""
 

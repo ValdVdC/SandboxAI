@@ -35,7 +35,9 @@ async def get_metrics(
 
     """
     # Count total prompts
-    prompts_stmt = select(func.count()).select_from(Prompt).where(Prompt.user_id == user.id)
+    prompts_stmt = (
+        select(func.count()).select_from(Prompt).where(Prompt.user_id == user.id)
+    )
     prompts_result = await db.execute(prompts_stmt)
     total_prompts = prompts_result.scalar() or 0
 
@@ -184,7 +186,9 @@ async def get_prompt_metrics(
 
     # Get versions count
     versions_stmt = (
-        select(func.count()).select_from(PromptVersion).where(PromptVersion.prompt_id == prompt_id)
+        select(func.count())
+        .select_from(PromptVersion)
+        .where(PromptVersion.prompt_id == prompt_id)
     )
     versions_result = await db.execute(versions_stmt)
     total_versions = versions_result.scalar() or 0
@@ -285,7 +289,9 @@ async def compare_versions(
             "avg_tokens": float(data.avg_tokens) if data.avg_tokens else 0.0,
             "avg_cost": float(data.avg_cost) if data.avg_cost else 0.0,
             "success_rate": (
-                (data.success_count / data.count * 100) if data.count and data.count > 0 else 0.0
+                (data.success_count / data.count * 100)
+                if data.count and data.count > 0
+                else 0.0
             ),
         }
 
@@ -323,7 +329,9 @@ async def get_prompt_evolution(
             func.count(TestResult.id)
             .filter(TestResult.status == "completed")
             .label("success_count"),
-            func.count(TestResult.id).filter(TestResult.status == "failed").label("fail_count"),
+            func.count(TestResult.id)
+            .filter(TestResult.status == "failed")
+            .label("fail_count"),
         )
         .select_from(PromptVersion)
         .outerjoin(TestResult, PromptVersion.id == TestResult.version_id)

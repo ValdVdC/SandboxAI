@@ -44,7 +44,9 @@ async def create_version(
 
     # Get current version count to determine next version number
     stmt = (
-        select(func.count()).select_from(PromptVersion).where(PromptVersion.prompt_id == prompt_id)
+        select(func.count())
+        .select_from(PromptVersion)
+        .where(PromptVersion.prompt_id == prompt_id)
     )
     result = await db.execute(stmt)
     count = result.scalar() or 0
@@ -98,7 +100,9 @@ async def list_versions(
 
     # Count total versions
     count_stmt = (
-        select(func.count()).select_from(PromptVersion).where(PromptVersion.prompt_id == prompt_id)
+        select(func.count())
+        .select_from(PromptVersion)
+        .where(PromptVersion.prompt_id == prompt_id)
     )
     count_result = await db.execute(count_stmt)
     total = count_result.scalar() or 0
@@ -160,7 +164,9 @@ async def get_version(
     return VersionResponse.from_orm(version)
 
 
-@router.post("/{prompt_id}/versions/{version_num}/restore", response_model=VersionResponse)
+@router.post(
+    "/{prompt_id}/versions/{version_num}/restore", response_model=VersionResponse
+)
 async def restore_version(
     prompt_id: UUID,
     version_num: int,

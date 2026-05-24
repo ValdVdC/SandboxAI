@@ -92,7 +92,9 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(["prompt_id"], ["prompts.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),
     )
-    op.create_index(op.f("ix_prompt_versions_prompt_id"), "prompt_versions", ["prompt_id"])
+    op.create_index(
+        op.f("ix_prompt_versions_prompt_id"), "prompt_versions", ["prompt_id"]
+    )
 
     # Create test_results table
     op.create_table(
@@ -124,7 +126,9 @@ def upgrade() -> None:
             nullable=False,
             server_default=sa.func.now(),
         ),
-        sa.ForeignKeyConstraint(["version_id"], ["prompt_versions.id"], ondelete="CASCADE"),
+        sa.ForeignKeyConstraint(
+            ["version_id"], ["prompt_versions.id"], ondelete="CASCADE"
+        ),
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_index(op.f("ix_test_results_version_id"), "test_results", ["version_id"])
