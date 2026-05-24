@@ -141,22 +141,24 @@ const Playground: React.FC = () => {
     }
   };
 
-  const handleSaveAsVersion = async (index: number) => {
+  const handleSaveAsVersion = async () => {
     if (!id || !prompt) return;
-    const config = configs[index];
+    
+    // Pegando as configurações da Coluna A (índice 0) como referência principal para o Prompt
+    const mainConfig = configs[0];
 
     try {
-      setSavingIndex(index);
+      setSavingIndex(0); // Mostra estado de loading
       
       await apiClient.createVersion(id, {
         content: promptContent,
-        provider: config.provider,
-        model: config.model,
+        provider: mainConfig.provider,
+        model: mainConfig.model,
       });
 
       setAlert({
         type: 'success',
-        message: `Prompt salvo com sucesso como Nova Versão com o modelo ${config.model}!`,
+        message: `Prompt salvo com sucesso como Nova Versão! (Configuração: ${mainConfig.provider} / ${mainConfig.model})`,
       });
     } catch (err) {
       console.error('Failed to save version:', err);
@@ -230,19 +232,31 @@ const Playground: React.FC = () => {
               />
             </div>
 
-            <button
-              className="btn-execute-playground"
-              onClick={handleExecute}
-              disabled={executing}
-            >
-              {executing ? (
-                <>
-                  <span className="spinner-mini"></span> Processando colunas...
-                </>
-              ) : (
-                '🚀 Executar Teste A/B/C'
-              )}
-            </button>
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button
+                className="btn-execute-playground"
+                onClick={handleExecute}
+                disabled={executing}
+                style={{ flex: 1 }}
+              >
+                {executing ? (
+                  <>
+                    <span className="spinner-mini"></span> Processando colunas...
+                  </>
+                ) : (
+                  '🚀 Executar Teste A/B/C'
+                )}
+              </button>
+
+              <button
+                className="btn-save-version-top"
+                onClick={handleSaveAsVersion}
+                disabled={savingIndex !== null}
+                style={{ flex: 1, backgroundColor: 'var(--success-color, #10b981)', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
+              >
+                {savingIndex !== null ? '💾 Salvando...' : '💾 Salvar como Nova Versão (Usando Coluna A)'}
+              </button>
+            </div>
           </div>
 
           {/* RIGHT VIEW: 3 Parallel Columns */}
@@ -348,18 +362,7 @@ const Playground: React.FC = () => {
                           )}
                         </div>
 
-                        {/* Save Action */}
-                        {result.status === 'completed' && (
-                          <div className="column-save-action">
-                            <button
-                              className="btn-save-column-version"
-                              onClick={() => handleSaveAsVersion(index)}
-                              disabled={savingIndex !== null}
-                            >
-                              {savingIndex === index ? 'Salvando...' : '💾 Salvar como Nova Versão'}
-                            </button>
-                          </div>
-                        )}
+                        {/* Save Action moved to the top */}
                       </div>
                     ) : (
                       <div className="column-empty-state">
