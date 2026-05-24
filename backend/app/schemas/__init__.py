@@ -175,12 +175,19 @@ class TestResultResponse(BaseModel):
     cost_usd: Optional[Decimal]
     score: Optional[float] = None
     is_correct: Optional[bool] = None
+    is_human_overridden: Optional[bool] = False
     status: str  # "pending", "completed", "failed"
     error_message: Optional[str]
     created_at: datetime
 
     class Config:
         from_attributes = True
+
+
+class TestOverrideRequest(BaseModel):
+    """Schema for overriding a test result."""
+
+    is_correct: bool
 
 
 class TestListResponse(BaseModel):

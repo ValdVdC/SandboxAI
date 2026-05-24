@@ -35,6 +35,17 @@ const TestResults: React.FC<TestResultsProps> = ({
     }
   };
 
+  const handleOverride = async (isCorrect: boolean) => {
+    if (!result) return;
+    try {
+      const updatedResult = await apiClient.overrideTestResult(result.id, isCorrect);
+      setResult(updatedResult);
+    } catch (err) {
+      console.error('Failed to override test result', err);
+      alert('Falha ao registrar override manual.');
+    }
+  };
+
   useEffect(() => {
     const fetchResult = async () => {
       try {
@@ -92,6 +103,17 @@ const TestResults: React.FC<TestResultsProps> = ({
         {result.status === 'completed' && result.is_correct !== null && result.is_correct !== undefined && (
           <span className={`validation-badge ${result.is_correct ? 'pass' : 'fail'}`}>
             {result.is_correct ? '✅ PASS' : '❌ FAIL'}
+          </span>
+        )}
+        {result.is_human_overridden && (
+          <span className="override-badge" style={{ backgroundColor: '#ffc107', color: '#000', padding: '2px 8px', borderRadius: '4px', fontSize: '0.8rem', fontWeight: 'bold', marginLeft: '8px' }}>
+            ⚠️ Override Manual
+          </span>
+        )}
+        {result.status === 'completed' && (
+          <span className="override-actions" style={{ marginLeft: '8px' }}>
+            <button className="btn btn-secondary btn-small" style={{ padding: '2px 6px', marginRight: '4px' }} onClick={() => handleOverride(true)} title="Aprovar">👍</button>
+            <button className="btn btn-secondary btn-small" style={{ padding: '2px 6px' }} onClick={() => handleOverride(false)} title="Reprovar">👎</button>
           </span>
         )}
         {result.created_at && (

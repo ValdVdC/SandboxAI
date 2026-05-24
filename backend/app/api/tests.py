@@ -20,6 +20,7 @@ from app.schemas import (
     TestExecuteRequest,
     TestListResponse,
     TestResultResponse,
+    TestOverrideRequest,
 )
 from app.workers.tasks import execute_test as execute_test_task
 
@@ -497,6 +498,56 @@ async def get_test_result(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Test result not found",
+        )
+
+    return TestResultResponse.from_orm(test_result)
+
+
+@router.patch("/tests/{test_id}/override", response_model=TestResultResponse)
+async def override_test_result(
+    test_id: UUID,
+    override_data: TestOverrideRequest,
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> TestResultResponse:
+    """
+    Override the correctness assessment of a test result.
+
+    Sets `is_correct` to the provided value and marks `is_human_overridden` as True.
+    """
+    # Get test result with ownership validation
+    stmt = (
+        select(TestResult)
+        .join(PromptVersion, TestResult.version_id == PromptVersion.id)
+        .join(Prompt, PromptVersion.prompt_id == Prompt.id)
+        .where(
+            and_(
+                TestResult.id == test_id,
+                Prompt.user_id == user.id,
+            )
+        )
+    )
+
+    result = await db.execute(stmt)
+    test_result = result.scalar_one_or_none()
+
+    if not test_result:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Test result not found",
+        )
+
+    test_result.is_correct = override_data.is_correct
+    test_result.is_human_overridden = True
+
+    try:
+        await db.commit()
+        await db.refresh(test_result)
+    except Exception as e:
+        await db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to update test result: {e}"
         )
 
     return TestResultResponse.from_orm(test_result)

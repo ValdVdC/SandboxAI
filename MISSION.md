@@ -1,35 +1,36 @@
-# Mission: Integração CI/CD (DevOps)
+# Mission: Human-in-the-loop: Sistema de Double Check
 
-**Status**: Done
-**Branch**: feature/ci-cd-prompt-testing
+**Status**: In Progress
+**Branch**: feature/human-in-the-loop
 
 ## Technical Design
 
-A missão épica de Integração CI/CD visa garantir a estabilidade e a eficiência dos prompts através de testes contínuos automatizados.
+A última grande Épica da Fase 2 do nosso Roadmap introduz o sistema "Human-in-the-loop", permitindo que um avaliador humano faça um double check e sobrescreva as avaliações de precisão dadas pela IA em resultados de testes.
 
 ### Decisões Arquiteturais Inegociáveis
 
-1. **Trigger Engine (Cliente CLI)**:
-   - O script CLI Python será apenas um cliente burro.
-   - Ele deve ler um arquivo local chamado `sandboxai-ci.yml` na raiz do repositório onde a GitHub Action rodar. Este arquivo especificará os IDs dos prompts alvo que devem ser testados.
-   - Em caso de falha (status FAIL), a CLI deve imprimir o texto de justificativa retornado pelo backend e forçar um `exit 1` para quebrar a pipeline CI/CD.
+1. **Data Model (Override Local)**:
+   - Vamos adicionar uma coluna `is_human_overridden = Column(Boolean, default=False)` na tabela `TestResult`.
+   - Quando o usuário humano discordar da nota de precisão da IA, o backend irá inverter o valor da coluna `is_correct` e setar `is_human_overridden = True`. 
+   - Isso resolve o problema de auditoria sem precisar de tabelas separadas.
 
-2. **Rule Engine (Server-side)**:
-   - Toda a inteligência de avaliação (ex: custo explodindo em >20% ou precisão semântica caindo) ocorrerá no Backend do SandboxAI.
-   - O endpoint avaliará o histórico de execução e calculará o drift.
-   - O endpoint retornará um status consolidado (`PASS` ou `FAIL`) junto com a justificativa detalhada em texto.
+2. **Experiência do Usuário (UI)**:
+   - Na nossa tabela de resultados de testes existente no Frontend (React), adicionaremos botões simples (👍 Aprovar / 👎 Reprovar).
+   - Ao clicar, o frontend dispara a API e marca visualmente a linha com uma tag 'Override Manual'.
 
 ## Active Tasks
 
 ### @backend-lead
-- [x] Criar o script CLI em Python (na pasta `backend/scripts/`) utilizando as bibliotecas padrão ou `argparse`/`typer`.
-- [x] Criar/atualizar o endpoint da API para calcular o drift (regressão de custos e precisão) com base no histórico, retornando o status final e justificativa.
+- [x] Adicionar o campo `is_human_overridden` no modelo `TestResult`.
+- [x] Gerar e aplicar a migração (Alembic).
+- [x] Criar o endpoint `PATCH /api/v1/tests/{test_id}/override` para inverter `is_correct` e marcar `is_human_overridden` como `True`.
 
-### @qa-engineer
-- [x] Criar a documentação do processo de CI/CD para os usuários.
-- [x] Criar um template real `.github/workflows/sandboxai-test-template.yml` para os clientes copiarem em seus repositórios.
+### @frontend-lead
+- [x] Modificar a interface de testes em lote.
+- [x] Plugar os botões de Thumbs Up/Down consumindo o novo endpoint.
+- [x] Marcar visualmente a linha atualizada com a tag 'Override Manual'.
 
 ### @architect
-- [x] Iniciar a branch `feature/ci-cd-prompt-testing` a partir da `develop`.
-- [x] Elaborar o Technical Design no `MISSION.md` definindo as regras da Trigger Engine e Rule Engine.
-- [x] Validar a implementação, realizar o PR via `gh pr create` e garantir que o `gh pr checks` passe 100% verde antes de fechar a missão.
+- [x] Iniciar a branch `feature/human-in-the-loop` a partir da `develop`.
+- [x] Elaborar o Technical Design no `MISSION.md` detalhando as duas decisões de arquitetura e montar as Active Tasks para o squad.
+- [ ] Validar a implementação, realizar o PR via `gh pr create` e garantir que o `gh pr checks` passe 100% verde antes de fechar a missão.

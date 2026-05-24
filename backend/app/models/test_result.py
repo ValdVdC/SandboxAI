@@ -30,6 +30,7 @@ class TestResult(BaseModel):
     cost_usd = Column(Numeric(10, 6), nullable=True, default=Decimal("0.0"))  # Cost in USD
     score = Column(Numeric(3, 2), nullable=True)  # Validation score (0.0 to 1.0)
     is_correct = Column(Boolean, nullable=True)  # Whether the output matches expected
+    is_human_overridden = Column(Boolean, default=False)  # Whether a human has overridden the result
     status = Column(
         String(50), nullable=False, default="pending"
     )  # "pending", "completed", "failed"

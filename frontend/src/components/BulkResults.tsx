@@ -31,6 +31,16 @@ const BulkResults: React.FC<BulkResultsProps> = ({ promptId, versionNumber, test
     }
   };
 
+  const handleOverride = async (testId: string, isCorrect: boolean) => {
+    try {
+      const updatedResult = await apiClient.overrideTestResult(testId, isCorrect);
+      setResults(prev => prev.map(r => r.id === testId ? updatedResult : r));
+    } catch (err) {
+      console.error('Failed to override test result', err);
+      alert('Falha ao registrar override manual.');
+    }
+  };
+
   useEffect(() => {
     let isMounted = true;
 
@@ -149,6 +159,26 @@ const BulkResults: React.FC<BulkResultsProps> = ({ promptId, versionNumber, test
                 </td>
                 <td className="col-status">
                   <span className={`status-badge ${result.status}`}>{result.status}</span>
+                  {result.status === 'completed' && result.is_correct !== null && result.is_correct !== undefined && (
+                    <div style={{ marginTop: '4px' }}>
+                      <span className={`validation-badge ${result.is_correct ? 'pass' : 'fail'}`} style={{ fontSize: '0.75rem', padding: '2px 4px' }}>
+                        {result.is_correct ? '✅' : '❌'}
+                      </span>
+                    </div>
+                  )}
+                  {result.is_human_overridden && (
+                    <div style={{ marginTop: '4px' }}>
+                      <span className="override-badge" style={{ backgroundColor: '#ffc107', color: '#000', padding: '2px 4px', borderRadius: '4px', fontSize: '0.7rem', fontWeight: 'bold' }}>
+                        ⚠️ Override
+                      </span>
+                    </div>
+                  )}
+                  {result.status === 'completed' && (
+                    <div style={{ marginTop: '4px', display: 'flex', gap: '4px' }}>
+                      <button className="btn btn-secondary btn-small" style={{ padding: '0 4px', fontSize: '0.8rem' }} onClick={() => handleOverride(result.id, true)} title="Aprovar">👍</button>
+                      <button className="btn btn-secondary btn-small" style={{ padding: '0 4px', fontSize: '0.8rem' }} onClick={() => handleOverride(result.id, false)} title="Reprovar">👎</button>
+                    </div>
+                  )}
                 </td>
               </tr>
             ))}
