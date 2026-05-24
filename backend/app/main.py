@@ -12,7 +12,7 @@ from fastapi.openapi.utils import get_openapi
 from fastapi.responses import JSONResponse
 from sqlalchemy import text
 
-from app.api import auth, metrics, playground, prompts, providers, tests, versions, ci
+from app.api import auth, ci, metrics, playground, prompts, providers, tests, versions
 from app.core.database import dispose_engine, engine
 
 # Tags metadata for better organization
@@ -95,9 +95,7 @@ def custom_openapi():
 app.openapi = custom_openapi
 
 # Middleware CORS
-allowed_origins_env = os.getenv(
-    "ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:5173"
-)
+allowed_origins_env = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:5173")
 if allowed_origins_env.strip() == "*":
     print(
         "⚠️ WARNING: ALLOWED_ORIGINS='*' is incompatible with "
@@ -152,9 +150,7 @@ async def startup_event():
                 print("❌ Critical database schema is missing (users/alembic_version).")
                 print("Please run migrations manually: alembic upgrade head")
                 # We raise error here to stop startup without modifying anything
-                raise RuntimeError(
-                    "Database schema missing. Manual intervention required."
-                )
+                raise RuntimeError("Database schema missing. Manual intervention required.")
 
             print("✅ Database connection validated")
     except Exception as e:

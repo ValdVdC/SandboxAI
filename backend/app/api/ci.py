@@ -4,13 +4,13 @@ import uuid
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import select, and_
+from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.dependencies import get_current_user
 from app.models import Prompt, PromptVersion, TestResult, User
-from app.schemas import CIRunRequest, CIRunResponse, CIJobStatusResponse
+from app.schemas import CIJobStatusResponse, CIRunRequest, CIRunResponse
 from app.workers.tasks import execute_test as execute_test_task
 
 router = APIRouter(prefix="/api/v1/ci", tags=["CI/CD"])
@@ -31,9 +31,7 @@ async def trigger_ci_run(
 
     for prompt_id in request.prompt_ids:
         # Verify ownership
-        stmt = select(Prompt).where(
-            and_(Prompt.id == prompt_id, Prompt.user_id == user.id)
-        )
+        stmt = select(Prompt).where(and_(Prompt.id == prompt_id, Prompt.user_id == user.id))
         result = await db.execute(stmt)
         prompt = result.scalar_one_or_none()
         if not prompt:
@@ -161,9 +159,9 @@ async def get_ci_run_status(
             justification="No historical data to compare. First run passed.",
         )
 
-    hist_cost_per_test = sum(
-        (float(t.cost_usd) if t.cost_usd else 0.0) for t in hist_tests
-    ) / len(hist_tests)
+    hist_cost_per_test = sum((float(t.cost_usd) if t.cost_usd else 0.0) for t in hist_tests) / len(
+        hist_tests
+    )
     hist_scores = [float(t.score) for t in hist_tests if t.score is not None]
     hist_avg_score = sum(hist_scores) / len(hist_scores) if hist_scores else 0.0
 
