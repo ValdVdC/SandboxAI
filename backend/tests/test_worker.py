@@ -1,6 +1,5 @@
 """Tests for Celery worker and provider implementations."""
 
-import time
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest

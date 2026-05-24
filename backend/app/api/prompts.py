@@ -193,6 +193,13 @@ async def duplicate_prompt(
     result = await db.execute(stmt)
     latest_version = result.scalar_one_or_none()
 
+    new_prompt = Prompt(
+        id=uuid4(),
+        user_id=user.id,
+        name=f"{original.name} (Copy)",
+        description=original.description,
+    )
+
     try:
         db.add(new_prompt)
 
@@ -211,7 +218,7 @@ async def duplicate_prompt(
 
         await db.commit()
         await db.refresh(new_prompt)
-    except Exception as e:
+    except Exception:
         await db.rollback()
         raise HTTPException(status_code=500, detail="Failed to duplicate prompt")
 

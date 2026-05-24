@@ -219,7 +219,7 @@ async def restore_version(
         db.add(prompt)
         await db.commit()
         await db.refresh(new_version)
-    except Exception as e:
+    except Exception:
         await db.rollback()
         raise HTTPException(status_code=500, detail="Failed to restore version")
 

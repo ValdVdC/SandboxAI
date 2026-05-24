@@ -176,7 +176,7 @@ async def execute_bulk_tests(
             test_ids.append(str(test_id))
 
         await db.commit()
-    except Exception as e:
+    except Exception:
         await db.rollback()
         raise HTTPException(status_code=500, detail="Failed to queue bulk tests")
 
