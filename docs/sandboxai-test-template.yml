@@ -1,5 +1,8 @@
 name: SandboxAI Continuous Prompt Testing
 
+permissions:
+  contents: read
+
 # ==============================================================================
 # Documentação e Processo de CI/CD para Usuários (SandboxAI)
 # ==============================================================================
@@ -15,7 +18,7 @@ name: SandboxAI Continuous Prompt Testing
 on:
   pull_request:
     # O workflow será disparado em PRs direcionados à branch principal.
-    branches: [ "main" ] 
+    branches: ["main"]
 
 jobs:
   sandboxai-tests:
@@ -25,11 +28,13 @@ jobs:
     steps:
       # 1. Faz o checkout do código do seu repositório
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+        with:
+          persist-credentials: false
 
       # 2. Configura a versão do Python necessária para rodar o cliente CLI
       - name: Setup Python 3.11
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@82c7e631bb3cdc910f68e0081d67478d79c6982d
         with:
           python-version: '3.11'
 
