@@ -257,31 +257,35 @@ async def execute_bulk_tests_upload(
     test_ids = []
     batch_id = uuid4()
 
-    for row in rows:
-        # Extract expected
-        expected = None
-        # Case insensitive search for 'expected' key
-        expected_key = next((k for k in row if k.lower() == "expected"), None)
-        if expected_key:
-            expected = str(row.pop(expected_key))
+    try:
+        for row in rows:
+            # Extract expected
+            expected = None
+            # Case insensitive search for 'expected' key
+            expected_key = next((k for k in row if k.lower() == "expected"), None)
+            if expected_key:
+                expected = str(row.pop(expected_key))
 
-        # Rest of the row is input variables
-        test_input_json = json.dumps(row)
+            # Rest of the row is input variables
+            test_input_json = json.dumps(row)
 
-        test_id = uuid4()
-        test_result = TestResult(
-            id=test_id,
-            version_id=version.id,
-            batch_id=batch_id,
-            input=test_input_json,
-            status="queued",
-            expected=expected,
-            created_at=datetime.now(timezone.utc),
-        )
-        db.add(test_result)
-        test_ids.append(str(test_id))
+            test_id = uuid4()
+            test_result = TestResult(
+                id=test_id,
+                version_id=version.id,
+                batch_id=batch_id,
+                input=test_input_json,
+                status="queued",
+                expected=expected,
+                created_at=datetime.now(timezone.utc),
+            )
+            db.add(test_result)
+            test_ids.append(str(test_id))
 
-    await db.commit()
+        await db.commit()
+    except Exception as e:
+        await db.rollback()
+        raise HTTPException(status_code=500, detail="Failed to queue bulk tests from file") from e
 
     # Queue tasks in parallel after commit
     task_ids = []
