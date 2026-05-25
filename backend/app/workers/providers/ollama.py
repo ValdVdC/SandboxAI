@@ -47,9 +47,7 @@ class OllamaProvider(BaseProvider):
                 )
 
                 if response.status_code != 200:
-                    raise Exception(
-                        f"Ollama API error: {response.status_code} - {response.text}"
-                    )
+                    raise Exception(f"Ollama API error: {response.status_code} - {response.text}")
 
                 data = response.json()
 
@@ -58,9 +56,7 @@ class OllamaProvider(BaseProvider):
                 output = data.get("response", "")
 
                 # Ollama provides metrics in the response
-                tokens_used = data.get("eval_count", 0) + data.get(
-                    "prompt_eval_count", 0
-                )
+                tokens_used = data.get("eval_count", 0) + data.get("prompt_eval_count", 0)
 
                 # Ollama local is free (cost = 0)
                 cost_usd = 0.0
