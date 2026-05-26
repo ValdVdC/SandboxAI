@@ -1,7 +1,7 @@
 """Authentication endpoints — registration and login."""
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -11,7 +11,7 @@ from app.models import User
 from app.schemas import TokenResponse, UserLogin, UserRegister, UserResponse
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login", auto_error=False)
+oauth2_scheme = HTTPBearer(auto_error=False)
 
 
 @router.post(
@@ -134,14 +134,14 @@ async def login(
 
 @router.get("/me", response_model=UserResponse)
 async def get_current_user(
-    token: str = Depends(oauth2_scheme),
+    token_obj: HTTPAuthorizationCredentials = Depends(oauth2_scheme),
     db: AsyncSession = Depends(get_db),
 ) -> UserResponse:
     """
     Get current authenticated user information.
 
     Args:
-        token: JWT access token from Authorization header
+        token_obj: JWT access token from Authorization header
         db: Database session
 
     Returns:
@@ -153,7 +153,7 @@ async def get_current_user(
 
     from app.core.security import JWTError, extract_user_id_from_token
 
-    if not token:
+    if not token_obj or not token_obj.credentials:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Not authenticated",
@@ -161,7 +161,7 @@ async def get_current_user(
         )
 
     try:
-        user_id = extract_user_id_from_token(token)
+        user_id = extract_user_id_from_token(token_obj.credentials)
     except (JWTError, ValueError) as e:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
