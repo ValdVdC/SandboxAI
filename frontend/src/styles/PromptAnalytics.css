@@ -92,7 +92,7 @@
 }
 
 .bar.not-selected {
-  background-color: #30363d !important; /* Cor sólida e visível, mas neutra */
+  background-color: var(--color-bg-tertiary) !important; /* Cor sólida e visível, mas neutra */
   opacity: 0.8;
 }
 
