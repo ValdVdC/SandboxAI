@@ -1,6 +1,6 @@
 """Add human override flag
 
-Revision ID: 94bd77c5d6e7
+Revision ID: 006_add_human_override_flag
 Revises: 005_add_validation_fields
 Create Date: 2026-05-24 19:42:34.077646
 
@@ -10,7 +10,7 @@ from alembic import op
 import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
-revision = "94bd77c5d6e7"
+revision = "006_add_human_override_flag"
 down_revision = "005_add_validation_fields"
 branch_labels = None
 depends_on = None
