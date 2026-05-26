@@ -51,7 +51,8 @@ def main():
 
     parsed = urlparse(base_url)
     if parsed.scheme not in ["http", "https"] or not parsed.netloc:
-        base_url = "http://localhost:8000"
+        print("ERROR: SANDBOXAI_API_URL inválida. Use uma URL http/https completa.")
+        sys.exit(1)
 
     run_url = f"{base_url}/api/v1/ci/run"
 
