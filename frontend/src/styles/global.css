@@ -226,7 +226,7 @@ pre, code, .code-block {
   overflow-x: auto;
   line-height: 1.5;
   white-space: pre-wrap; /* Forçar quebra de linha */
-  word-break: break-word; /* Evitar estouro horizontal */
+  overflow-wrap: break-word; /* Evitar estouro horizontal */
 }
 
 /* Layout */
