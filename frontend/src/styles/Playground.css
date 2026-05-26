@@ -435,7 +435,7 @@
   font-size: 0.8rem;
   color: #cbd5e1;
   white-space: pre-wrap;
-  word-break: break-word;
+  overflow-wrap: anywhere;
   line-height: 1.5;
 }
 
