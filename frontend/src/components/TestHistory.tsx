@@ -139,7 +139,19 @@ const TestHistory: React.FC<TestHistoryProps> = ({ promptId, versionNumber, onVi
               const previewInputs = item.data.slice(0, 3); // Preview das 3 primeiras entradas
               
               return (
-                <div key={idx} className="test-item batch-item" onClick={() => onViewBatch?.(item.data.map(t => t.id))}>
+                <div
+                  key={idx}
+                  className="test-item batch-item"
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => onViewBatch?.(item.data.map((t) => t.id))}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      onViewBatch?.(item.data.map((t) => t.id));
+                    }
+                  }}
+                >
                   <div className="item-content-top">
                     <div className="test-header">
                       <span className="batch-badge">📦 LOTE ({item.data.length} testes)</span>
@@ -169,7 +181,19 @@ const TestHistory: React.FC<TestHistoryProps> = ({ promptId, versionNumber, onVi
             } else {
               const test = item.data[0];
               return (
-                <div key={idx} className={`test-item status-${test.status}`} onClick={() => setSelectedTest(test)}>
+                <div
+                  key={idx}
+                  className={`test-item status-${test.status}`}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => setSelectedTest(test)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      setSelectedTest(test);
+                    }
+                  }}
+                >
                   <div className="item-content-top">
                     <div className="test-header">
                       <span className={`status-badge status-${test.status}`}>{test.status}</span>
