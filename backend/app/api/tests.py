@@ -571,10 +571,14 @@ async def override_test_result(
         await db.commit()
         await db.refresh(test_result)
     except Exception as e:
+        import logging
+
+        logger = logging.getLogger(__name__)
+        logger.exception("Error during test override: %s", e)
         await db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to update test result: {e}",
-        )
+            detail="Erro interno ao atualizar o resultado do teste",
+        ) from e
 
     return TestResultResponse.from_orm(test_result)
