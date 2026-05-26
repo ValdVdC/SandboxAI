@@ -157,7 +157,7 @@ class ApiClient {
     versionNum: number,
     data: { inputs: string[]; expected?: string }
   ): Promise<{ test_ids: string[]; celery_task_ids: string[]; total_queued: number; message: string }> {
-    const response = await this.client.post(
+    const response = await this.client.post<{ test_ids: string[]; celery_task_ids: string[]; total_queued: number; message: string }>(
       `/prompts/${promptId}/versions/${versionNum}/tests/bulk`,
       data
     );
@@ -172,7 +172,7 @@ class ApiClient {
     const formData = new FormData();
     formData.append('file', file);
     
-    const response = await this.client.post(
+    const response = await this.client.post<{ test_ids: string[]; celery_task_ids: string[]; total_queued: number; message: string }>(
       `/prompts/${promptId}/versions/${versionNum}/tests/bulk/upload`,
       formData,
       {
@@ -186,7 +186,7 @@ class ApiClient {
 
   async exportTests(promptId: string, versionNum: number, batchId?: string): Promise<void> {
     const params = batchId ? { batch_id: batchId } : {};
-    const response = await this.client.get(
+    const response = await this.client.get<Blob>(
       `/prompts/${promptId}/versions/${versionNum}/export`,
       { params, responseType: 'blob' }
     );
@@ -199,8 +199,12 @@ class ApiClient {
     const filename = batchId ? `batch_${batchId}.csv` : `prompt_${promptId}_v${versionNum}.csv`;
     link.setAttribute('download', filename);
     document.body.appendChild(link);
-    link.click();
-    link.remove();
+    try {
+      link.click();
+    } finally {
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    }
   }
 
   async getTestExecution(id: string): Promise<TestExecution> {
@@ -242,7 +246,10 @@ class ApiClient {
     v1: { total_tests: number; avg_latency: number; avg_tokens: number; avg_cost: number; success_rate: number };
     v2: { total_tests: number; avg_latency: number; avg_tokens: number; avg_cost: number; success_rate: number };
   }> {
-    const response = await this.client.get(`/metrics/compare-versions/${v1Id}/${v2Id}`);
+    const response = await this.client.get<{
+      v1: { total_tests: number; avg_latency: number; avg_tokens: number; avg_cost: number; success_rate: number };
+      v2: { total_tests: number; avg_latency: number; avg_tokens: number; avg_cost: number; success_rate: number };
+    }>(`/metrics/compare-versions/${v1Id}/${v2Id}`);
     return response.data;
   }
 
@@ -255,7 +262,15 @@ class ApiClient {
     success_count: number;
     fail_count: number;
   }>> {
-    const response = await this.client.get(`/metrics/prompt-evolution/${promptId}`);
+    const response = await this.client.get<Array<{
+      version: number;
+      avg_latency: number;
+      avg_cost: number;
+      avg_tokens: number;
+      test_count: number;
+      success_count: number;
+      fail_count: number;
+    }>>(`/metrics/prompt-evolution/${promptId}`);
     return response.data;
   }
 
