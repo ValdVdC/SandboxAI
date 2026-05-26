@@ -193,9 +193,15 @@ async def execute_bulk_tests(
             task_ids.append(task.id)
         except Exception as e:
             import logging
+
             logging.error("Failed to queue celery task for test %s: %s", t_id, e)
             from sqlalchemy import update
-            stmt = update(TestResult).where(TestResult.id == t_id).values(status="failed", error_message="Failed to queue task")
+
+            stmt = (
+                update(TestResult)
+                .where(TestResult.id == t_id)
+                .values(status="failed", error_message="Failed to queue task")
+            )
             await db.execute(stmt)
             await db.commit()
 
@@ -314,9 +320,15 @@ async def execute_bulk_tests_upload(
             task_ids.append(task.id)
         except Exception as e:
             import logging
+
             logging.error("Failed to queue celery task for test %s: %s", t_id, e)
             from sqlalchemy import update
-            stmt = update(TestResult).where(TestResult.id == t_id).values(status="failed", error_message="Failed to queue task")
+
+            stmt = (
+                update(TestResult)
+                .where(TestResult.id == t_id)
+                .values(status="failed", error_message="Failed to queue task")
+            )
             await db.execute(stmt)
             await db.commit()
 

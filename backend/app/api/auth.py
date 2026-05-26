@@ -164,6 +164,7 @@ async def get_current_user(
         user_id = extract_user_id_from_token(token_obj.credentials)
     except (JWTError, ValueError) as e:
         import logging
+
         logger = logging.getLogger(__name__)
         logger.warning("Token validation failed: %s", e)
         raise HTTPException(
