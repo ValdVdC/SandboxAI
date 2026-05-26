@@ -4,6 +4,7 @@ import Header from '../components/Header';
 import Loading from '../components/Loading';
 import Alert from '../components/Alert';
 import apiClient from '../services/api';
+import { useApiData } from '../hooks/useApiData';
 import { Prompt, PlaygroundColumnResult, PlaygroundConfig } from '../types';
 import '../styles/Playground.css';
 
@@ -50,45 +51,46 @@ const Playground: React.FC = () => {
   const [results, setResults] = useState<(PlaygroundColumnResult | null)[]>([null, null, null]);
   const [savingIndex, setSavingIndex] = useState<number | null>(null);
 
-  // Load initial prompt, version, and provider status
-  useEffect(() => {
-    const initializePlayground = async () => {
-      if (!id) return;
-      try {
-        setLoading(true);
-        // 1. Fetch Prompt Details
-        const promptData = await apiClient.getPrompt(id);
-        setPrompt(promptData);
-
-        // 2. Fetch Prompt Versions to pre-fill content with LATEST version
-        const versionsData = await apiClient.getPromptVersions(id);
-        if (versionsData.items.length > 0) {
-          const sorted = versionsData.items.sort((a, b) => b.version - a.version);
-          setPromptContent(sorted[0].content);
-          
-          // Pre-fill columns based on the latest version's configuration as the first column
-          const latest = sorted[0];
-          setConfigs([
-            { provider: latest.provider, model: latest.model },
-            { provider: latest.provider === 'openai' ? 'groq' : 'openai', model: latest.provider === 'openai' ? 'llama-3.3-70b-versatile' : 'gpt-4o' },
-            { provider: 'ollama', model: 'mistral' }
-          ]);
-        }
-
-        // 3. Fetch Provider Availability Status
-        const statusData = await apiClient.getProviderStatus();
-        setProviderStatus(statusData);
-
-      } catch (err) {
-        console.error('Failed to initialize playground:', err);
-        setError(err instanceof Error ? err.message : 'Falha ao inicializar o Playground.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    initializePlayground();
+  // Load initial prompt, version, and provider status using useApiData
+  const { data: initData, loading: initLoading, error: initError } = useApiData(async () => {
+    if (!id) return null;
+    const [promptData, versionsData, statusData] = await Promise.all([
+      apiClient.getPrompt(id),
+      apiClient.getPromptVersions(id),
+      apiClient.getProviderStatus()
+    ]);
+    return { promptData, versionsData, statusData };
   }, [id]);
+
+  useEffect(() => {
+    if (initLoading) {
+      setLoading(true);
+      return;
+    }
+    if (initError) {
+      setError(initError);
+      setLoading(false);
+      return;
+    }
+    if (initData) {
+      const { promptData, versionsData, statusData } = initData;
+      setPrompt(promptData);
+      
+      if (versionsData.items.length > 0) {
+        const sorted = versionsData.items.sort((a, b) => b.version - a.version);
+        setPromptContent(sorted[0].content);
+        
+        const latest = sorted[0];
+        setConfigs([
+          { provider: latest.provider, model: latest.model },
+          { provider: latest.provider === 'openai' ? 'groq' : 'openai', model: latest.provider === 'openai' ? 'llama-3.3-70b-versatile' : 'gpt-4o' },
+          { provider: 'ollama', model: 'mistral' }
+        ]);
+      }
+      setProviderStatus(statusData);
+    }
+    setLoading(false);
+  }, [initData, initLoading, initError]);
 
   const handleConfigChange = (index: number, key: keyof PlaygroundConfig, value: string) => {
     const updated = [...configs];
