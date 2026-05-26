@@ -5,13 +5,13 @@ Aplicação principal para versionamento e teste de prompts para LLMs.
 """
 
 import os
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
 from fastapi.responses import JSONResponse
 from sqlalchemy import text
-from contextlib import asynccontextmanager
 
 from app.api import auth, metrics, playground, prompts, providers, tests, versions
 from app.core.database import dispose_engine, engine
