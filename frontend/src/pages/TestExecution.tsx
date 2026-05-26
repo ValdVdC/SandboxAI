@@ -22,7 +22,7 @@ const TestExecution: React.FC = () => {
       try {
         setLoading(true)
         const response = await apiClient.getPromptVersions(promptId)
-        const sorted = response.items.sort((a, b) => a.version - b.version)
+        const sorted = response.items.sort((a, b) => b.version - a.version)
         setVersions(sorted)
       } catch (err) {
         setError(
@@ -46,7 +46,7 @@ const TestExecution: React.FC = () => {
       </div>
     )
 
-  const firstVersion = versions[0]
+  const latestVersion = versions[0]
 
   return (
     <>
@@ -56,17 +56,17 @@ const TestExecution: React.FC = () => {
           {activeTest ? (
             <TestResults
               promptId={promptId}
-              versionNumber={firstVersion.version}
+              versionNumber={latestVersion.version}
               testId={activeTest}
               autoRefresh={true}
               onBack={() => setActiveTest(null)}
             />
           ) : (
             <>
-              <h1>Executar Teste - v{firstVersion.version}</h1>
+              <h1>Executar Teste - v{latestVersion.version}</h1>
               <TestRunner
                 promptId={promptId}
-                versionNumber={firstVersion.version}
+                versionNumber={latestVersion.version}
                 onTestStarted={setActiveTest}
               />
             </>

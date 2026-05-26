@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import apiClient from '../services/api'
+import { useApiData } from '../hooks/useApiData'
 import { CreatePromptRequest, Prompt } from '../types'
 import Alert from './Alert'
 import '../styles/PromptEditor.css'
@@ -15,12 +16,6 @@ interface PromptEditorProps {
   onCancel: () => void
 }
 
-interface ProviderStatus {
-  [key: string]: {
-    available: boolean
-    reason: string
-  }
-}
 
 const PROVIDER_MODELS: Record<string, string[]> = {
   ollama: ['llama2:7b', 'mistral', 'neural-chat'],
@@ -50,7 +45,10 @@ const PromptEditor: React.FC<PromptEditorProps> = ({
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
-  const [providerStatus, setProviderStatus] = useState<ProviderStatus>({
+  const fetchProviders = useCallback(() => apiClient.getProviderStatus(), [])
+  const { data: fetchedProviderStatus } = useApiData(fetchProviders)
+
+  const providerStatus = fetchedProviderStatus || {
     groq: { available: true, reason: 'API key configured' },
     ollama: {
       available: false,
@@ -58,31 +56,19 @@ const PromptEditor: React.FC<PromptEditorProps> = ({
     },
     openai: { available: false, reason: 'API key not configured' },
     anthropic: { available: false, reason: 'API key not configured' },
-  })
+  }
 
-  // Fetch provider status on mount
+  // If current provider is not available, switch to first available one
   useEffect(() => {
-    const fetchProviderStatus = async () => {
-      try {
-        const status = await apiClient.getProviderStatus()
-        setProviderStatus(status)
-
-        // If current provider is not available, switch to first available one
-        if (!status[provider]?.available) {
-          const firstAvailable = Object.keys(status).find(
-            (p) => status[p].available
-          )
-          if (firstAvailable) {
-            setProvider(firstAvailable)
-          }
-        }
-      } catch (err) {
-        console.error('Failed to fetch provider status:', err)
+    if (fetchedProviderStatus && !fetchedProviderStatus[provider]?.available) {
+      const firstAvailable = Object.keys(fetchedProviderStatus).find(
+        (p) => fetchedProviderStatus[p].available
+      )
+      if (firstAvailable) {
+        setProvider(firstAvailable)
       }
     }
-
-    fetchProviderStatus()
-  }, [provider])
+  }, [fetchedProviderStatus, provider])
 
   // Update available models when provider changes
   useEffect(() => {

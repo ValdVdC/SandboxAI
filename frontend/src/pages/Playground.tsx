@@ -90,6 +90,7 @@ const Playground: React.FC = () => {
       return
     }
     if (initData) {
+      setError(null)
       const { promptData, versionsData, statusData } = initData
       setPrompt(promptData)
 

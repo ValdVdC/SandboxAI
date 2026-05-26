@@ -453,12 +453,11 @@ const VersionComparison: React.FC = () => {
             </>
           )}
 
-          {!v1 ||
-            (!v2 && !error && (
-              <div className="no-selection">
-                Selecione as versões para iniciar a análise técnica.
-              </div>
-            ))}
+          {(!v1 || !v2) && !error && (
+            <div className="no-selection">
+              Selecione as versões para iniciar a análise técnica.
+            </div>
+          )}
 
           {error && <div className="error-message">{error}</div>}
         </div>

@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react'
+import React, { useCallback } from 'react'
 import apiClient from '../services/api'
+import { useApiData } from '../hooks/useApiData'
 import Loading from './Loading'
 import '../styles/PromptAnalytics.css'
 
@@ -24,23 +25,9 @@ const PromptAnalytics: React.FC<PromptAnalyticsProps> = ({
   selectedVersionNumber,
   onBack,
 }) => {
-  const [data, setData] = useState<EvolutionData[]>([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    const fetchEvolution = async () => {
-      try {
-        setLoading(true)
-        const evolution = await apiClient.getPromptEvolution(promptId)
-        setData(evolution)
-      } catch (err) {
-        console.error('Failed to fetch prompt evolution', err)
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchEvolution()
-  }, [promptId])
+  const fetchEvolution = useCallback(() => apiClient.getPromptEvolution(promptId), [promptId])
+  const { data: fetchedData, loading } = useApiData(fetchEvolution)
+  const data = fetchedData || []
 
   if (loading) return <Loading message="Calculando métricas contextuais..." />
 
@@ -48,12 +35,13 @@ const PromptAnalytics: React.FC<PromptAnalyticsProps> = ({
   const successfulVersions = data.filter((d) => d.success_count > 0)
 
   // Current active data point (either selected or the latest)
+  const isSelectedValid = selectedVersionNumber && data.some(v => v.version === selectedVersionNumber)
   const activeVersionNumber =
-    selectedVersionNumber ||
-    (data.length > 0 ? data[data.length - 1].version : 0)
-  const activeData =
-    data.find((v) => v.version === activeVersionNumber) ||
-    (data.length > 0 ? data[data.length - 1] : null)
+    isSelectedValid
+      ? selectedVersionNumber
+      : (data.length > 0 ? data[data.length - 1].version : 0)
+
+  const activeData = data.find((v) => v.version === activeVersionNumber) || null
 
   // Helper to check if active version has valid data
   const activeHasData = activeData && activeData.test_count > 0
