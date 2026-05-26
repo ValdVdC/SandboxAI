@@ -127,7 +127,7 @@ Edite o arquivo `.env` com suas chaves de API (veja [ENVIRONMENT.md](./ENVIRONME
 
 Garanta que o `.env` contenha `COMPOSE_PROJECT_NAME=sandboxai` para manter nomes estáveis de volumes e evitar criação acidental de um banco "novo" em outro contexto.
 
-### 3. Suba os cointainers e escolha a configuração de deployment
+### 3. Suba os containers e escolha a configuração de deployment
 
 **Sem Ollama Local (padrão - economiza CPU/storage)**
 ```bash
