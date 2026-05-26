@@ -46,7 +46,9 @@ async def create_version(
         # Lock the prompt to prevent concurrent version creations
         prompt_stmt = select(Prompt).where(Prompt.id == prompt_id).with_for_update()
         prompt_result = await db.execute(prompt_stmt)
-        locked_prompt = prompt_result.scalar_one()
+        locked_prompt = prompt_result.scalar_one_or_none()
+        if not locked_prompt:
+            raise HTTPException(status_code=404, detail="Prompt not found")
 
         next_version = locked_prompt.version_count + 1
 
@@ -204,7 +206,9 @@ async def restore_version(
         # Lock the prompt to prevent concurrent version creations
         prompt_stmt = select(Prompt).where(Prompt.id == prompt_id).with_for_update()
         prompt_result = await db.execute(prompt_stmt)
-        locked_prompt = prompt_result.scalar_one()
+        locked_prompt = prompt_result.scalar_one_or_none()
+        if not locked_prompt:
+            raise HTTPException(status_code=404, detail="Prompt not found")
 
         # Determine next version number
         next_version = locked_prompt.version_count + 1

@@ -52,6 +52,7 @@ tags_metadata = [
 async def startup_event():
     """Validate database connection on startup."""
     print("Validating database connection...")
+    run_migrations = False
     try:
         async with engine.begin() as conn:
             await conn.execute(text("SELECT 1"))
@@ -67,12 +68,22 @@ async def startup_event():
             status_row = result.mappings().one()
 
             if not status_row["has_users"] or not status_row["has_alembic"]:
-                print("❌ Critical database schema is missing (users/alembic_version).")
-                print("Please run migrations manually: alembic upgrade head")
-                # We raise error here to stop startup without modifying anything
-                raise RuntimeError("Database schema missing. Manual intervention required.")
+                run_migrations = True
 
-            print("✅ Database connection validated")
+        if run_migrations:
+            print("⚠️ Critical database schema is missing. Running migrations automatically...")
+            import subprocess
+
+            try:
+                subprocess.run(["alembic", "upgrade", "head"], check=True)
+                print("✅ Migrations completed successfully.")
+            except subprocess.CalledProcessError as sub_e:
+                print(f"❌ Migrations failed: {sub_e}")
+                raise RuntimeError(
+                    "Database schema missing and automatic migration failed."
+                ) from sub_e
+
+        print("✅ Database connection validated")
     except Exception as e:
         print(f"❌ Database connection failed: {e}")
         raise
