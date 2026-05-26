@@ -1,8 +1,8 @@
-import React from 'react';
-import '../styles/Loading.css';
+import React from 'react'
+import '../styles/Loading.css'
 
 interface LoadingProps {
-  message?: string;
+  message?: string
 }
 
 const Loading: React.FC<LoadingProps> = ({ message = 'Carregando...' }) => {
@@ -11,7 +11,7 @@ const Loading: React.FC<LoadingProps> = ({ message = 'Carregando...' }) => {
       <div className="spinner"></div>
       <p>{message}</p>
     </div>
-  );
-};
+  )
+}
 
-export default Loading;
+export default Loading

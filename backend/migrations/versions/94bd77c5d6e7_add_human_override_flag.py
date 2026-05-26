@@ -5,9 +5,9 @@ Revises: 005_add_validation_fields
 Create Date: 2026-05-24 19:42:34.077646
 
 """
+
 from alembic import op
 import sqlalchemy as sa
-
 
 # revision identifiers, used by Alembic.
 revision = "94bd77c5d6e7"

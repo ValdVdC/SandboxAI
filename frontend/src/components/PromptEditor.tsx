@@ -1,25 +1,25 @@
-import React, { useState, useEffect } from 'react';
-import apiClient from '../services/api';
-import { CreatePromptRequest, Prompt } from '../types';
-import Alert from './Alert';
-import '../styles/PromptEditor.css';
+import React, { useState, useEffect } from 'react'
+import apiClient from '../services/api'
+import { CreatePromptRequest, Prompt } from '../types'
+import Alert from './Alert'
+import '../styles/PromptEditor.css'
 
 interface PromptEditorProps {
-  initialName?: string;
-  initialDescription?: string;
-  initialContent?: string;
-  initialProvider?: string;
-  initialModel?: string;
-  isNew?: boolean;
-  onSave: (prompt: Prompt | null) => void;
-  onCancel: () => void;
+  initialName?: string
+  initialDescription?: string
+  initialContent?: string
+  initialProvider?: string
+  initialModel?: string
+  isNew?: boolean
+  onSave: (prompt: Prompt | null) => void
+  onCancel: () => void
 }
 
 interface ProviderStatus {
   [key: string]: {
-    available: boolean;
-    reason: string;
-  };
+    available: boolean
+    reason: string
+  }
 }
 
 const PROVIDER_MODELS: Record<string, string[]> = {
@@ -27,7 +27,7 @@ const PROVIDER_MODELS: Record<string, string[]> = {
   groq: ['llama-3.3-70b-versatile', 'gemma2-9b-it', 'llama-3.1-8b-instant'],
   openai: ['gpt-4', 'gpt-3.5-turbo'],
   anthropic: ['claude-3-opus', 'claude-3-sonnet'],
-};
+}
 
 const PromptEditor: React.FC<PromptEditorProps> = ({
   initialName = '',
@@ -39,98 +39,106 @@ const PromptEditor: React.FC<PromptEditorProps> = ({
   onSave,
   onCancel,
 }) => {
-  const [name, setName] = useState(initialName);
-  const [description, setDescription] = useState(initialDescription);
-  const [content, setContent] = useState(initialContent);
-  const [provider, setProvider] = useState(initialProvider);
-  const [model, setModel] = useState(initialModel);
+  const [name, setName] = useState(initialName)
+  const [description, setDescription] = useState(initialDescription)
+  const [content, setContent] = useState(initialContent)
+  const [provider, setProvider] = useState(initialProvider)
+  const [model, setModel] = useState(initialModel)
   const [availableModels, setAvailableModels] = useState<string[]>(
     PROVIDER_MODELS[initialProvider] || []
-  );
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
+  )
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState(false)
   const [providerStatus, setProviderStatus] = useState<ProviderStatus>({
     groq: { available: true, reason: 'API key configured' },
-    ollama: { available: false, reason: 'Service not running (disabled in this deployment)' },
+    ollama: {
+      available: false,
+      reason: 'Service not running (disabled in this deployment)',
+    },
     openai: { available: false, reason: 'API key not configured' },
     anthropic: { available: false, reason: 'API key not configured' },
-  });
+  })
 
   // Fetch provider status on mount
   useEffect(() => {
     const fetchProviderStatus = async () => {
       try {
-        const status = await apiClient.getProviderStatus();
-        setProviderStatus(status);
-        
+        const status = await apiClient.getProviderStatus()
+        setProviderStatus(status)
+
         // If current provider is not available, switch to first available one
         if (!status[provider]?.available) {
-          const firstAvailable = Object.keys(status).find(p => status[p].available);
+          const firstAvailable = Object.keys(status).find(
+            (p) => status[p].available
+          )
           if (firstAvailable) {
-            setProvider(firstAvailable);
+            setProvider(firstAvailable)
           }
         }
       } catch (err) {
-        console.error('Failed to fetch provider status:', err);
+        console.error('Failed to fetch provider status:', err)
       }
-    };
+    }
 
-    fetchProviderStatus();
-  }, [provider]);
+    fetchProviderStatus()
+  }, [provider])
 
   // Update available models when provider changes
   useEffect(() => {
-    const models = PROVIDER_MODELS[provider] || [];
-    setAvailableModels(models);
+    const models = PROVIDER_MODELS[provider] || []
+    setAvailableModels(models)
     // Set model to first available if current model not in list
     if (!models.includes(model)) {
-      setModel(models[0] || '');
+      setModel(models[0] || '')
     }
-  }, [provider, model]);
+  }, [provider, model])
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
+    e.preventDefault()
+    setLoading(true)
+    setError(null)
 
     try {
       if (isNew) {
         // Step 1: Create prompt (only name and description)
-        const createPromptData: CreatePromptRequest = { name, description };
-        console.log('Creating prompt with:', createPromptData);
-        const prompt = await apiClient.createPrompt(createPromptData);
-        console.log('Prompt created:', prompt);
-        
+        const createPromptData: CreatePromptRequest = { name, description }
+        console.log('Creating prompt with:', createPromptData)
+        const prompt = await apiClient.createPrompt(createPromptData)
+        console.log('Prompt created:', prompt)
+
         // Step 2: Create initial version (content, provider, model)
-        const versionData = { content, provider, model };
-        console.log('Creating version with:', versionData);
-        await apiClient.createVersion(prompt.id, versionData);
-        console.log('Version created successfully');
-        
-        setSuccess(true);
+        const versionData = { content, provider, model }
+        console.log('Creating version with:', versionData)
+        await apiClient.createVersion(prompt.id, versionData)
+        console.log('Version created successfully')
+
+        setSuccess(true)
         // Signal that a new prompt was created
-        localStorage.setItem('newPromptCreated', 'true');
-        setTimeout(() => onSave(prompt), 1500);
+        localStorage.setItem('newPromptCreated', 'true')
+        setTimeout(() => onSave(prompt), 1500)
       } else {
         // Update flow - would need prompt ID
-        setSuccess(true);
-        setTimeout(() => onSave(null), 1500);
+        setSuccess(true)
+        setTimeout(() => onSave(null), 1500)
       }
     } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : 'Failed to save prompt';
-      console.error('Prompt creation error:', err);
-      setError(errorMsg);
+      const errorMsg =
+        err instanceof Error ? err.message : 'Failed to save prompt'
+      console.error('Prompt creation error:', err)
+      setError(errorMsg)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   return (
     <form className="prompt-editor" onSubmit={handleSubmit}>
       <h2>{isNew ? 'Novo Prompt' : 'Editar Prompt'}</h2>
 
-      {error && <Alert type="error" message={error} onClose={() => setError(null)} />}
+      {error && (
+        <Alert type="error" message={error} onClose={() => setError(null)} />
+      )}
       {success && <Alert type="success" message="Prompt salvo com sucesso!" />}
 
       <div className="form-group">
@@ -166,7 +174,10 @@ const PromptEditor: React.FC<PromptEditorProps> = ({
           required
           rows={12}
         />
-        <small>Dica: Use {'{input}'} para marcar onde a entrada do teste será inserida</small>
+        <small>
+          Dica: Use {'{input}'} para marcar onde a entrada do teste será
+          inserida
+        </small>
       </div>
 
       <div className="form-row">
@@ -178,17 +189,37 @@ const PromptEditor: React.FC<PromptEditorProps> = ({
             onChange={(e) => setProvider(e.target.value)}
             required
           >
-            <option value="groq" disabled={providerStatus.groq?.available === false}>
-              {providerStatus.groq?.available === false ? 'Groq (Desativado)' : 'Groq'}
+            <option
+              value="groq"
+              disabled={providerStatus.groq?.available === false}
+            >
+              {providerStatus.groq?.available === false
+                ? 'Groq (Desativado)'
+                : 'Groq'}
             </option>
-            <option value="ollama" disabled={providerStatus.ollama?.available === false}>
-              {providerStatus.ollama?.available === false ? 'Ollama (Local) (Desativado)' : 'Ollama (Local)'}
+            <option
+              value="ollama"
+              disabled={providerStatus.ollama?.available === false}
+            >
+              {providerStatus.ollama?.available === false
+                ? 'Ollama (Local) (Desativado)'
+                : 'Ollama (Local)'}
             </option>
-            <option value="openai" disabled={providerStatus.openai?.available === false}>
-              {providerStatus.openai?.available === false ? 'OpenAI (Desativado)' : 'OpenAI'}
+            <option
+              value="openai"
+              disabled={providerStatus.openai?.available === false}
+            >
+              {providerStatus.openai?.available === false
+                ? 'OpenAI (Desativado)'
+                : 'OpenAI'}
             </option>
-            <option value="anthropic" disabled={providerStatus.anthropic?.available === false}>
-              {providerStatus.anthropic?.available === false ? 'Anthropic (Desativado)' : 'Anthropic'}
+            <option
+              value="anthropic"
+              disabled={providerStatus.anthropic?.available === false}
+            >
+              {providerStatus.anthropic?.available === false
+                ? 'Anthropic (Desativado)'
+                : 'Anthropic'}
             </option>
           </select>
         </div>
@@ -220,7 +251,7 @@ const PromptEditor: React.FC<PromptEditorProps> = ({
         </button>
       </div>
     </form>
-  );
-};
+  )
+}
 
-export default PromptEditor;
+export default PromptEditor

@@ -1,87 +1,95 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { User, LoginRequest, RegisterRequest } from '../types';
-import apiClient from '../services/api';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from 'react'
+import { User, LoginRequest, RegisterRequest } from '../types'
+import apiClient from '../services/api'
 
 interface AuthContextType {
-  user: User | null;
-  token: string | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  error: string | null;
-  login: (data: LoginRequest) => Promise<void>;
-  register: (data: RegisterRequest) => Promise<void>;
-  logout: () => void;
-  clearError: () => void;
+  user: User | null
+  token: string | null
+  isAuthenticated: boolean
+  isLoading: boolean
+  error: string | null
+  login: (data: LoginRequest) => Promise<void>
+  register: (data: RegisterRequest) => Promise<void>
+  logout: () => void
+  clearError: () => void
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+export const AuthProvider: React.FC<{ children: ReactNode }> = ({
+  children,
+}) => {
+  const [user, setUser] = useState<User | null>(null)
+  const [token, setToken] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   // Check for existing token on mount
   useEffect(() => {
-    const storedToken = localStorage.getItem('access_token');
-    const storedUser = localStorage.getItem('user');
-    
+    const storedToken = localStorage.getItem('access_token')
+    const storedUser = localStorage.getItem('user')
+
     if (storedToken && storedUser) {
-      setToken(storedToken);
-      setUser(JSON.parse(storedUser));
+      setToken(storedToken)
+      setUser(JSON.parse(storedUser))
     }
-    
-    setIsLoading(false);
-  }, []);
+
+    setIsLoading(false)
+  }, [])
 
   const login = async (data: LoginRequest) => {
-    setIsLoading(true);
-    setError(null);
+    setIsLoading(true)
+    setError(null)
     try {
-      const response = await apiClient.login(data);
-      setToken(response.access_token);
-      setUser(response.user);
-      localStorage.setItem('access_token', response.access_token);
-      localStorage.setItem('user', JSON.stringify(response.user));
+      const response = await apiClient.login(data)
+      setToken(response.access_token)
+      setUser(response.user)
+      localStorage.setItem('access_token', response.access_token)
+      localStorage.setItem('user', JSON.stringify(response.user))
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Login failed';
-      setError(message);
-      throw err;
+      const message = err instanceof Error ? err.message : 'Login failed'
+      setError(message)
+      throw err
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   const register = async (data: RegisterRequest) => {
-    setIsLoading(true);
-    setError(null);
+    setIsLoading(true)
+    setError(null)
     try {
-      const response = await apiClient.register(data);
-      setToken(response.access_token);
-      setUser(response.user);
-      localStorage.setItem('access_token', response.access_token);
-      localStorage.setItem('user', JSON.stringify(response.user));
+      const response = await apiClient.register(data)
+      setToken(response.access_token)
+      setUser(response.user)
+      localStorage.setItem('access_token', response.access_token)
+      localStorage.setItem('user', JSON.stringify(response.user))
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Registration failed';
-      setError(message);
-      throw err;
+      const message = err instanceof Error ? err.message : 'Registration failed'
+      setError(message)
+      throw err
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   const logout = () => {
-    setUser(null);
-    setToken(null);
-    setError(null);
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('user');
-  };
+    setUser(null)
+    setToken(null)
+    setError(null)
+    localStorage.removeItem('access_token')
+    localStorage.removeItem('user')
+  }
 
   const clearError = () => {
-    setError(null);
-  };
+    setError(null)
+  }
 
   const value: AuthContextType = {
     user,
@@ -93,16 +101,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     register,
     logout,
     clearError,
-  };
+  }
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-};
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+}
 
 // eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => {
-  const context = useContext(AuthContext);
+  const context = useContext(AuthContext)
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error('useAuth must be used within an AuthProvider')
   }
-  return context;
-};
+  return context
+}

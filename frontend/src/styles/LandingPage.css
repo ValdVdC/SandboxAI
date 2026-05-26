@@ -8,16 +8,24 @@
 }
 
 .landing-page {
-  font-family: Inter, system-ui, -apple-system, sans-serif;
+  font-family:
+    Inter,
+    system-ui,
+    -apple-system,
+    sans-serif;
   color: #f8fafc;
   background-color: var(--lp-bg-dark);
   position: relative;
   min-height: 100vh;
   width: 100%;
-  overflow: clip; 
+  overflow: clip;
 }
 
-.landing-page h1, .landing-page h2, .landing-page h3, .landing-page h4, .landing-page p {
+.landing-page h1,
+.landing-page h2,
+.landing-page h3,
+.landing-page h4,
+.landing-page p {
   margin: 0;
   padding: 0;
 }
@@ -41,10 +49,15 @@
 .bg-grid {
   position: absolute;
   inset: 0;
-  background-image: linear-gradient(var(--lp-border) 1px, transparent 1px), 
-                    linear-gradient(90deg, var(--lp-border) 1px, transparent 1px);
+  background-image:
+    linear-gradient(var(--lp-border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--lp-border) 1px, transparent 1px);
   background-size: 40px 40px;
-  -webkit-mask-image: radial-gradient(circle at 50% 50%, black, transparent 80%);
+  -webkit-mask-image: radial-gradient(
+    circle at 50% 50%,
+    black,
+    transparent 80%
+  );
   mask-image: radial-gradient(circle at 50% 50%, black, transparent 80%);
   opacity: 0.15;
   z-index: 0;
@@ -54,8 +67,9 @@
 .reveal {
   opacity: 0;
   transform: translateY(20px);
-  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), 
-              transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  transition:
+    opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .reveal-visible {
@@ -130,7 +144,7 @@
   font-size: 1.2rem;
   text-decoration: none !important;
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 }
 
 .primary-glow:hover {
@@ -164,7 +178,7 @@
   background: #0f172a;
   border: 1px solid var(--lp-border);
   border-radius: 20px;
-  box-shadow: 0 50px 100px -20px rgba(0,0,0,0.8);
+  box-shadow: 0 50px 100px -20px rgba(0, 0, 0, 0.8);
   overflow: hidden;
   height: 500px;
   display: flex;
@@ -175,7 +189,7 @@
   padding: 16px;
   display: flex;
   gap: 10px;
-  background: rgba(255,255,255,0.03);
+  background: rgba(255, 255, 255, 0.03);
   border-bottom: 1px solid var(--lp-border);
 }
 
@@ -194,7 +208,7 @@
 .mockup-sidebar {
   width: 200px;
   border-right: 1px solid var(--lp-border);
-  background: rgba(0,0,0,0.2);
+  background: rgba(0, 0, 0, 0.2);
 }
 
 .mockup-main {
@@ -207,19 +221,23 @@
 
 .mockup-card {
   height: 140px;
-  background: rgba(255,255,255,0.05);
+  background: rgba(255, 255, 255, 0.05);
   border-radius: 14px;
-  border: 1px solid rgba(255,255,255,0.05);
+  border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .mockup-line {
   height: 12px;
-  background: rgba(255,255,255,0.03);
+  background: rgba(255, 255, 255, 0.03);
   border-radius: 6px;
 }
 
-.w-75 { width: 75%; }
-.w-50 { width: 50%; }
+.w-75 {
+  width: 75%;
+}
+.w-50 {
+  width: 50%;
+}
 
 .floating-badge {
   position: absolute;
@@ -229,16 +247,29 @@
   border-radius: 14px;
   font-weight: 700;
   font-size: 1rem;
-  box-shadow: 0 25px 50px rgba(0,0,0,0.7);
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.7);
   z-index: 20;
 }
 
-.badge-1 { top: 15%; left: -30px; animation: float 6s ease-in-out infinite; }
-.badge-2 { bottom: 25%; right: -30px; animation: float 6s ease-in-out infinite 3s; }
+.badge-1 {
+  top: 15%;
+  left: -30px;
+  animation: float 6s ease-in-out infinite;
+}
+.badge-2 {
+  bottom: 25%;
+  right: -30px;
+  animation: float 6s ease-in-out infinite 3s;
+}
 
 @keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-20px); }
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
 }
 
 /* Bento Grid Section */
@@ -298,16 +329,31 @@
 }
 
 /* Ajuste de Proporção Bento */
-.large { grid-column: span 2; grid-row: span 2; }
-.medium { grid-column: span 1; grid-row: span 2; }
-.small { grid-column: span 1; }
-.full-width { grid-column: span 2; }
+.large {
+  grid-column: span 2;
+  grid-row: span 2;
+}
+.medium {
+  grid-column: span 1;
+  grid-row: span 2;
+}
+.small {
+  grid-column: span 1;
+}
+.full-width {
+  grid-column: span 2;
+}
 
 /* Visual decorativo para preencher cards vazios */
 .card-visual {
   margin-top: 24px;
   height: 60px;
-  background: linear-gradient(90deg, transparent, rgba(56, 189, 248, 0.1), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(56, 189, 248, 0.1),
+    transparent
+  );
   border-radius: 12px;
   position: relative;
   overflow: hidden;
@@ -320,12 +366,19 @@
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(56, 189, 248, 0.2), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(56, 189, 248, 0.2),
+    transparent
+  );
   animation: shimmer 3s infinite;
 }
 
 @keyframes shimmer {
-  100% { left: 100%; }
+  100% {
+    left: 100%;
+  }
 }
 
 /* Trust Section */
@@ -338,11 +391,15 @@
 .trust-card {
   max-width: 1100px;
   margin: 0 auto;
-  background: linear-gradient(135deg, rgba(30, 58, 138, 0.4) 0%, rgba(15, 23, 42, 0.4) 100%);
+  background: linear-gradient(
+    135deg,
+    rgba(30, 58, 138, 0.4) 0%,
+    rgba(15, 23, 42, 0.4) 100%
+  );
   padding: 100px 60px;
   border-radius: 40px;
   text-align: center;
-  border: 1px solid rgba(255,255,255,0.08);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(12px);
 }
 
@@ -410,16 +467,43 @@
 
 /* Mobile Responsive */
 @media (max-width: 1100px) {
-  .bento-grid { grid-template-columns: repeat(2, 1fr); grid-auto-rows: 250px; }
-  .large, .medium, .full-width { grid-column: span 2; }
+  .bento-grid {
+    grid-template-columns: repeat(2, 1fr);
+    grid-auto-rows: 250px;
+  }
+  .large,
+  .medium,
+  .full-width {
+    grid-column: span 2;
+  }
 }
 
 @media (max-width: 768px) {
-  .hero { padding-top: 120px; }
-  .section-title { margin-bottom: 60px; }
-  .bento-grid { grid-template-columns: 1fr; grid-auto-rows: auto; }
-  .large, .medium, .small, .full-width { grid-column: span 1; grid-row: span 1; }
-  .badge-1, .badge-2 { display: none; }
-  .mockup-window { height: 350px; }
-  .trust-card { padding: 60px 24px; }
+  .hero {
+    padding-top: 120px;
+  }
+  .section-title {
+    margin-bottom: 60px;
+  }
+  .bento-grid {
+    grid-template-columns: 1fr;
+    grid-auto-rows: auto;
+  }
+  .large,
+  .medium,
+  .small,
+  .full-width {
+    grid-column: span 1;
+    grid-row: span 1;
+  }
+  .badge-1,
+  .badge-2 {
+    display: none;
+  }
+  .mockup-window {
+    height: 350px;
+  }
+  .trust-card {
+    padding: 60px 24px;
+  }
 }

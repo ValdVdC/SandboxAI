@@ -68,6 +68,7 @@ async def global_exception_handler(request, exc):
         JSONResponse: Resposta com erro
     """
     import logging
+
     logging.exception("Unhandled exception:")
     return JSONResponse(
         status_code=500,

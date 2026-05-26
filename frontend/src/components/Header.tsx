@@ -1,16 +1,16 @@
-import React from 'react';
-import { useAuth } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
-import '../styles/Header.css';
+import React from 'react'
+import { useAuth } from '../context/AuthContext'
+import { useNavigate } from 'react-router-dom'
+import '../styles/Header.css'
 
 const Header: React.FC = () => {
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
+  const { user, logout } = useAuth()
+  const navigate = useNavigate()
 
   const handleLogout = () => {
-    logout();
-    navigate('/');
-  };
+    logout()
+    navigate('/')
+  }
 
   return (
     <header className="header">
@@ -25,7 +25,10 @@ const Header: React.FC = () => {
           <button className="nav-link" onClick={() => navigate('/prompts')}>
             Prompts
           </button>
-          <button className="nav-link" onClick={() => navigate('/create-prompt')}>
+          <button
+            className="nav-link"
+            onClick={() => navigate('/create-prompt')}
+          >
             + Novo Prompt
           </button>
         </nav>
@@ -37,7 +40,7 @@ const Header: React.FC = () => {
         </div>
       </div>
     </header>
-  );
-};
+  )
+}
 
-export default Header;
+export default Header

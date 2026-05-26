@@ -1,47 +1,53 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import Header from '../components/Header';
-import Loading from '../components/Loading';
-import Alert from '../components/Alert';
-import { usePrompts } from '../hooks/useApiData';
-import apiClient from '../services/api';
-import '../styles/PromptList.css';
+import React, { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import Header from '../components/Header'
+import Loading from '../components/Loading'
+import Alert from '../components/Alert'
+import { usePrompts } from '../hooks/useApiData'
+import apiClient from '../services/api'
+import '../styles/PromptList.css'
 
 const PromptList: React.FC = () => {
-  const navigate = useNavigate();
-  const [search, setSearch] = useState('');
-  const { prompts, loading, error } = usePrompts(search);
-  const [deleting, setDeleting] = useState<string | null>(null);
+  const navigate = useNavigate()
+  const [search, setSearch] = useState('')
+  const { prompts, loading, error } = usePrompts(search)
+  const [deleting, setDeleting] = useState<string | null>(null)
 
   // Listen for new prompt creation
   useEffect(() => {
     const handleStorageChange = () => {
-      const flag = localStorage.getItem('newPromptCreated');
+      const flag = localStorage.getItem('newPromptCreated')
       if (flag === 'true') {
-        console.log('New prompt created, refreshing list...');
-        localStorage.removeItem('newPromptCreated');
+        console.log('New prompt created, refreshing list...')
+        localStorage.removeItem('newPromptCreated')
         // Force full page reload to get new prompts
-        window.location.reload();
-      }
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
-  }, []);
-
-  const handleDelete = async (id: string) => {
-    if (confirm('Tem certeza que deseja deletar este prompt e todas as suas versões?')) {
-      setDeleting(id);
-      try {
-        await apiClient.deletePrompt(id);
-        // Refresh list
-        window.location.reload();
-      } catch (err) {
-        alert(`Erro ao deletar: ${err instanceof Error ? err.message : 'Unknown error'}`);
-        setDeleting(null);
+        window.location.reload()
       }
     }
-  };
+
+    window.addEventListener('storage', handleStorageChange)
+    return () => window.removeEventListener('storage', handleStorageChange)
+  }, [])
+
+  const handleDelete = async (id: string) => {
+    if (
+      confirm(
+        'Tem certeza que deseja deletar este prompt e todas as suas versões?'
+      )
+    ) {
+      setDeleting(id)
+      try {
+        await apiClient.deletePrompt(id)
+        // Refresh list
+        window.location.reload()
+      } catch (err) {
+        alert(
+          `Erro ao deletar: ${err instanceof Error ? err.message : 'Unknown error'}`
+        )
+        setDeleting(null)
+      }
+    }
+  }
 
   return (
     <>
@@ -49,7 +55,10 @@ const PromptList: React.FC = () => {
       <div className="prompt-list-page">
         <div className="page-header">
           <h1>Meus Prompts</h1>
-          <button className="btn btn-primary" onClick={() => navigate('/create-prompt')}>
+          <button
+            className="btn btn-primary"
+            onClick={() => navigate('/create-prompt')}
+          >
             + Novo Prompt
           </button>
         </div>
@@ -84,7 +93,9 @@ const PromptList: React.FC = () => {
                 <div key={prompt.id} className="prompt-card">
                   <div className="card-header">
                     <h3>{prompt.name}</h3>
-                    <span className="version-badge">v{prompt.current_version}</span>
+                    <span className="version-badge">
+                      v{prompt.current_version}
+                    </span>
                   </div>
                   <p className="card-description">{prompt.description}</p>
                   <div className="card-meta">
@@ -114,7 +125,7 @@ const PromptList: React.FC = () => {
         )}
       </div>
     </>
-  );
-};
+  )
+}
 
-export default PromptList;
+export default PromptList

@@ -117,7 +117,9 @@
   font-size: 0.85rem;
   line-height: 1.5;
   resize: vertical;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
 }
 
 .prompt-template-textarea:focus,
@@ -144,7 +146,11 @@
 }
 
 .btn-execute-playground {
-  background: linear-gradient(135deg, var(--primary-color, #3b82f6) 0%, #1d4ed8 100%);
+  background: linear-gradient(
+    135deg,
+    var(--primary-color, #3b82f6) 0%,
+    #1d4ed8 100%
+  );
   color: #ffffff;
   border: none;
   border-radius: 8px;
@@ -203,7 +209,9 @@
 
 .comparison-column:hover {
   transform: translateY(-4px);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5), 0 0 15px rgba(255, 255, 255, 0.02);
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.5),
+    0 0 15px rgba(255, 255, 255, 0.02);
   border-color: rgba(255, 255, 255, 0.15);
   border-top-color: var(--column-theme-color);
 }
@@ -314,7 +322,12 @@
 }
 
 .pulse {
-  background: linear-gradient(-90deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.1) 50%, rgba(255, 255, 255, 0.04) 100%);
+  background: linear-gradient(
+    -90deg,
+    rgba(255, 255, 255, 0.04) 0%,
+    rgba(255, 255, 255, 0.1) 50%,
+    rgba(255, 255, 255, 0.04) 100%
+  );
   background-size: 400% 400%;
   animation: pulse-kf 1.5s ease-in-out infinite;
 }

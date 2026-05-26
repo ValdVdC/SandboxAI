@@ -1,39 +1,39 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import Alert from '../components/Alert';
-import '../styles/Auth.css';
+import React, { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
+import Alert from '../components/Alert'
+import '../styles/Auth.css'
 
 const Register: React.FC = () => {
-  const [email, setEmail] = useState('');
-  const [fullName, setFullName] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const { register } = useAuth();
-  const navigate = useNavigate();
+  const [email, setEmail] = useState('')
+  const [fullName, setFullName] = useState('')
+  const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const { register } = useAuth()
+  const navigate = useNavigate()
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
+    e.preventDefault()
+    setError(null)
 
     if (password !== confirmPassword) {
-      setError('As senhas não correspondem');
-      return;
+      setError('As senhas não correspondem')
+      return
     }
 
-    setLoading(true);
+    setLoading(true)
 
     try {
-      await register({ email, full_name: fullName, password });
-      navigate('/dashboard');
+      await register({ email, full_name: fullName, password })
+      navigate('/dashboard')
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Falha ao cadastrar');
+      setError(err instanceof Error ? err.message : 'Falha ao cadastrar')
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   return (
     <div className="auth-container">
@@ -45,7 +45,9 @@ const Register: React.FC = () => {
 
         <h2>Cadastro</h2>
 
-        {error && <Alert type="error" message={error} onClose={() => setError(null)} />}
+        {error && (
+          <Alert type="error" message={error} onClose={() => setError(null)} />
+        )}
 
         <form onSubmit={handleSubmit}>
           <div className="form-group">
@@ -103,13 +105,17 @@ const Register: React.FC = () => {
 
         <p className="auth-footer">
           Já tem conta?{' '}
-          <button type="button" onClick={() => navigate('/login')} className="link-button">
+          <button
+            type="button"
+            onClick={() => navigate('/login')}
+            className="link-button"
+          >
             Faça login
           </button>
         </p>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default Register;
+export default Register

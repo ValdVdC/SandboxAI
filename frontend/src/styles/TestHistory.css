@@ -86,7 +86,7 @@
 
 /* Status markers as indicators */
 .test-item::after {
-  content: "";
+  content: '';
   position: absolute;
   left: 0;
   top: 0;
@@ -95,9 +95,16 @@
   background-color: transparent;
 }
 
-.test-item.status-completed::after { background-color: var(--color-success); }
-.test-item.status-failed::after { background-color: var(--color-danger); }
-.test-item.status-queued::after, .test-item.status-running::after { background-color: var(--color-warning); }
+.test-item.status-completed::after {
+  background-color: var(--color-success);
+}
+.test-item.status-failed::after {
+  background-color: var(--color-danger);
+}
+.test-item.status-queued::after,
+.test-item.status-running::after {
+  background-color: var(--color-warning);
+}
 
 /* Batch Item marker */
 .batch-item::after {
@@ -126,7 +133,7 @@
 }
 
 .batch-preview-item::before {
-  content: "•";
+  content: '•';
   position: absolute;
   left: 0;
   color: var(--color-primary);

@@ -1,29 +1,33 @@
-import React, { useState, useEffect } from 'react';
-import apiClient from '../services/api';
-import { PromptVersion } from '../types';
-import Alert from './Alert';
-import '../styles/CreateVersion.css';
+import React, { useState, useEffect } from 'react'
+import apiClient from '../services/api'
+import { PromptVersion } from '../types'
+import Alert from './Alert'
+import '../styles/CreateVersion.css'
 
 interface CreateVersionProps {
-  promptId: string;
-  currentVersion?: PromptVersion;
-  onVersionCreated: (version: PromptVersion) => void;
-  onCancel: () => void;
+  promptId: string
+  currentVersion?: PromptVersion
+  onVersionCreated: (version: PromptVersion) => void
+  onCancel: () => void
 }
 
 interface ProviderStatus {
   [key: string]: {
-    available: boolean;
-    reason: string;
-  };
+    available: boolean
+    reason: string
+  }
 }
 
 const PROVIDER_MODELS: Record<string, string[]> = {
   ollama: ['llama2:7b', 'mistral', 'neural-chat'],
-  groq: ['llama-3.3-70b-versatile', 'openai/gpt-oss-120b', 'llama-3.1-8b-instant'],
+  groq: [
+    'llama-3.3-70b-versatile',
+    'openai/gpt-oss-120b',
+    'llama-3.1-8b-instant',
+  ],
   openai: ['gpt-4', 'gpt-3.5-turbo'],
   anthropic: ['claude-3-opus', 'claude-3-sonnet'],
-};
+}
 
 const CreateVersion: React.FC<CreateVersionProps> = ({
   promptId,
@@ -31,101 +35,111 @@ const CreateVersion: React.FC<CreateVersionProps> = ({
   onVersionCreated,
   onCancel,
 }) => {
-  const [content, setContent] = useState(currentVersion?.content || '');
-  const [provider, setProvider] = useState(currentVersion?.provider || 'groq');
-  const [model, setModel] = useState(currentVersion?.model || 'llama-3.3-70b-versatile');
-  const [changeDescription, setChangeDescription] = useState('');
+  const [content, setContent] = useState(currentVersion?.content || '')
+  const [provider, setProvider] = useState(currentVersion?.provider || 'groq')
+  const [model, setModel] = useState(
+    currentVersion?.model || 'llama-3.3-70b-versatile'
+  )
+  const [changeDescription, setChangeDescription] = useState('')
   const [availableModels, setAvailableModels] = useState<string[]>(
     PROVIDER_MODELS[currentVersion?.provider || 'groq'] || []
-  );
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
+  )
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState(false)
   const [providerStatus, setProviderStatus] = useState<ProviderStatus>({
     groq: { available: true, reason: 'API key configured' },
-    ollama: { available: false, reason: 'Service not running (disabled in this deployment)' },
+    ollama: {
+      available: false,
+      reason: 'Service not running (disabled in this deployment)',
+    },
     openai: { available: false, reason: 'API key not configured' },
     anthropic: { available: false, reason: 'API key not configured' },
-  });
+  })
 
   // Fetch provider status on mount
   useEffect(() => {
     const fetchProviderStatus = async () => {
       try {
-        const response = await fetch('http://localhost:8000/providers/status');
+        const response = await fetch('http://localhost:8000/providers/status')
         if (response.ok) {
-          const status = await response.json();
-          setProviderStatus(status);
-          
+          const status = await response.json()
+          setProviderStatus(status)
+
           // If current provider is not available, switch to first available one
           if (!status[provider]?.available) {
-            const firstAvailable = Object.keys(status).find(p => status[p].available);
+            const firstAvailable = Object.keys(status).find(
+              (p) => status[p].available
+            )
             if (firstAvailable) {
-              setProvider(firstAvailable);
+              setProvider(firstAvailable)
             }
           }
         }
       } catch (err) {
-        console.error('Failed to fetch provider status:', err);
+        console.error('Failed to fetch provider status:', err)
       }
-    };
+    }
 
-    fetchProviderStatus();
-  }, [provider]);
+    fetchProviderStatus()
+  }, [provider])
 
   // Update available models when provider changes
   useEffect(() => {
-    const models = PROVIDER_MODELS[provider] || [];
-    setAvailableModels(models);
+    const models = PROVIDER_MODELS[provider] || []
+    setAvailableModels(models)
     if (!models.includes(model)) {
-      setModel(models[0] || '');
+      setModel(models[0] || '')
     }
-  }, [provider, model]);
+  }, [provider, model])
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
+    e.preventDefault()
+    setLoading(true)
+    setError(null)
 
     try {
       if (!content.trim()) {
-        throw new Error('Conteúdo do prompt é obrigatório');
+        throw new Error('Conteúdo do prompt é obrigatório')
       }
 
-      const versionData = { 
-        content, 
-        provider, 
+      const versionData = {
+        content,
+        provider,
         model,
         change_description: changeDescription,
-      };
-      const newVersion = await apiClient.createVersion(promptId, versionData);
+      }
+      const newVersion = await apiClient.createVersion(promptId, versionData)
 
-      setSuccess(true);
+      setSuccess(true)
       setTimeout(() => {
-        onVersionCreated(newVersion);
-      }, 1500);
+        onVersionCreated(newVersion)
+      }, 1500)
     } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : 'Failed to create version';
-    //   console.error('Version creation error:', err);
-      setError(errorMsg);
+      const errorMsg =
+        err instanceof Error ? err.message : 'Failed to create version'
+      //   console.error('Version creation error:', err);
+      setError(errorMsg)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   return (
     <div className="create-version">
       <div className="create-version-header">
         <h3>Nova Versão do Prompt</h3>
         <p className="subtitle">
-          {currentVersion ? 'Baseado na versão v' + currentVersion.version : 'Criar primeira versão'}
+          {currentVersion
+            ? 'Baseado na versão v' + currentVersion.version
+            : 'Criar primeira versão'}
         </p>
       </div>
 
-      {error && <Alert type="error" message={error} onClose={() => setError(null)} />}
-      {success && (
-        <Alert type="success" message="Versão criada com sucesso!" />
+      {error && (
+        <Alert type="error" message={error} onClose={() => setError(null)} />
       )}
+      {success && <Alert type="success" message="Versão criada com sucesso!" />}
 
       <form className="version-form" onSubmit={handleSubmit}>
         <div className="form-group">
@@ -150,17 +164,37 @@ const CreateVersion: React.FC<CreateVersionProps> = ({
               onChange={(e) => setProvider(e.target.value)}
               className="form-control"
             >
-              <option value="groq" disabled={providerStatus.groq?.available === false}>
-                {providerStatus.groq?.available === false ? 'Groq (Desativado)' : 'Groq'}
+              <option
+                value="groq"
+                disabled={providerStatus.groq?.available === false}
+              >
+                {providerStatus.groq?.available === false
+                  ? 'Groq (Desativado)'
+                  : 'Groq'}
               </option>
-              <option value="ollama" disabled={providerStatus.ollama?.available === false}>
-                {providerStatus.ollama?.available === false ? 'Ollama (Local) (Desativado)' : 'Ollama (Local)'}
+              <option
+                value="ollama"
+                disabled={providerStatus.ollama?.available === false}
+              >
+                {providerStatus.ollama?.available === false
+                  ? 'Ollama (Local) (Desativado)'
+                  : 'Ollama (Local)'}
               </option>
-              <option value="openai" disabled={providerStatus.openai?.available === false}>
-                {providerStatus.openai?.available === false ? 'OpenAI (Desativado)' : 'OpenAI'}
+              <option
+                value="openai"
+                disabled={providerStatus.openai?.available === false}
+              >
+                {providerStatus.openai?.available === false
+                  ? 'OpenAI (Desativado)'
+                  : 'OpenAI'}
               </option>
-              <option value="anthropic" disabled={providerStatus.anthropic?.available === false}>
-                {providerStatus.anthropic?.available === false ? 'Anthropic (Desativado)' : 'Anthropic'}
+              <option
+                value="anthropic"
+                disabled={providerStatus.anthropic?.available === false}
+              >
+                {providerStatus.anthropic?.available === false
+                  ? 'Anthropic (Desativado)'
+                  : 'Anthropic'}
               </option>
             </select>
           </div>
@@ -184,7 +218,9 @@ const CreateVersion: React.FC<CreateVersionProps> = ({
         </div>
 
         <div className="form-group">
-          <label htmlFor="changeDescription">Descrição da Mudança (Opcional)</label>
+          <label htmlFor="changeDescription">
+            Descrição da Mudança (Opcional)
+          </label>
           <input
             id="changeDescription"
             type="text"
@@ -210,7 +246,7 @@ const CreateVersion: React.FC<CreateVersionProps> = ({
         </div>
       </form>
     </div>
-  );
-};
+  )
+}
 
-export default CreateVersion;
+export default CreateVersion

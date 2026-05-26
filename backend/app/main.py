@@ -11,8 +11,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
 from fastapi.responses import JSONResponse
 from sqlalchemy import text
+from contextlib import asynccontextmanager
 
-from app.api import auth, ci, metrics, playground, prompts, providers, tests, versions
+from app.api import auth, metrics, playground, prompts, providers, tests, versions
 from app.core.database import dispose_engine, engine
 
 # Trigger CIs
@@ -46,7 +47,6 @@ tags_metadata = [
     },
 ]
 
-from contextlib import asynccontextmanager
 
 # Startup and shutdown events
 async def startup_event():
@@ -70,18 +70,22 @@ async def startup_event():
                 print("❌ Critical database schema is missing (users/alembic_version).")
                 print("Please run migrations manually: alembic upgrade head")
                 # We raise error here to stop startup without modifying anything
-                raise RuntimeError("Database schema missing. Manual intervention required.")
+                raise RuntimeError(
+                    "Database schema missing. Manual intervention required."
+                )
 
             print("✅ Database connection validated")
     except Exception as e:
         print(f"❌ Database connection failed: {e}")
         raise
 
+
 async def shutdown_event():
     """Cleanup on application shutdown."""
     print("🔌 Disposing database connections...")
     await dispose_engine()
     print("✅ Database connections closed")
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -90,6 +94,7 @@ async def lifespan(app: FastAPI):
         yield
     finally:
         await shutdown_event()
+
 
 # Criar aplicação FastAPI
 app = FastAPI(
@@ -137,7 +142,9 @@ def custom_openapi():
     PUBLIC_PATHS = {"/", "/health"}
     for path in openapi_schema["paths"]:
         for method in openapi_schema["paths"][path]:
-            if path in PUBLIC_PATHS or openapi_schema["paths"][path][method].get("security"):
+            if path in PUBLIC_PATHS or openapi_schema["paths"][path][method].get(
+                "security"
+            ):
                 continue
             openapi_schema["paths"][path][method]["security"] = [{"BearerAuth": []}]
     app.openapi_schema = openapi_schema
@@ -147,7 +154,9 @@ def custom_openapi():
 app.openapi = custom_openapi
 
 # Middleware CORS
-allowed_origins_env = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:5173")
+allowed_origins_env = os.getenv(
+    "ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:5173"
+)
 if allowed_origins_env.strip() == "*":
     print(
         "⚠️ WARNING: ALLOWED_ORIGINS='*' is incompatible with "

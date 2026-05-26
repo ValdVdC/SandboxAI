@@ -1,5 +1,5 @@
 /// <reference types="vite/client" />
-import axios, { AxiosInstance } from 'axios';
+import axios, { AxiosInstance } from 'axios'
 import {
   AuthResponse,
   CreatePromptRequest,
@@ -17,12 +17,12 @@ import {
   PaginatedResponse,
   PlaygroundRunRequest,
   PlaygroundRunResponse,
-} from '../types';
+} from '../types'
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
 class ApiClient {
-  private client: AxiosInstance;
+  private client: AxiosInstance
 
   constructor() {
     this.client = axios.create({
@@ -30,83 +30,98 @@ class ApiClient {
       headers: {
         'Content-Type': 'application/json',
       },
-    });
+    })
 
     // Add token to requests
     this.client.interceptors.request.use((config) => {
-      const token = localStorage.getItem('access_token');
+      const token = localStorage.getItem('access_token')
       if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
+        config.headers.Authorization = `Bearer ${token}`
       }
-      return config;
-    });
+      return config
+    })
 
     // Handle errors
     this.client.interceptors.response.use(
       (response) => response,
       (error) => {
         if (error.response?.status === 401) {
-          localStorage.removeItem('access_token');
-          localStorage.removeItem('user');
-          window.location.href = '/login';
+          localStorage.removeItem('access_token')
+          localStorage.removeItem('user')
+          window.location.href = '/login'
         }
-        return Promise.reject(error);
+        return Promise.reject(error)
       }
-    );
+    )
   }
 
   // Auth
   async login(data: LoginRequest): Promise<AuthResponse> {
-    const response = await this.client.post<AuthResponse>('/auth/login', data);
-    return response.data;
+    const response = await this.client.post<AuthResponse>('/auth/login', data)
+    return response.data
   }
 
   async register(data: RegisterRequest): Promise<AuthResponse> {
-    const response = await this.client.post<AuthResponse>('/auth/register', data);
-    return response.data;
+    const response = await this.client.post<AuthResponse>(
+      '/auth/register',
+      data
+    )
+    return response.data
   }
 
   async getProfile(): Promise<User> {
-    const response = await this.client.get<User>('/auth/me');
-    return response.data;
+    const response = await this.client.get<User>('/auth/me')
+    return response.data
   }
 
   // Prompts
   async createPrompt(data: CreatePromptRequest): Promise<Prompt> {
-    const response = await this.client.post<Prompt>('/prompts', data);
-    return response.data;
+    const response = await this.client.post<Prompt>('/prompts', data)
+    return response.data
   }
 
-  async listPrompts(search?: string, page: number = 1, per_page: number = 20): Promise<PaginatedResponse<Prompt>> {
-    const response = await this.client.get<PaginatedResponse<Prompt>>('/prompts', {
-      params: { search, page, per_page },
-    });
-    return response.data;
+  async listPrompts(
+    search?: string,
+    page: number = 1,
+    per_page: number = 20
+  ): Promise<PaginatedResponse<Prompt>> {
+    const response = await this.client.get<PaginatedResponse<Prompt>>(
+      '/prompts',
+      {
+        params: { search, page, per_page },
+      }
+    )
+    return response.data
   }
 
   async getPrompt(id: string): Promise<Prompt> {
-    const response = await this.client.get<Prompt>(`/prompts/${id}`);
-    return response.data;
+    const response = await this.client.get<Prompt>(`/prompts/${id}`)
+    return response.data
   }
 
   async updatePrompt(id: string, data: UpdatePromptRequest): Promise<Prompt> {
-    const response = await this.client.patch<Prompt>(`/prompts/${id}`, data);
-    return response.data;
+    const response = await this.client.patch<Prompt>(`/prompts/${id}`, data)
+    return response.data
   }
 
   async deletePrompt(id: string): Promise<void> {
-    await this.client.delete(`/prompts/${id}`);
+    await this.client.delete(`/prompts/${id}`)
   }
 
   async duplicatePrompt(id: string, name: string): Promise<Prompt> {
-    const response = await this.client.post<Prompt>(`/prompts/${id}/duplicate`, { name });
-    return response.data;
+    const response = await this.client.post<Prompt>(
+      `/prompts/${id}/duplicate`,
+      { name }
+    )
+    return response.data
   }
 
   // Versions
   async getPromptVersions(promptId: string): Promise<VersionListResponse> {
-    const response = await this.client.get<VersionListResponse>(`/prompts/${promptId}/versions`);
-    return response.data;
+    const response = await this.client.get<VersionListResponse>(
+      `/prompts/${promptId}/versions`
+    )
+    return response.data
   }
 
   async createVersion(
@@ -116,22 +131,25 @@ class ApiClient {
     const response = await this.client.post<PromptVersion>(
       `/prompts/${promptId}/versions`,
       data
-    );
-    return response.data;
+    )
+    return response.data
   }
 
-  async getVersion(promptId: string, versionId: string): Promise<PromptVersion> {
+  async getVersion(
+    promptId: string,
+    versionId: string
+  ): Promise<PromptVersion> {
     const response = await this.client.get<PromptVersion>(
       `/prompts/${promptId}/versions/${versionId}`
-    );
-    return response.data;
+    )
+    return response.data
   }
 
   async restoreVersion(promptId: string, versionId: string): Promise<Prompt> {
     const response = await this.client.post<Prompt>(
       `/prompts/${promptId}/versions/${versionId}/restore`
-    );
-    return response.data;
+    )
+    return response.data
   }
 
   // Tests
@@ -143,36 +161,58 @@ class ApiClient {
     const response = await this.client.post<TestExecution>(
       `/prompts/${promptId}/versions/${versionNum}/tests`,
       data
-    );
-    return response.data;
+    )
+    return response.data
   }
 
-  async executePlayground(data: PlaygroundRunRequest): Promise<PlaygroundRunResponse> {
-    const response = await this.client.post<PlaygroundRunResponse>('/playground/run', data);
-    return response.data;
+  async executePlayground(
+    data: PlaygroundRunRequest
+  ): Promise<PlaygroundRunResponse> {
+    const response = await this.client.post<PlaygroundRunResponse>(
+      '/playground/run',
+      data
+    )
+    return response.data
   }
 
   async executeBulkTests(
     promptId: string,
     versionNum: number,
     data: { inputs: string[]; expected?: string }
-  ): Promise<{ test_ids: string[]; celery_task_ids: string[]; total_queued: number; message: string }> {
-    const response = await this.client.post<{ test_ids: string[]; celery_task_ids: string[]; total_queued: number; message: string }>(
-      `/prompts/${promptId}/versions/${versionNum}/tests/bulk`,
-      data
-    );
-    return response.data;
+  ): Promise<{
+    test_ids: string[]
+    celery_task_ids: string[]
+    total_queued: number
+    message: string
+  }> {
+    const response = await this.client.post<{
+      test_ids: string[]
+      celery_task_ids: string[]
+      total_queued: number
+      message: string
+    }>(`/prompts/${promptId}/versions/${versionNum}/tests/bulk`, data)
+    return response.data
   }
 
   async executeBulkTestsUpload(
     promptId: string,
     versionNum: number,
     file: File
-  ): Promise<{ test_ids: string[]; celery_task_ids: string[]; total_queued: number; message: string }> {
-    const formData = new FormData();
-    formData.append('file', file);
-    
-    const response = await this.client.post<{ test_ids: string[]; celery_task_ids: string[]; total_queued: number; message: string }>(
+  ): Promise<{
+    test_ids: string[]
+    celery_task_ids: string[]
+    total_queued: number
+    message: string
+  }> {
+    const formData = new FormData()
+    formData.append('file', file)
+
+    const response = await this.client.post<{
+      test_ids: string[]
+      celery_task_ids: string[]
+      total_queued: number
+      message: string
+    }>(
       `/prompts/${promptId}/versions/${versionNum}/tests/bulk/upload`,
       formData,
       {
@@ -180,113 +220,168 @@ class ApiClient {
           'Content-Type': 'multipart/form-data',
         },
       }
-    );
-    return response.data;
+    )
+    return response.data
   }
 
-  async exportTests(promptId: string, versionNum: number, batchId?: string): Promise<void> {
-    const params = batchId ? { batch_id: batchId } : {};
+  async exportTests(
+    promptId: string,
+    versionNum: number,
+    batchId?: string
+  ): Promise<void> {
+    const params = batchId ? { batch_id: batchId } : {}
     const response = await this.client.get<Blob>(
       `/prompts/${promptId}/versions/${versionNum}/export`,
       { params, responseType: 'blob' }
-    );
-    
+    )
+
     // Create a link and trigger download
-    const url = window.URL.createObjectURL(new Blob([response.data]));
-    const link = document.createElement('a');
-    link.href = url;
-    
-    const filename = batchId ? `batch_${batchId}.csv` : `prompt_${promptId}_v${versionNum}.csv`;
-    link.setAttribute('download', filename);
-    document.body.appendChild(link);
+    const url = window.URL.createObjectURL(new Blob([response.data]))
+    const link = document.createElement('a')
+    link.href = url
+
+    const filename = batchId
+      ? `batch_${batchId}.csv`
+      : `prompt_${promptId}_v${versionNum}.csv`
+    link.setAttribute('download', filename)
+    document.body.appendChild(link)
     try {
-      link.click();
+      link.click()
     } finally {
-      link.remove();
-      window.URL.revokeObjectURL(url);
+      link.remove()
+      window.URL.revokeObjectURL(url)
     }
   }
 
   async getTestExecution(id: string): Promise<TestExecution> {
-    const response = await this.client.get<TestExecution>(`/prompts/tests/${id}`);
-    return response.data;
+    const response = await this.client.get<TestExecution>(
+      `/prompts/tests/${id}`
+    )
+    return response.data
   }
 
-  async getPromptTests(promptId: string, versionNumber: number): Promise<TestResult[]> {
+  async getPromptTests(
+    promptId: string,
+    versionNumber: number
+  ): Promise<TestResult[]> {
     const response = await this.client.get<PaginatedResponse<TestResult>>(
       `/prompts/${promptId}/versions/${versionNumber}/tests`
-    );
-    return response.data.items;
+    )
+    return response.data.items
   }
 
   async getTestResult(testId: string): Promise<TestResult> {
-    const response = await this.client.get<TestResult>(`/prompts/tests/${testId}`);
-    return response.data;
+    const response = await this.client.get<TestResult>(
+      `/prompts/tests/${testId}`
+    )
+    return response.data
   }
 
-  async overrideTestResult(testId: string, isCorrect: boolean): Promise<TestResult> {
-    const response = await this.client.patch<TestResult>(`/prompts/tests/${testId}/override`, {
-      is_correct: isCorrect,
-    });
-    return response.data;
+  async overrideTestResult(
+    testId: string,
+    isCorrect: boolean
+  ): Promise<TestResult> {
+    const response = await this.client.patch<TestResult>(
+      `/prompts/tests/${testId}/override`,
+      {
+        is_correct: isCorrect,
+      }
+    )
+    return response.data
   }
 
   // Metrics
   async getMetrics(): Promise<Metrics> {
-    const response = await this.client.get<Metrics>('/metrics');
-    return response.data;
+    const response = await this.client.get<Metrics>('/metrics')
+    return response.data
   }
 
   async getPromptMetrics(promptId: string): Promise<PromptMetrics> {
-    const response = await this.client.get<PromptMetrics>(`/metrics/by-prompt/${promptId}`);
-    return response.data;
+    const response = await this.client.get<PromptMetrics>(
+      `/metrics/by-prompt/${promptId}`
+    )
+    return response.data
   }
 
-  async compareVersions(v1Id: string, v2Id: string): Promise<{
-    v1: { total_tests: number; avg_latency: number; avg_tokens: number; avg_cost: number; success_rate: number };
-    v2: { total_tests: number; avg_latency: number; avg_tokens: number; avg_cost: number; success_rate: number };
+  async compareVersions(
+    v1Id: string,
+    v2Id: string
+  ): Promise<{
+    v1: {
+      total_tests: number
+      avg_latency: number
+      avg_tokens: number
+      avg_cost: number
+      success_rate: number
+    }
+    v2: {
+      total_tests: number
+      avg_latency: number
+      avg_tokens: number
+      avg_cost: number
+      success_rate: number
+    }
   }> {
     const response = await this.client.get<{
-      v1: { total_tests: number; avg_latency: number; avg_tokens: number; avg_cost: number; success_rate: number };
-      v2: { total_tests: number; avg_latency: number; avg_tokens: number; avg_cost: number; success_rate: number };
-    }>(`/metrics/compare-versions/${v1Id}/${v2Id}`);
-    return response.data;
+      v1: {
+        total_tests: number
+        avg_latency: number
+        avg_tokens: number
+        avg_cost: number
+        success_rate: number
+      }
+      v2: {
+        total_tests: number
+        avg_latency: number
+        avg_tokens: number
+        avg_cost: number
+        success_rate: number
+      }
+    }>(`/metrics/compare-versions/${v1Id}/${v2Id}`)
+    return response.data
   }
 
-  async getPromptEvolution(promptId: string): Promise<Array<{
-    version: number;
-    avg_latency: number;
-    avg_cost: number;
-    avg_tokens: number;
-    test_count: number;
-    success_count: number;
-    fail_count: number;
-  }>> {
-    const response = await this.client.get<Array<{
-      version: number;
-      avg_latency: number;
-      avg_cost: number;
-      avg_tokens: number;
-      test_count: number;
-      success_count: number;
-      fail_count: number;
-    }>>(`/metrics/prompt-evolution/${promptId}`);
-    return response.data;
+  async getPromptEvolution(promptId: string): Promise<
+    Array<{
+      version: number
+      avg_latency: number
+      avg_cost: number
+      avg_tokens: number
+      test_count: number
+      success_count: number
+      fail_count: number
+    }>
+  > {
+    const response = await this.client.get<
+      Array<{
+        version: number
+        avg_latency: number
+        avg_cost: number
+        avg_tokens: number
+        test_count: number
+        success_count: number
+        fail_count: number
+      }>
+    >(`/metrics/prompt-evolution/${promptId}`)
+    return response.data
   }
 
   // Providers
-  async getProviderStatus(): Promise<Record<string, { available: boolean; reason: string }>> {
-    const response = await this.client.get<Record<string, { available: boolean; reason: string }>>(
-      '/providers/status'
-    );
-    return response.data;
+  async getProviderStatus(): Promise<
+    Record<string, { available: boolean; reason: string }>
+  > {
+    const response =
+      await this.client.get<
+        Record<string, { available: boolean; reason: string }>
+      >('/providers/status')
+    return response.data
   }
 
   // Health
   async health(): Promise<{ status: string }> {
-    const response = await this.client.get<{ status: string }>('/health');
-    return response.data;
+    const response = await this.client.get<{ status: string }>('/health')
+    return response.data
   }
 }
 
-export default new ApiClient();
+export default new ApiClient()

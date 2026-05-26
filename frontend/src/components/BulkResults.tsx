@@ -1,111 +1,139 @@
-import React, { useEffect, useState } from 'react';
-import apiClient from '../services/api';
-import { TestResult } from '../types';
-import Loading from './Loading';
+import React, { useEffect, useState } from 'react'
+import apiClient from '../services/api'
+import { TestResult } from '../types'
+import Loading from './Loading'
 
 interface BulkResultsProps {
-  promptId: string;
-  versionNumber: number;
-  testIds: string[];
-  onBack: () => void;
+  promptId: string
+  versionNumber: number
+  testIds: string[]
+  onBack: () => void
 }
 
-const BulkResults: React.FC<BulkResultsProps> = ({ promptId, versionNumber, testIds, onBack }) => {
-  const [results, setResults] = useState<TestResult[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [polling, setPolling] = useState(true);
-  const [exporting, setExporting] = useState(false);
+const BulkResults: React.FC<BulkResultsProps> = ({
+  promptId,
+  versionNumber,
+  testIds,
+  onBack,
+}) => {
+  const [results, setResults] = useState<TestResult[]>([])
+  const [loading, setLoading] = useState(true)
+  const [polling, setPolling] = useState(true)
+  const [exporting, setExporting] = useState(false)
 
   const handleExport = async () => {
-    if (results.length === 0) return;
-    const validResult = results.find(r => r.batch_id && r.batch_id.trim() !== '');
+    if (results.length === 0) return
+    const validResult = results.find(
+      (r) => r.batch_id && r.batch_id.trim() !== ''
+    )
     if (!validResult || !validResult.batch_id) {
-      alert('Nenhum batch_id válido encontrado para exportar.');
-      return;
+      alert('Nenhum batch_id válido encontrado para exportar.')
+      return
     }
     try {
-      setExporting(true);
+      setExporting(true)
       // We use the batch_id of the first result since they all belong to the same batch
-      const batchId = validResult.batch_id.trim();
-      await apiClient.exportTests(promptId, versionNumber, batchId);
+      const batchId = validResult.batch_id.trim()
+      await apiClient.exportTests(promptId, versionNumber, batchId)
     } catch (err) {
-      console.error('Export failed', err);
-      alert('Falha ao exportar CSV. Tente novamente.');
+      console.error('Export failed', err)
+      alert('Falha ao exportar CSV. Tente novamente.')
     } finally {
-      setExporting(false);
+      setExporting(false)
     }
-  };
+  }
 
   const handleOverride = async (testId: string, isCorrect: boolean) => {
     try {
-      const updatedResult = await apiClient.overrideTestResult(testId, isCorrect);
-      setResults(prev => prev.map(r => r.id === testId ? updatedResult : r));
+      const updatedResult = await apiClient.overrideTestResult(
+        testId,
+        isCorrect
+      )
+      setResults((prev) =>
+        prev.map((r) => (r.id === testId ? updatedResult : r))
+      )
     } catch (err) {
-      console.error('Failed to override test result', err);
-      alert('Falha ao registrar override manual.');
+      console.error('Failed to override test result', err)
+      alert('Falha ao registrar override manual.')
     }
-  };
+  }
 
   useEffect(() => {
-    let isMounted = true;
+    let isMounted = true
 
     const fetchResults = async () => {
       try {
         const promises = testIds.map(async (id) => {
-          const existing = results.find(r => r.id === id);
-          if (existing && (existing.status === 'completed' || existing.status === 'failed')) {
-            return existing;
+          const existing = results.find((r) => r.id === id)
+          if (
+            existing &&
+            (existing.status === 'completed' || existing.status === 'failed')
+          ) {
+            return existing
           }
-          return apiClient.getTestResult(id);
-        });
+          return apiClient.getTestResult(id)
+        })
 
-        const data = await Promise.all(promises);
-        if (!isMounted) return;
-        setResults(data);
-        
-        const allFinished = data.every(r => r.status === 'completed' || r.status === 'failed');
+        const data = await Promise.all(promises)
+        if (!isMounted) return
+        setResults(data)
+
+        const allFinished = data.every(
+          (r) => r.status === 'completed' || r.status === 'failed'
+        )
         if (allFinished) {
-          setPolling(false);
+          setPolling(false)
         }
       } catch (err) {
-        console.error('Failed to fetch bulk results:', err);
+        console.error('Failed to fetch bulk results:', err)
       } finally {
-        if (isMounted) setLoading(false);
+        if (isMounted) setLoading(false)
       }
-    };
-
-    fetchResults();
-    
-    let interval: number | undefined;
-    if (polling) {
-      interval = window.setInterval(fetchResults, 3000);
     }
-    
+
+    fetchResults()
+
+    let interval: number | undefined
+    if (polling) {
+      interval = window.setInterval(fetchResults, 3000)
+    }
+
     return () => {
-      isMounted = false;
-      if (interval) clearInterval(interval);
-    };
+      isMounted = false
+      if (interval) clearInterval(interval)
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [testIds, polling]); 
+  }, [testIds, polling])
 
-  const completedCount = results.filter(r => r.status === 'completed').length;
-  const failedCount = results.filter(r => r.status === 'failed').length;
-  const pendingCount = results.length - completedCount - failedCount;
+  const completedCount = results.filter((r) => r.status === 'completed').length
+  const failedCount = results.filter((r) => r.status === 'failed').length
+  const pendingCount = results.length - completedCount - failedCount
 
-  if (loading && results.length === 0) return <Loading message="Iniciando processamento em lote..." />;
+  if (loading && results.length === 0)
+    return <Loading message="Iniciando processamento em lote..." />
 
   return (
     <div className="bulk-results">
       <div className="bulk-header">
         <div className="flex-center-md">
-          <button className="btn btn-secondary" onClick={onBack} aria-label="Voltar">← Voltar</button>
+          <button
+            className="btn btn-secondary"
+            onClick={onBack}
+            aria-label="Voltar"
+          >
+            ← Voltar
+          </button>
           <h2 className="m-0">Resultados do Lote</h2>
         </div>
-        <button 
-          className="btn btn-primary" 
+        <button
+          className="btn btn-primary"
           onClick={handleExport}
           disabled={exporting || polling}
-          title={polling ? "Aguarde os testes terminarem para exportar" : "Baixar resultados em CSV"}
+          title={
+            polling
+              ? 'Aguarde os testes terminarem para exportar'
+              : 'Baixar resultados em CSV'
+          }
         >
           {exporting ? 'Exportando...' : 'Exportar CSV'}
         </button>
@@ -141,7 +169,7 @@ const BulkResults: React.FC<BulkResultsProps> = ({ promptId, versionNumber, test
             </tr>
           </thead>
           <tbody>
-            {results.map(result => (
+            {results.map((result) => (
               <tr key={result.id} className={`status-${result.status}`}>
                 <td className="col-input">{result.input}</td>
                 <td className="col-output">
@@ -163,14 +191,20 @@ const BulkResults: React.FC<BulkResultsProps> = ({ promptId, versionNumber, test
                   )}
                 </td>
                 <td className="col-status">
-                  <span className={`status-badge ${result.status}`}>{result.status}</span>
-                  {result.status === 'completed' && result.is_correct !== null && result.is_correct !== undefined && (
-                    <div className="mt-4">
-                      <span className={`validation-badge validation-badge-inline ${result.is_correct ? 'pass' : 'fail'}`}>
-                        {result.is_correct ? '✅' : '❌'}
-                      </span>
-                    </div>
-                  )}
+                  <span className={`status-badge ${result.status}`}>
+                    {result.status}
+                  </span>
+                  {result.status === 'completed' &&
+                    result.is_correct !== null &&
+                    result.is_correct !== undefined && (
+                      <div className="mt-4">
+                        <span
+                          className={`validation-badge validation-badge-inline ${result.is_correct ? 'pass' : 'fail'}`}
+                        >
+                          {result.is_correct ? '✅' : '❌'}
+                        </span>
+                      </div>
+                    )}
                   {result.is_human_overridden && (
                     <div className="mt-4">
                       <span className="override-badge override-badge-inline">
@@ -180,8 +214,22 @@ const BulkResults: React.FC<BulkResultsProps> = ({ promptId, versionNumber, test
                   )}
                   {result.status === 'completed' && (
                     <div className="action-buttons">
-                      <button className="btn btn-secondary btn-micro" onClick={() => handleOverride(result.id, true)} title="Aprovar" aria-label="Aprovar">👍</button>
-                      <button className="btn btn-secondary btn-micro" onClick={() => handleOverride(result.id, false)} title="Reprovar" aria-label="Reprovar">👎</button>
+                      <button
+                        className="btn btn-secondary btn-micro"
+                        onClick={() => handleOverride(result.id, true)}
+                        title="Aprovar"
+                        aria-label="Aprovar"
+                      >
+                        👍
+                      </button>
+                      <button
+                        className="btn btn-secondary btn-micro"
+                        onClick={() => handleOverride(result.id, false)}
+                        title="Reprovar"
+                        aria-label="Reprovar"
+                      >
+                        👎
+                      </button>
                     </div>
                   )}
                 </td>
@@ -191,7 +239,7 @@ const BulkResults: React.FC<BulkResultsProps> = ({ promptId, versionNumber, test
         </table>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default BulkResults;
+export default BulkResults
