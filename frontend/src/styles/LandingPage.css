@@ -8,7 +8,7 @@
 }
 
 .landing-page {
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-family: Inter, system-ui, -apple-system, sans-serif;
   color: #f8fafc;
   background-color: var(--lp-bg-dark);
   position: relative;
