@@ -23,6 +23,8 @@ from .base import BaseModel
 class TestResult(BaseModel):
     """TestResult model representing results of prompt tests."""
 
+    __test__ = False
+
     __tablename__ = "test_results"
 
     __table_args__ = (CheckConstraint("score >= 0.0 AND score <= 1.0", name="check_score_range"),)
