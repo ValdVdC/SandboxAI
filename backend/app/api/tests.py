@@ -29,9 +29,7 @@ router = APIRouter(prefix="/prompts", tags=["Tests"])
 MAX_BULK_TESTS = 50
 
 
-@router.post(
-    "/{prompt_id}/versions/{version_num}/tests", status_code=status.HTTP_202_ACCEPTED
-)
+@router.post("/{prompt_id}/versions/{version_num}/tests", status_code=status.HTTP_202_ACCEPTED)
 async def execute_test(
     prompt_id: UUID,
     version_num: int,
@@ -293,9 +291,7 @@ async def execute_bulk_tests_upload(
         await db.commit()
     except Exception as e:
         await db.rollback()
-        raise HTTPException(
-            status_code=500, detail="Failed to queue bulk tests from file"
-        ) from e
+        raise HTTPException(status_code=500, detail="Failed to queue bulk tests from file") from e
 
     # Queue tasks in parallel after commit
     task_ids = []
@@ -414,9 +410,7 @@ async def export_tests_csv(
     )
 
 
-@router.get(
-    "/{prompt_id}/versions/{version_num}/tests", response_model=TestListResponse
-)
+@router.get("/{prompt_id}/versions/{version_num}/tests", response_model=TestListResponse)
 async def list_tests(
     prompt_id: UUID,
     version_num: int,
@@ -464,9 +458,7 @@ async def list_tests(
 
     # Count total tests
     count_stmt = (
-        select(func.count())
-        .select_from(TestResult)
-        .where(TestResult.version_id == version.id)
+        select(func.count()).select_from(TestResult).where(TestResult.version_id == version.id)
     )
     count_result = await db.execute(count_stmt)
     total = count_result.scalar() or 0

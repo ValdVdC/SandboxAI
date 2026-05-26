@@ -70,9 +70,7 @@ async def startup_event():
                 print("❌ Critical database schema is missing (users/alembic_version).")
                 print("Please run migrations manually: alembic upgrade head")
                 # We raise error here to stop startup without modifying anything
-                raise RuntimeError(
-                    "Database schema missing. Manual intervention required."
-                )
+                raise RuntimeError("Database schema missing. Manual intervention required.")
 
             print("✅ Database connection validated")
     except Exception as e:
@@ -142,9 +140,7 @@ def custom_openapi():
     PUBLIC_PATHS = {"/", "/health"}
     for path in openapi_schema["paths"]:
         for method in openapi_schema["paths"][path]:
-            if path in PUBLIC_PATHS or openapi_schema["paths"][path][method].get(
-                "security"
-            ):
+            if path in PUBLIC_PATHS or openapi_schema["paths"][path][method].get("security"):
                 continue
             openapi_schema["paths"][path][method]["security"] = [{"BearerAuth": []}]
     app.openapi_schema = openapi_schema
@@ -154,9 +150,7 @@ def custom_openapi():
 app.openapi = custom_openapi
 
 # Middleware CORS
-allowed_origins_env = os.getenv(
-    "ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:5173"
-)
+allowed_origins_env = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:5173")
 if allowed_origins_env.strip() == "*":
     print(
         "⚠️ WARNING: ALLOWED_ORIGINS='*' is incompatible with "

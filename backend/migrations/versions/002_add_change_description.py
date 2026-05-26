@@ -18,9 +18,7 @@ depends_on = None
 
 def upgrade() -> None:
     # Add change_description column to prompt_versions table
-    op.add_column(
-        "prompt_versions", sa.Column("change_description", sa.Text(), nullable=True)
-    )
+    op.add_column("prompt_versions", sa.Column("change_description", sa.Text(), nullable=True))
 
 
 def downgrade() -> None:

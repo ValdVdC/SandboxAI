@@ -16,9 +16,7 @@ depends_on = None
 
 
 def upgrade() -> None:
-    op.create_unique_constraint(
-        "uq_prompt_version", "prompt_versions", ["prompt_id", "version"]
-    )
+    op.create_unique_constraint("uq_prompt_version", "prompt_versions", ["prompt_id", "version"])
 
 
 def downgrade() -> None:
