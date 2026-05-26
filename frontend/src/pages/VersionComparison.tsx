@@ -52,12 +52,15 @@ const VersionComparison: React.FC = () => {
         setPrompt(promptData);
         setVersions(versionsData.items);
         
-        if (versionsData.items.length >= 2) {
-          // Latest versions are usually at the beginning of the list (sorted desc)
-          setV1Id(versionsData.items[1].id);
-          setV2Id(versionsData.items[0].id);
-        } else if (versionsData.items.length === 1) {
-          setV1Id(versionsData.items[0].id);
+        if (versionsData.items.length > 0) {
+          // Sort versions descending to pick defaults deterministically
+          const sorted = [...versionsData.items].sort((a, b) => b.version - a.version);
+          if (sorted.length >= 2) {
+            setV1Id(sorted[1].id);
+            setV2Id(sorted[0].id);
+          } else {
+            setV1Id(sorted[0].id);
+          }
         }
       } catch (err) {
         setError('Falha ao carregar dados do prompt');
