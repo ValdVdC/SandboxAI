@@ -46,6 +46,51 @@ tags_metadata = [
     },
 ]
 
+from contextlib import asynccontextmanager
+
+# Startup and shutdown events
+async def startup_event():
+    """Validate database connection on startup."""
+    print("Validating database connection...")
+    try:
+        async with engine.begin() as conn:
+            await conn.execute(text("SELECT 1"))
+
+            # Check if tables exist
+            sql_query = """
+                SELECT
+                    to_regclass('public.users') IS NOT NULL AS has_users,
+                    to_regclass('public.alembic_version') IS NOT NULL AS has_alembic
+                """
+            tables_stmt = text(sql_query)
+            result = await conn.execute(tables_stmt)
+            status_row = result.mappings().one()
+
+            if not status_row["has_users"] or not status_row["has_alembic"]:
+                print("❌ Critical database schema is missing (users/alembic_version).")
+                print("Please run migrations manually: alembic upgrade head")
+                # We raise error here to stop startup without modifying anything
+                raise RuntimeError("Database schema missing. Manual intervention required.")
+
+            print("✅ Database connection validated")
+    except Exception as e:
+        print(f"❌ Database connection failed: {e}")
+        raise
+
+async def shutdown_event():
+    """Cleanup on application shutdown."""
+    print("🔌 Disposing database connections...")
+    await dispose_engine()
+    print("✅ Database connections closed")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await startup_event()
+    try:
+        yield
+    finally:
+        await shutdown_event()
+
 # Criar aplicação FastAPI
 app = FastAPI(
     title="SandboxAI API",
@@ -67,6 +112,7 @@ Utilize o botão **Authorize** para autenticar com seu token JWT.
         {"url": "http://localhost:8000", "description": "Local development"},
         {"url": "http://api:8000", "description": "Docker environment"},
     ],
+    lifespan=lifespan,
 )
 
 
@@ -130,46 +176,6 @@ app.include_router(tests.router)
 app.include_router(metrics.router)
 app.include_router(providers.router)
 app.include_router(playground.router)
-app.include_router(ci.router)
-
-
-# Startup and shutdown events
-@app.on_event("startup")
-async def startup_event():
-    """Validate database connection on startup."""
-    print("Validating database connection...")
-    try:
-        async with engine.begin() as conn:
-            await conn.execute(text("SELECT 1"))
-
-            # Check if tables exist
-            sql_query = """
-                SELECT
-                    to_regclass('public.users') IS NOT NULL AS has_users,
-                    to_regclass('public.alembic_version') IS NOT NULL AS has_alembic
-                """
-            tables_stmt = text(sql_query)
-            result = await conn.execute(tables_stmt)
-            status_row = result.mappings().one()
-
-            if not status_row["has_users"] or not status_row["has_alembic"]:
-                print("❌ Critical database schema is missing (users/alembic_version).")
-                print("Please run migrations manually: alembic upgrade head")
-                # We raise error here to stop startup without modifying anything
-                raise RuntimeError("Database schema missing. Manual intervention required.")
-
-            print("✅ Database connection validated")
-    except Exception as e:
-        print(f"❌ Database connection failed: {e}")
-        raise
-
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    """Cleanup on application shutdown."""
-    print("🔌 Disposing database connections...")
-    await dispose_engine()
-    print("✅ Database connections closed")
 
 
 # Health check endpoint
