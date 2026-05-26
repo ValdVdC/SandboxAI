@@ -507,3 +507,12 @@
     padding: 60px 24px;
   }
 }
+  
+@media (prefers-reduced-motion: reduce) {  
+  .reveal, .reveal-visible, .badge-1, .badge-2, .card-visual::after {  
+    animation: none !important;  
+    transition: none !important;  
+    transform: none !important;  
+    opacity: 1 !important;  
+  }  
+} 

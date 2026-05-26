@@ -183,13 +183,21 @@ async def execute_bulk_tests(
     # Queue tasks in parallel after commit
     task_ids = []
     for t_id in test_ids:
-        task = execute_test_task.delay(
-            test_id=t_id,
-            prompt_content=version.content,
-            provider=version.provider,
-            model=version.model,
-        )
-        task_ids.append(task.id)
+        try:
+            task = execute_test_task.delay(
+                test_id=t_id,
+                prompt_content=version.content,
+                provider=version.provider,
+                model=version.model,
+            )
+            task_ids.append(task.id)
+        except Exception as e:
+            import logging
+            logging.error("Failed to queue celery task for test %s: %s", t_id, e)
+            from sqlalchemy import update
+            stmt = update(TestResult).where(TestResult.id == t_id).values(status="failed", error_message="Failed to queue task")
+            await db.execute(stmt)
+            await db.commit()
 
     return {
         "test_ids": test_ids,
@@ -296,13 +304,21 @@ async def execute_bulk_tests_upload(
     # Queue tasks in parallel after commit
     task_ids = []
     for t_id in test_ids:
-        task = execute_test_task.delay(
-            test_id=t_id,
-            prompt_content=version.content,
-            provider=version.provider,
-            model=version.model,
-        )
-        task_ids.append(task.id)
+        try:
+            task = execute_test_task.delay(
+                test_id=t_id,
+                prompt_content=version.content,
+                provider=version.provider,
+                model=version.model,
+            )
+            task_ids.append(task.id)
+        except Exception as e:
+            import logging
+            logging.error("Failed to queue celery task for test %s: %s", t_id, e)
+            from sqlalchemy import update
+            stmt = update(TestResult).where(TestResult.id == t_id).values(status="failed", error_message="Failed to queue task")
+            await db.execute(stmt)
+            await db.commit()
 
     return {
         "test_ids": test_ids,
