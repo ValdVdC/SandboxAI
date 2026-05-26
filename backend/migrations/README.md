@@ -42,9 +42,11 @@ This creates a new file in `migrations/versions/` with the schema changes.
 ### 3. Review Migration
 
 Before applying, check the generated migration file:
+
 ```bash
 cat migrations/versions/XXX_add_new_column_to_users.py
 ```
+
 
 Make sure the `upgrade()` and `downgrade()` functions are correct.
 
