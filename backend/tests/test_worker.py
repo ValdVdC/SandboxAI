@@ -44,9 +44,7 @@ class TestGroqProvider:
     @patch.dict("os.environ", {"GROQ_API_KEY": ""})
     def test_groq_missing_api_key(self):
         """Test Groq provider with missing API key."""
-        with pytest.raises(
-            ValueError, match="GROQ_API_KEY environment variable not set"
-        ):
+        with pytest.raises(ValueError, match="GROQ_API_KEY environment variable not set"):
             GroqProvider()
 
 

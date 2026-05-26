@@ -71,9 +71,7 @@ async def startup_event():
                 run_migrations = True
 
         if run_migrations:
-            print(
-                "⚠️ Critical database schema is missing. Running migrations automatically..."
-            )
+            print("⚠️ Critical database schema is missing. Running migrations automatically...")
             import subprocess
 
             try:
@@ -153,9 +151,7 @@ def custom_openapi():
     PUBLIC_PATHS = {"/", "/health"}
     for path in openapi_schema["paths"]:
         for method in openapi_schema["paths"][path]:
-            if path in PUBLIC_PATHS or openapi_schema["paths"][path][method].get(
-                "security"
-            ):
+            if path in PUBLIC_PATHS or openapi_schema["paths"][path][method].get("security"):
                 continue
             openapi_schema["paths"][path][method]["security"] = [{"BearerAuth": []}]
     app.openapi_schema = openapi_schema
@@ -165,9 +161,7 @@ def custom_openapi():
 app.openapi = custom_openapi
 
 # Middleware CORS
-allowed_origins_env = os.getenv(
-    "ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:5173"
-)
+allowed_origins_env = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:5173")
 if allowed_origins_env.strip() == "*":
     print(
         "⚠️ WARNING: ALLOWED_ORIGINS='*' is incompatible with "

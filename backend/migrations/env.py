@@ -25,9 +25,7 @@ target_metadata = Base.metadata
 
 def get_database_url():
     """Get database URL from environment."""
-    return os.getenv(
-        "DATABASE_URL", "postgresql://sandboxai:sandboxai@localhost:5432/sandboxai"
-    )
+    return os.getenv("DATABASE_URL", "postgresql://sandboxai:sandboxai@localhost:5432/sandboxai")
 
 
 def run_migrations_offline() -> None:
