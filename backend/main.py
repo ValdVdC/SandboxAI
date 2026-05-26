@@ -67,9 +67,11 @@ async def global_exception_handler(request, exc):
     Returns:
         JSONResponse: Resposta com erro
     """
+    import logging
+    logging.exception("Unhandled exception:")
     return JSONResponse(
         status_code=500,
-        content={"detail": "Erro interno do servidor", "type": type(exc).__name__},
+        content={"detail": "Erro interno do servidor"},
     )
 
 
