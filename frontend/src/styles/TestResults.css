@@ -69,15 +69,15 @@
 }
 
 .validation-badge.pass {
-  background-color: #052c16;
-  color: #75ffaf;
-  border: 1px solid #14532d;
+  background-color: rgba(63, 185, 80, 0.1);
+  color: var(--color-success);
+  border: 1px solid rgba(63, 185, 80, 0.3);
 }
 
 .validation-badge.fail {
-  background-color: #450a0a;
-  color: #fca5a5;
-  border: 1px solid #7f1d1d;
+  background-color: rgba(248, 81, 73, 0.1);
+  color: var(--color-danger);
+  border: 1px solid rgba(248, 81, 73, 0.3);
 }
 
 .test-date {
