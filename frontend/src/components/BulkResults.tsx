@@ -26,7 +26,7 @@ const BulkResults: React.FC<BulkResultsProps> = ({ promptId, versionNumber, test
     try {
       setExporting(true);
       // We use the batch_id of the first result since they all belong to the same batch
-      const batchId = validResult.batch_id;
+      const batchId = validResult.batch_id.trim();
       await apiClient.exportTests(promptId, versionNumber, batchId);
     } catch (err) {
       console.error('Export failed', err);
