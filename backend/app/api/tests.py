@@ -254,6 +254,12 @@ async def execute_bulk_tests_upload(
             detail=f"Muitos testes em um único lote. Máximo permitido: {MAX_BULK_TESTS}",
         )
 
+    if any(not isinstance(row, dict) for row in rows):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cada item do CSV/JSON deve ser um objeto com os campos de entrada.",
+        )
+
     test_ids = []
     batch_id = uuid4()
 
