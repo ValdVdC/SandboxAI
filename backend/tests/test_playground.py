@@ -66,7 +66,10 @@ async def test_playground_run_success(client: AsyncClient, sample_user):
     res_1 = data["results"][0]
     assert res_1["provider"] == "openai"
     assert res_1["model"] == "gpt-4o"
-    assert "Mocked output for prompt: 'Translate to Spanish: Hello World'" in res_1["output"]
+    assert (
+        "Mocked output for prompt: 'Translate to Spanish: Hello World'"
+        in res_1["output"]
+    )
     assert res_1["status"] == "completed"
     assert res_1["latency_ms"] == 120.0
     assert res_1["tokens_used"] == 42

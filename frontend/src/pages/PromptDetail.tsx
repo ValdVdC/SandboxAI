@@ -33,6 +33,7 @@ const PromptDetail: React.FC = () => {
 
   // Load versions and auto-select LATEST one
   useEffect(() => {
+    setSelectedVersion(null)
     const loadVersions = async () => {
       if (!id) return
       try {
@@ -41,9 +42,9 @@ const PromptDetail: React.FC = () => {
         const sorted = response.items.sort((a, b) => b.version - a.version)
         setVersions(sorted)
         // Auto-select the LATEST version (first in descending order) only on initial load
-        setSelectedVersion((prev) =>
-          prev === null && sorted.length > 0 ? sorted[0] : prev
-        )
+        if (sorted.length > 0) {
+          setSelectedVersion(sorted[0])
+        }
       } catch (err) {
         console.error('Failed to load versions:', err)
       } finally {
@@ -81,12 +82,6 @@ const PromptDetail: React.FC = () => {
   if (error) return <div className="error-message">{error}</div>
   if (!prompt) return <div>Prompt não encontrado</div>
   if (versionsLoading) return <Loading message="Carregando versões..." />
-  if (versions.length === 0)
-    return (
-      <div className="error-message">
-        Nenhuma versão encontrada para este prompt
-      </div>
-    )
 
   return (
     <>
@@ -174,6 +169,13 @@ const PromptDetail: React.FC = () => {
                         {selectedVersion.content}
                       </pre>
                     </div>
+                  </div>
+                )}
+
+                {!selectedVersion && versions.length === 0 && !showCreateVersion && (
+                  <div className="empty-state" style={{ padding: '2rem', textAlign: 'center', backgroundColor: 'var(--color-bg-secondary)', borderRadius: '8px', marginBottom: '1rem' }}>
+                    <h3>Nenhuma versão encontrada</h3>
+                    <p>Crie uma nova versão para começar a testar.</p>
                   </div>
                 )}
 

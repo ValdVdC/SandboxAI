@@ -18,7 +18,6 @@ const PromptList: React.FC = () => {
     const handleStorageChange = () => {
       const flag = localStorage.getItem('newPromptCreated')
       if (flag === 'true') {
-        console.log('New prompt created, refreshing list...')
         localStorage.removeItem('newPromptCreated')
         // Force full page reload to get new prompts
         window.location.reload()

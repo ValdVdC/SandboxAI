@@ -28,8 +28,15 @@ const TestRunner: React.FC<TestRunnerProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setError(null)
+    setPreviewHeaders([])
+    setPreviewRows([])
+    
     const selectedFile = e.target.files?.[0]
-    if (!selectedFile) return
+    if (!selectedFile) {
+      setFile(null)
+      return
+    }
 
     setFile(selectedFile)
 

@@ -151,3 +151,40 @@ export interface PlaygroundColumnResult {
 export interface PlaygroundRunResponse {
   results: PlaygroundColumnResult[]
 }
+
+export interface BulkTestsResponse {
+  test_ids: string[]
+  celery_task_ids: string[]
+  total_queued: number
+  message: string
+}
+
+export interface VersionCompareMetrics {
+  total_tests: number
+  avg_latency: number
+  avg_tokens: number
+  avg_cost: number
+  success_rate: number
+}
+
+export interface CompareVersionsResponse {
+  v1: VersionCompareMetrics
+  v2: VersionCompareMetrics
+}
+
+export interface PromptEvolutionItem {
+  version: number
+  avg_latency: number
+  avg_cost: number
+  avg_tokens: number
+  test_count: number
+  success_count: number
+  fail_count: number
+}
+
+export interface ProviderStatus {
+  available: boolean
+  reason: string
+}
+
+export type ProviderStatusResponse = Record<string, ProviderStatus>

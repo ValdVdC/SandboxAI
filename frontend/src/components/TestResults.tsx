@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useCallback } from 'react'
 import apiClient from '../services/api'
 import { TestResult } from '../types'
 import Loading from './Loading'
@@ -49,35 +49,37 @@ const TestResults: React.FC<TestResultsProps> = ({
     }
   }
 
-  useEffect(() => {
-    const fetchResult = async () => {
-      try {
-        const resultData = await apiClient.getTestExecution(testId)
-        setResult(resultData as TestResult)
-      } catch (err) {
-        console.error('Error fetching test result:', err)
-        setError(
-          err instanceof Error ? err.message : 'Failed to fetch test result'
-        )
-      } finally {
-        setLoading(false)
-      }
+  const fetchResult = useCallback(async () => {
+    try {
+      const resultData = await apiClient.getTestExecution(testId)
+      setResult(resultData as TestResult)
+    } catch (err) {
+      console.error('Error fetching test result:', err)
+      setError(
+        err instanceof Error ? err.message : 'Failed to fetch test result'
+      )
+    } finally {
+      setLoading(false)
     }
+  }, [testId])
 
+  // Initial fetch
+  useEffect(() => {
     fetchResult()
+  }, [fetchResult])
 
-    // Poll while test is queued or running
+  // Polling loop
+  useEffect(() => {
     if (
       autoRefresh &&
-      result &&
-      (result.status === 'queued' ||
-        result.status === 'pending' ||
-        result.status === 'running')
+      (result?.status === 'queued' ||
+        result?.status === 'pending' ||
+        result?.status === 'running')
     ) {
       const interval = setInterval(fetchResult, 1000)
       return () => clearInterval(interval)
     }
-  }, [testId, result, autoRefresh])
+  }, [result?.status, autoRefresh, fetchResult])
 
   if (loading) return <Loading message="Carregando resultados do teste..." />
 

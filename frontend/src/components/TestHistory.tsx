@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useCallback } from 'react'
 import apiClient from '../services/api'
+import { useApiData } from '../hooks/useApiData'
 import { TestResult } from '../types'
 import Loading from './Loading'
 import '../styles/TestHistory.css'
@@ -23,8 +24,6 @@ const TestHistory: React.FC<TestHistoryProps> = ({
   onViewBatch,
 }) => {
   const [items, setItems] = useState<HistoryItem[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
   const [selectedTest, setSelectedTest] = useState<TestResult | null>(null)
   const [exporting, setExporting] = useState(false)
 
@@ -39,57 +38,47 @@ const TestHistory: React.FC<TestHistoryProps> = ({
     }
   }
 
+  const fetchTests = useCallback(() => apiClient.getPromptTests(promptId, versionNumber), [promptId, versionNumber])
+  const { data: tests, loading, error } = useApiData(fetchTests)
+
   useEffect(() => {
-    const fetchTests = async () => {
-      try {
-        setLoading(true)
-        const tests = await apiClient.getPromptTests(promptId, versionNumber)
+    if (tests) {
+      const groups: Record<string, TestResult[]> = {}
+      const singles: TestResult[] = []
 
-        const groups: Record<string, TestResult[]> = {}
-        const singles: TestResult[] = []
+      tests.forEach((t) => {
+        if (t.batch_id) {
+          if (!groups[t.batch_id]) groups[t.batch_id] = []
+          groups[t.batch_id].push(t)
+        } else {
+          singles.push(t)
+        }
+      })
 
-        tests.forEach((t) => {
-          if (t.batch_id) {
-            if (!groups[t.batch_id]) groups[t.batch_id] = []
-            groups[t.batch_id].push(t)
-          } else {
-            singles.push(t)
-          }
-        })
+      const historyItems: HistoryItem[] = [
+        ...Object.entries(groups).map(([bid, tests]) => ({
+          type: 'batch' as const,
+          batch_id: bid,
+          data: tests,
+          created_at: tests[0].created_at || '',
+        })),
+        ...singles.map((t) => ({
+          type: 'single' as const,
+          data: [t],
+          created_at: t.created_at || '',
+        })),
+      ]
 
-        const historyItems: HistoryItem[] = [
-          ...Object.entries(groups).map(([bid, tests]) => ({
-            type: 'batch' as const,
-            batch_id: bid,
-            data: tests,
-            created_at: tests[0].created_at || '',
-          })),
-          ...singles.map((t) => ({
-            type: 'single' as const,
-            data: [t],
-            created_at: t.created_at || '',
-          })),
-        ]
+      // Sort by date with safety fallback
+      historyItems.sort((a, b) => {
+        const dateA = new Date(a.created_at).getTime() || 0
+        const dateB = new Date(b.created_at).getTime() || 0
+        return dateB - dateA
+      })
 
-        // Sort by date with safety fallback
-        historyItems.sort((a, b) => {
-          const dateA = new Date(a.created_at).getTime() || 0
-          const dateB = new Date(b.created_at).getTime() || 0
-          return dateB - dateA
-        })
-
-        setItems(historyItems)
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to fetch tests')
-      } finally {
-        setLoading(false)
-      }
+      setItems(historyItems)
     }
-
-    if (promptId && versionNumber) {
-      fetchTests()
-    }
-  }, [promptId, versionNumber])
+  }, [tests])
 
   if (loading) return <Loading message="Carregando histórico..." />
   if (error) return <div className="error-message">{error}</div>
@@ -197,9 +186,9 @@ const TestHistory: React.FC<TestHistoryProps> = ({
                       {successCount} sucessos, {item.data.length - successCount}{' '}
                       outros.
                     </span>
-                    <button className="btn btn-secondary btn-small">
+                    <span aria-hidden="true" className="btn btn-secondary btn-small">
                       Ver detalhes do lote →
-                    </button>
+                    </span>
                   </div>
                 </div>
               )
@@ -240,9 +229,9 @@ const TestHistory: React.FC<TestHistoryProps> = ({
 
                   <div className="batch-summary">
                     <span className="stats text-muted">Teste Individual</span>
-                    <button className="btn btn-secondary btn-small">
+                    <span aria-hidden="true" className="btn btn-secondary btn-small">
                       Abrir detalhes →
-                    </button>
+                    </span>
                   </div>
                 </div>
               )

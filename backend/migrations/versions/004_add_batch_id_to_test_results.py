@@ -20,7 +20,9 @@ def upgrade() -> None:
     # Add batch_id column to test_results table
     op.add_column("test_results", sa.Column("batch_id", sa.UUID(), nullable=True))
     # Create index for better performance when grouping by batch
-    op.create_index(op.f("ix_test_results_batch_id"), "test_results", ["batch_id"], unique=False)
+    op.create_index(
+        op.f("ix_test_results_batch_id"), "test_results", ["batch_id"], unique=False
+    )
 
 
 def downgrade() -> None:

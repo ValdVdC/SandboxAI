@@ -76,7 +76,9 @@ async def list_prompts(
         query = query.where(Prompt.name.ilike(f"%{search}%"))
 
     # Count total before pagination
-    count_stmt = select(func.count()).select_from(Prompt).where(Prompt.user_id == user.id)
+    count_stmt = (
+        select(func.count()).select_from(Prompt).where(Prompt.user_id == user.id)
+    )
     if search:
         count_stmt = count_stmt.where(Prompt.name.ilike(f"%{search}%"))
 

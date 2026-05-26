@@ -14,6 +14,7 @@ const Dashboard: React.FC = () => {
     const fetchMetrics = async () => {
       try {
         setLoading(true)
+        setError(null)
         const data = await apiClient.getMetrics()
         setMetrics(data)
       } catch (err) {
@@ -87,7 +88,8 @@ const Dashboard: React.FC = () => {
                       </div>
                     )
                   )}
-                  {!metrics.tests_by_provider && (
+                  {(!metrics.tests_by_provider ||
+                    Object.keys(metrics.tests_by_provider).length === 0) && (
                     <p className="no-data">Sem dados</p>
                   )}
                 </div>
@@ -104,7 +106,8 @@ const Dashboard: React.FC = () => {
                       </div>
                     )
                   )}
-                  {!metrics.tests_by_status && (
+                  {(!metrics.tests_by_status ||
+                    Object.keys(metrics.tests_by_status).length === 0) && (
                     <p className="no-data">Sem dados</p>
                   )}
                 </div>

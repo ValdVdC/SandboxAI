@@ -16,7 +16,29 @@ depends_on = None
 
 
 def upgrade() -> None:
-    op.create_unique_constraint("uq_prompt_version", "prompt_versions", ["prompt_id", "version"])
+    # Deduplicate existing duplicate (prompt_id, version) pairs
+    conn = op.get_bind()
+    from sqlalchemy import text
+
+    conn.execute(
+        text(
+            """
+        DELETE FROM prompt_versions
+        WHERE id IN (
+            SELECT id
+            FROM (
+                SELECT id,
+                ROW_NUMBER() OVER( PARTITION BY prompt_id, version ORDER BY created_at DESC ) as row_num
+                FROM prompt_versions
+            ) t
+            WHERE t.row_num > 1
+        )
+        """
+        )
+    )
+    op.create_unique_constraint(
+        "uq_prompt_version", "prompt_versions", ["prompt_id", "version"]
+    )
 
 
 def downgrade() -> None:
