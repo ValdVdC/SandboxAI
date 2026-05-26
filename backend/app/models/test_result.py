@@ -13,6 +13,7 @@ from sqlalchemy import (
     Numeric,
     String,
     Text,
+    text,
 )
 from sqlalchemy.orm import relationship
 
@@ -43,7 +44,7 @@ class TestResult(BaseModel):
     score = Column(Numeric(3, 2), nullable=True)  # Validation score (0.0 to 1.0)
     is_correct = Column(Boolean, nullable=True)  # Whether the output matches expected
     is_human_overridden = Column(
-        Boolean, default=False
+        Boolean, default=False, nullable=False, server_default=text("false")
     )  # Whether a human has overridden the result
     status = Column(
         String(50), nullable=False, default="pending"
