@@ -91,7 +91,7 @@ const TestResults: React.FC<TestResultsProps> = ({
           <button 
             className="btn btn-primary btn-small" 
             onClick={handleExport}
-            disabled={exporting || result.status === 'queued' || result.status === 'running'}
+            disabled={exporting || result.status === 'queued' || result.status === 'pending' || result.status === 'running'}
           >
             {exporting ? 'Exportando...' : 'Exportar Versão'}
           </button>
