@@ -102,7 +102,7 @@ Responsável pela execução assíncrona dos testes de prompts.
 ```yaml
 worker:
   build: ./backend
-  command: celery -A app.workers.worker worker
+  command: celery -A app.workers.config worker
   depends_on:
     - redis
     - postgres
@@ -410,12 +410,6 @@ Para escalar horizontalmente em produção:
 ```bash
 # Escalar workers para processar mais testes em paralelo
 docker compose up --scale worker=4
-```
-
-O Redis garante que cada tarefa seja processada por apenas um worker, sem duplicação.
-mais testes em paralelo
-docker compose up --scale worker=4
-
 ```
 
 O Redis garante que cada tarefa seja processada por apenas um worker, sem duplicação.
