@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.dependencies import get_current_user, get_user_prompt
-from app.models import PromptVersion, User
+from app.models import Prompt, PromptVersion, User
 from app.schemas import VersionCreate, VersionListResponse, VersionResponse
 
 router = APIRouter(prefix="/prompts", tags=["Versions"])
@@ -42,32 +42,35 @@ async def create_version(
     # Get prompt with ownership check
     prompt = await get_user_prompt(prompt_id, user, db)
 
-    # Get current version count to determine next version number
-    stmt = (
-        select(func.count()).select_from(PromptVersion).where(PromptVersion.prompt_id == prompt_id)
-    )
-    result = await db.execute(stmt)
-    count = result.scalar() or 0
-    next_version = count + 1
+    try:
+        # Lock the prompt to prevent concurrent version creations
+        prompt_stmt = select(Prompt).where(Prompt.id == prompt_id).with_for_update()
+        prompt_result = await db.execute(prompt_stmt)
+        locked_prompt = prompt_result.scalar_one()
 
-    # Create new version
-    version = PromptVersion(
-        id=uuid4(),
-        prompt_id=prompt_id,
-        version=next_version,
-        content=version_data.content,
-        provider=version_data.provider,
-        model=version_data.model,
-        change_description=version_data.change_description,
-    )
+        next_version = locked_prompt.version_count + 1
 
-    # Update prompt version count
-    prompt.version_count = next_version
+        # Create new version
+        version = PromptVersion(
+            id=uuid4(),
+            prompt_id=prompt_id,
+            version=next_version,
+            content=version_data.content,
+            provider=version_data.provider,
+            model=version_data.model,
+            change_description=version_data.change_description,
+        )
 
-    db.add(version)
-    db.add(prompt)
-    await db.commit()
-    await db.refresh(version)
+        # Update prompt version count
+        locked_prompt.version_count = next_version
+
+        db.add(version)
+        db.add(locked_prompt)
+        await db.commit()
+        await db.refresh(version)
+    except Exception as e:
+        await db.rollback()
+        raise HTTPException(status_code=500, detail="Failed to create version") from e
 
     return VersionResponse.from_orm(version)
 
@@ -197,26 +200,31 @@ async def restore_version(
     if not version_to_restore:
         raise HTTPException(status_code=404, detail=f"Version {version_num} not found")
 
-    # Determine next version number
-    next_version = prompt.version_count + 1
-
-    # Create new version
-    new_version = PromptVersion(
-        id=uuid4(),
-        prompt_id=prompt_id,
-        version=next_version,
-        content=version_to_restore.content,
-        provider=version_to_restore.provider,
-        model=version_to_restore.model,
-        change_description=f"Restored from version {version_num}",
-    )
-
-    # Update prompt
-    prompt.version_count = next_version
-
     try:
+        # Lock the prompt to prevent concurrent version creations
+        prompt_stmt = select(Prompt).where(Prompt.id == prompt_id).with_for_update()
+        prompt_result = await db.execute(prompt_stmt)
+        locked_prompt = prompt_result.scalar_one()
+
+        # Determine next version number
+        next_version = locked_prompt.version_count + 1
+
+        # Create new version
+        new_version = PromptVersion(
+            id=uuid4(),
+            prompt_id=prompt_id,
+            version=next_version,
+            content=version_to_restore.content,
+            provider=version_to_restore.provider,
+            model=version_to_restore.model,
+            change_description=f"Restored from version {version_num}",
+        )
+
+        # Update prompt
+        locked_prompt.version_count = next_version
+
         db.add(new_version)
-        db.add(prompt)
+        db.add(locked_prompt)
         await db.commit()
         await db.refresh(new_version)
     except Exception as e:
