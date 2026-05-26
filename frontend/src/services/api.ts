@@ -17,6 +17,10 @@ import {
   PaginatedResponse,
   PlaygroundRunRequest,
   PlaygroundRunResponse,
+  BulkTestsResponse,
+  CompareVersionsResponse,
+  PromptEvolutionItem,
+  ProviderStatusResponse,
 } from '../types'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
@@ -179,18 +183,8 @@ class ApiClient {
     promptId: string,
     versionNum: number,
     data: { inputs: string[]; expected?: string }
-  ): Promise<{
-    test_ids: string[]
-    celery_task_ids: string[]
-    total_queued: number
-    message: string
-  }> {
-    const response = await this.client.post<{
-      test_ids: string[]
-      celery_task_ids: string[]
-      total_queued: number
-      message: string
-    }>(`/prompts/${promptId}/versions/${versionNum}/tests/bulk`, data)
+  ): Promise<BulkTestsResponse> {
+    const response = await this.client.post<BulkTestsResponse>(`/prompts/${promptId}/versions/${versionNum}/tests/bulk`, data)
     return response.data
   }
 
@@ -198,21 +192,11 @@ class ApiClient {
     promptId: string,
     versionNum: number,
     file: File
-  ): Promise<{
-    test_ids: string[]
-    celery_task_ids: string[]
-    total_queued: number
-    message: string
-  }> {
+  ): Promise<BulkTestsResponse> {
     const formData = new FormData()
     formData.append('file', file)
 
-    const response = await this.client.post<{
-      test_ids: string[]
-      celery_task_ids: string[]
-      total_queued: number
-      message: string
-    }>(
+    const response = await this.client.post<BulkTestsResponse>(
       `/prompts/${promptId}/versions/${versionNum}/tests/bulk/upload`,
       formData,
       {
@@ -306,74 +290,19 @@ class ApiClient {
   async compareVersions(
     v1Id: string,
     v2Id: string
-  ): Promise<{
-    v1: {
-      total_tests: number
-      avg_latency: number
-      avg_tokens: number
-      avg_cost: number
-      success_rate: number
-    }
-    v2: {
-      total_tests: number
-      avg_latency: number
-      avg_tokens: number
-      avg_cost: number
-      success_rate: number
-    }
-  }> {
-    const response = await this.client.get<{
-      v1: {
-        total_tests: number
-        avg_latency: number
-        avg_tokens: number
-        avg_cost: number
-        success_rate: number
-      }
-      v2: {
-        total_tests: number
-        avg_latency: number
-        avg_tokens: number
-        avg_cost: number
-        success_rate: number
-      }
-    }>(`/metrics/compare-versions/${v1Id}/${v2Id}`)
+  ): Promise<CompareVersionsResponse> {
+    const response = await this.client.get<CompareVersionsResponse>(`/metrics/compare-versions/${v1Id}/${v2Id}`)
     return response.data
   }
 
-  async getPromptEvolution(promptId: string): Promise<
-    Array<{
-      version: number
-      avg_latency: number
-      avg_cost: number
-      avg_tokens: number
-      test_count: number
-      success_count: number
-      fail_count: number
-    }>
-  > {
-    const response = await this.client.get<
-      Array<{
-        version: number
-        avg_latency: number
-        avg_cost: number
-        avg_tokens: number
-        test_count: number
-        success_count: number
-        fail_count: number
-      }>
-    >(`/metrics/prompt-evolution/${promptId}`)
+  async getPromptEvolution(promptId: string): Promise<PromptEvolutionItem[]> {
+    const response = await this.client.get<PromptEvolutionItem[]>(`/metrics/prompt-evolution/${promptId}`)
     return response.data
   }
 
   // Providers
-  async getProviderStatus(): Promise<
-    Record<string, { available: boolean; reason: string }>
-  > {
-    const response =
-      await this.client.get<
-        Record<string, { available: boolean; reason: string }>
-      >('/providers/status')
+  async getProviderStatus(): Promise<ProviderStatusResponse> {
+    const response = await this.client.get<ProviderStatusResponse>('/providers/status')
     return response.data
   }
 
