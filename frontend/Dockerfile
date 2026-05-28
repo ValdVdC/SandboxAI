@@ -6,7 +6,7 @@
 # STAGE 1: BUILDER — Compilar React + TypeScript
 # ─────────────────────────────────────────────────────────────────────────────
 
-FROM node:20-alpine AS builder
+FROM node:26-alpine AS builder
 
 WORKDIR /app
 
@@ -26,7 +26,7 @@ RUN npm run build
 # STAGE 2: DEVELOPMENT — Servidor de desenvolvimento (Vite)
 # ─────────────────────────────────────────────────────────────────────────────
 
-FROM node:20-alpine AS development
+FROM node:26-alpine AS development
 
 WORKDIR /app
 
