@@ -1,7 +1,7 @@
 """add unique constraint to prompt_version
 
-Revision ID: 111111111111
-Revises: 94bd77c5d6e7
+Revision ID: 007_add_unique_constraint
+Revises: 006_add_human_override_flag
 Create Date: 2026-05-25 00:00:00.000000
 
 """
@@ -9,8 +9,8 @@ Create Date: 2026-05-25 00:00:00.000000
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision = "111111111111"
-down_revision = "94bd77c5d6e7"
+revision = "007_add_unique_constraint"
+down_revision = "006_add_human_override_flag"
 branch_labels = None
 depends_on = None
 
