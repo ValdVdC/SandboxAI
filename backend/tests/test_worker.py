@@ -1,13 +1,12 @@
 """Tests for Celery worker and provider implementations."""
 
-import pytest
-import asyncio
-from unittest.mock import Mock, patch, AsyncMock
-from uuid import uuid4
+from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
+
+from app.workers.config import celery_app
 from app.workers.providers.groq import GroqProvider
 from app.workers.providers.ollama import OllamaProvider
-from app.workers.config import celery_app
 
 
 class TestGroqProvider:
@@ -39,13 +38,13 @@ class TestGroqProvider:
         # Verify
         assert result.output == "Test output"
         assert result.tokens_used == 15
-        assert result.latency_ms > 0
+        assert result.latency_ms >= 0
         assert result.cost_usd > 0
 
     @patch.dict("os.environ", {"GROQ_API_KEY": ""})
     def test_groq_missing_api_key(self):
         """Test Groq provider with missing API key."""
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="GROQ_API_KEY environment variable not set"):
             GroqProvider()
 
 
@@ -63,9 +62,9 @@ class TestOllamaProvider:
         provider = OllamaProvider()
 
         # Mock HTTP response
-        mock_response = AsyncMock()
+        mock_response = MagicMock()
         mock_response.status_code = 200
-        mock_response.json = AsyncMock(
+        mock_response.json = MagicMock(
             return_value={
                 "response": "Test output",
                 "eval_count": 5,

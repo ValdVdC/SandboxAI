@@ -1,6 +1,5 @@
 """Prompt version management endpoints."""
 
-from typing import Optional
 from uuid import UUID, uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -41,34 +40,39 @@ async def create_version(
         Created version with metadata
     """
     # Get prompt with ownership check
-    prompt = await get_user_prompt(prompt_id, user, db)
+    await get_user_prompt(prompt_id, user, db)
 
-    # Get current version count to determine next version number
-    stmt = (
-        select(func.count()).select_from(PromptVersion).where(PromptVersion.prompt_id == prompt_id)
-    )
-    result = await db.execute(stmt)
-    count = result.scalar() or 0
-    next_version = count + 1
+    try:
+        # Lock the prompt to prevent concurrent version creations
+        prompt_stmt = select(Prompt).where(Prompt.id == prompt_id).with_for_update()
+        prompt_result = await db.execute(prompt_stmt)
+        locked_prompt = prompt_result.scalar_one_or_none()
+        if not locked_prompt:
+            raise HTTPException(status_code=404, detail="Prompt not found")
 
-    # Create new version
-    version = PromptVersion(
-        id=uuid4(),
-        prompt_id=prompt_id,
-        version=next_version,
-        content=version_data.content,
-        provider=version_data.provider,
-        model=version_data.model,
-        change_description=version_data.change_description,
-    )
+        next_version = locked_prompt.version_count + 1
 
-    # Update prompt version count
-    prompt.version_count = next_version
+        # Create new version
+        version = PromptVersion(
+            id=uuid4(),
+            prompt_id=prompt_id,
+            version=next_version,
+            content=version_data.content,
+            provider=version_data.provider,
+            model=version_data.model,
+            change_description=version_data.change_description,
+        )
 
-    db.add(version)
-    db.add(prompt)
-    await db.commit()
-    await db.refresh(version)
+        # Update prompt version count
+        locked_prompt.version_count = next_version
+
+        db.add(version)
+        db.add(locked_prompt)
+        await db.commit()
+        await db.refresh(version)
+    except Exception as e:
+        await db.rollback()
+        raise HTTPException(status_code=500, detail="Failed to create version") from e
 
     return VersionResponse.from_orm(version)
 
@@ -95,7 +99,7 @@ async def list_versions(
         Paginated list of versions
     """
     # Validate ownership
-    prompt = await get_user_prompt(prompt_id, user, db)
+    await get_user_prompt(prompt_id, user, db)
 
     # Count total versions
     count_stmt = (
@@ -122,46 +126,113 @@ async def list_versions(
     )
 
 
-@router.get("/{prompt_id}/versions/{version_num}", response_model=VersionResponse)
+@router.get("/{prompt_id}/versions/{version_id}", response_model=VersionResponse)
 async def get_version(
+    prompt_id: UUID,
+    version_id: UUID,
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> VersionResponse:
+    """
+    Get details of a specific prompt version by its ID.
+
+    Args:
+        prompt_id: ID of the prompt
+        version_id: ID of the specific version
+        user: Current authenticated user
+        db: Database session
+
+    Returns:
+        Version details
+    """
+    # Validate ownership of the prompt
+    await get_user_prompt(prompt_id, user, db)
+
+    # Get the specific version
+
+    stmt = select(PromptVersion).where(
+        and_(
+            PromptVersion.prompt_id == prompt_id,
+            PromptVersion.id == version_id,
+        )
+    )
+    result = await db.execute(stmt)
+    version = result.scalar_one_or_none()
+
+    if not version:
+        raise HTTPException(status_code=404, detail="Version not found")
+
+    return VersionResponse.from_orm(version)
+
+
+@router.post("/{prompt_id}/versions/{version_num}/restore", response_model=VersionResponse)
+async def restore_version(
     prompt_id: UUID,
     version_num: int,
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> VersionResponse:
     """
-    Get a specific version of a prompt.
+    Restore an old version of a prompt.
+
+    Creates a new version with the content and settings of the specified old version.
 
     Args:
         prompt_id: ID of prompt
-        version_num: Version number
+        version_num: Version number to restore
         user: Current authenticated user
         db: Database session
 
     Returns:
-        Version details
-
-    Raises:
-        HTTPException: If prompt not found, user doesn't own it, or version doesn't exist
+        The new version created from the restoration
     """
     # Validate ownership
-    prompt = await get_user_prompt(prompt_id, user, db)
+    await get_user_prompt(prompt_id, user, db)
 
-    # Get specific version
+    # Get version to restore
     stmt = select(PromptVersion).where(
         and_(
             PromptVersion.prompt_id == prompt_id,
             PromptVersion.version == version_num,
         )
     )
-
     result = await db.execute(stmt)
-    version = result.scalar_one_or_none()
+    version_to_restore = result.scalar_one_or_none()
 
-    if not version:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Version {version_num} not found",
+    if not version_to_restore:
+        raise HTTPException(status_code=404, detail=f"Version {version_num} not found")
+
+    try:
+        # Lock the prompt to prevent concurrent version creations
+        prompt_stmt = select(Prompt).where(Prompt.id == prompt_id).with_for_update()
+        prompt_result = await db.execute(prompt_stmt)
+        locked_prompt = prompt_result.scalar_one_or_none()
+        if not locked_prompt:
+            raise HTTPException(status_code=404, detail="Prompt not found")
+
+        # Determine next version number
+        next_version = locked_prompt.version_count + 1
+
+        # Create new version
+        new_version = PromptVersion(
+            id=uuid4(),
+            prompt_id=prompt_id,
+            version=next_version,
+            content=version_to_restore.content,
+            provider=version_to_restore.provider,
+            model=version_to_restore.model,
+            change_description=f"Restored from version {version_num}",
         )
 
-    return VersionResponse.from_orm(version)
+        # Update prompt
+        locked_prompt.version_count = next_version
+
+        db.add(new_version)
+        db.add(locked_prompt)
+        await db.commit()
+        await db.refresh(new_version)
+    except Exception as e:
+        await db.rollback()
+        raise HTTPException(status_code=500, detail="Failed to restore version") from e
+
+    return VersionResponse.from_orm(new_version)

@@ -1,43 +1,50 @@
-import React, { useEffect, useState } from 'react';
-import apiClient from '../services/api';
-import { PromptVersion } from '../types';
-import '../styles/VersionList.css';
+import React, { useEffect, useState } from 'react'
+import apiClient from '../services/api'
+import { PromptVersion } from '../types'
+import '../styles/VersionList.css'
 
 interface VersionListProps {
-  promptId: string;
-  selectedVersionId?: string;
-  versionRefreshTrigger?: number;
-  onSelectVersion: (version: PromptVersion) => void;
+  promptId: string
+  selectedVersionId?: string
+  versionRefreshTrigger?: number
+  onSelectVersion: (version: PromptVersion) => void
 }
 
-const VersionList: React.FC<VersionListProps> = ({ promptId, selectedVersionId, versionRefreshTrigger, onSelectVersion }) => {
-  const [versions, setVersions] = useState<PromptVersion[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+const VersionList: React.FC<VersionListProps> = ({
+  promptId,
+  selectedVersionId,
+  versionRefreshTrigger,
+  onSelectVersion,
+}) => {
+  const [versions, setVersions] = useState<PromptVersion[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     const fetchVersions = async () => {
       try {
-        setLoading(true);
-        const response = await apiClient.getPromptVersions(promptId);
-        const sorted = response.items.sort((a, b) => b.version - a.version);
-        setVersions(sorted);
+        setLoading(true)
+        const response = await apiClient.getPromptVersions(promptId)
+        const sorted = response.items.sort((a, b) => b.version - a.version)
+        setVersions(sorted)
       } catch (err) {
-        const errorMsg = err instanceof Error ? err.message : 'Failed to fetch versions';
-        console.error('Error fetching versions:', { error: err, errorMsg });
-        setError(errorMsg);
+        const errorMsg =
+          err instanceof Error ? err.message : 'Failed to fetch versions'
+        console.error('Error fetching versions:', { error: err, errorMsg })
+        setError(errorMsg)
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
-    };
+    }
 
     if (promptId) {
-      fetchVersions();
+      fetchVersions()
     }
-  }, [promptId, versionRefreshTrigger]);
+  }, [promptId, versionRefreshTrigger])
 
-  if (loading) return <div className="version-list-loading">Carregando versões...</div>;
-  if (error) return <div className="version-list-error">{error}</div>;
+  if (loading)
+    return <div className="version-list-loading">Carregando versões...</div>
+  if (error) return <div className="version-list-error">{error}</div>
 
   return (
     <div className="version-list">
@@ -66,7 +73,7 @@ const VersionList: React.FC<VersionListProps> = ({ promptId, selectedVersionId, 
         </ul>
       )}
     </div>
-  );
-};
+  )
+}
 
-export default VersionList;
+export default VersionList

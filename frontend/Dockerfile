@@ -75,7 +75,12 @@ COPY --from=builder /app/dist /usr/share/nginx/html
 # Criar usuário não-root para Nginx
 RUN addgroup -g 1000 appuser && \
     adduser -D -u 1000 -G appuser appuser && \
-    chown -R appuser:appuser /usr/share/nginx/html
+    chown -R appuser:appuser /usr/share/nginx/html && \
+    chown -R appuser:appuser /var/cache/nginx && \
+    chown -R appuser:appuser /var/log/nginx && \
+    chown -R appuser:appuser /etc/nginx/conf.d && \
+    touch /tmp/nginx.pid && \
+    chown appuser:appuser /tmp/nginx.pid
 
 USER appuser
 

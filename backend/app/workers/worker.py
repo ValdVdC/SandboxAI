@@ -4,7 +4,7 @@ Celery worker entrypoint.
 
 Usage:
     python -m app.workers.worker
-    
+
     Or with options:
     celery -A app.workers.config worker --loglevel=info --concurrency=10 --queues=default,tests,priority
 """
@@ -64,7 +64,7 @@ def start_worker():
     celery_app.worker_main(
         [
             "worker",
-            f"--loglevel=info",
+            "--loglevel=info",
             f"--concurrency={concurrency}",
             "--queues=default,tests,priority",
             "--prefetch-multiplier=1",

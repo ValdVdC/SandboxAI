@@ -126,6 +126,7 @@ docker compose run --rm api ruff check .
 ```
 
 **Convenções:**
+
 - Funções e variáveis em `snake_case`
 - Classes em `PascalCase`
 - Constantes em `UPPER_SNAKE_CASE`
@@ -165,6 +166,7 @@ docker compose run --rm frontend npm run lint
 ```
 
 **Convenções:**
+
 - Componentes React em `PascalCase`
 - Funções e variáveis em `camelCase`
 - Arquivos de componentes em `PascalCase.tsx`

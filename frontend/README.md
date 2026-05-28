@@ -71,18 +71,18 @@ frontend/
 
 O frontend utiliza **paletra de cores coerente** com tema escuro:
 
-| Cor | Uso |
-|-----|-----|
-| `#0d1117` | Background primário (página) |
+| Cor       | Uso                           |
+| --------- | ----------------------------- |
+| `#0d1117` | Background primário (página)  |
 | `#161b22` | Background secundário (cards) |
 | `#21262d` | Background terciário (inputs) |
-| `#e6edf3` | Texto primário |
-| `#c9d1d9` | Texto secundário |
-| `#8b949e` | Texto muted |
-| `#58a6ff` | Primary (botões, links) |
-| `#3fb950` | Success (✅) |
-| `#f85149` | Danger (❌) |
-| `#d29922` | Warning (⚠️) |
+| `#e6edf3` | Texto primário                |
+| `#c9d1d9` | Texto secundário              |
+| `#8b949e` | Texto muted                   |
+| `#58a6ff` | Primary (botões, links)       |
+| `#3fb950` | Success (✅)                  |
+| `#f85149` | Danger (❌)                   |
+| `#d29922` | Warning (⚠️)                  |
 
 Todas as cores estão definidas em **CSS variables** em `styles/global.css`.
 
@@ -101,6 +101,7 @@ Login/Register → AuthContext → API Client → localStorage
 ### Endpoints Autenticados
 
 Todos os requests incluem automaticamente o header:
+
 ```
 Authorization: Bearer <access_token>
 ```
@@ -110,18 +111,21 @@ Token é armazenado em `localStorage` e recuperado ao recarregar a página.
 ## 📄 Telas Implementadas
 
 ### 1. **Login** `/login`
+
 - Email e senha
 - Link para cadastro
 - Validação básica
 - Tratamento de erros
 
 ### 2. **Registro** `/register`
+
 - Email, username e senha
 - Confirmação de senha
 - Link para login
 - Mensagens de validação
 
 ### 3. **Dashboard** `/dashboard`
+
 - **Métricas Principais:**
   - Total de testes executados
   - Custo total em USD
@@ -133,6 +137,7 @@ Token é armazenado em `localStorage` e recuperado ao recarregar a página.
 - Auto-refresh a cada 30 segundos
 
 ### 4. **Listagem de Prompts** `/prompts`
+
 - Grid de cards com prompts
 - **Busca em tempo real** (debounce de 300ms)
 - Filtro por nome
@@ -140,6 +145,7 @@ Token é armazenado em `localStorage` e recuperado ao recarregar a página.
 - Indicador de versão atual (v1, v2, etc)
 
 ### 5. **Criação de Prompt** `/create-prompt`
+
 - Formulário com:
   - Nome
   - Descrição
@@ -148,6 +154,7 @@ Token é armazenado em `localStorage` e recuperado ao recarregar a página.
 - Dica: `Use {input} para marcar onde a entrada será inserida`
 
 ### 6. **Detalhes do Prompt** `/prompts/:id`
+
 - Informações do prompt (nome, descrição, versão)
 - **Sidebar com histórico de versões**
   - Clique em versão para comparar
@@ -155,6 +162,7 @@ Token é armazenado em `localStorage` e recuperado ao recarregar a página.
 - **Comparação side-by-side** de versões
 
 ### 7. **Execução de Testes** `/test/:promptId`
+
 - Seleção de:
   - Provider (Ollama, Groq, OpenAI)
   - Modelo específico por provider
@@ -163,6 +171,7 @@ Token é armazenado em `localStorage` e recuperado ao recarregar a página.
 - **Real-time refresh** enquanto executando
 
 ### 8. **Resultados de Teste**
+
 - Status badge (pending, running, completed, failed)
 - Input/Output/Expected em painéis separados
 - **Métricas:**
@@ -173,6 +182,7 @@ Token é armazenado em `localStorage` e recuperado ao recarregar a página.
   - Provider e modelo usado
 
 ### 9. **Comparação de Versões** `/compare`
+
 - Side-by-side de duas versões
 - Visualização de alterações
 
@@ -189,46 +199,50 @@ Token é armazenado em `localStorage` e recuperado ao recarregar a página.
 
 ### Endpoints Consumidos
 
-| Método | Rota | Função |
-|--------|------|--------|
-| **Auth** | | |
-| POST | `/auth/login` | Autenticação |
-| POST | `/auth/register` | Cadastro |
-| GET | `/auth/profile` | Perfil do usuário |
-| **Prompts** | | |
-| POST | `/prompts` | Criar prompt |
-| GET | `/prompts` | Listar prompts |
-| GET | `/prompts/{id}` | Detalhar prompt |
-| PUT | `/prompts/{id}` | Editar prompt |
-| DELETE | `/prompts/{id}` | Deletar prompt |
-| POST | `/prompts/{id}/duplicate` | Duplicar prompt |
-| **Versões** | | |
-| GET | `/prompts/{id}/versions` | Listar versões |
-| GET | `/prompts/{id}/versions/{versionId}` | Detalhes de versão |
-| POST | `/prompts/{id}/versions/{versionId}/restore` | Restaurar versão |
-| **Testes** | | |
-| POST | `/tests` | Executar teste |
-| GET | `/tests/{id}` | Status do teste |
-| GET | `/tests/{id}/result` | Resultados completos |
-| GET | `/prompts/{id}/tests` | Testes de um prompt |
-| **Métricas** | | |
-| GET | `/metrics` | Métricas globais |
-| GET | `/prompts/{id}/metrics` | Métricas por prompt |
+| Método       | Rota                                         | Função               |
+| ------------ | -------------------------------------------- | -------------------- |
+| **Auth**     |                                              |                      |
+| POST         | `/auth/login`                                | Autenticação         |
+| POST         | `/auth/register`                             | Cadastro             |
+| GET          | `/auth/profile`                              | Perfil do usuário    |
+| **Prompts**  |                                              |                      |
+| POST         | `/prompts`                                   | Criar prompt         |
+| GET          | `/prompts`                                   | Listar prompts       |
+| GET          | `/prompts/{id}`                              | Detalhar prompt      |
+| PUT          | `/prompts/{id}`                              | Editar prompt        |
+| DELETE       | `/prompts/{id}`                              | Deletar prompt       |
+| POST         | `/prompts/{id}/duplicate`                    | Duplicar prompt      |
+| **Versões**  |                                              |                      |
+| GET          | `/prompts/{id}/versions`                     | Listar versões       |
+| GET          | `/prompts/{id}/versions/{versionId}`         | Detalhes de versão   |
+| POST         | `/prompts/{id}/versions/{versionId}/restore` | Restaurar versão     |
+| **Testes**   |                                              |                      |
+| POST         | `/tests`                                     | Executar teste       |
+| GET          | `/tests/{id}`                                | Status do teste      |
+| GET          | `/tests/{id}/result`                         | Resultados completos |
+| GET          | `/prompts/{id}/tests`                        | Testes de um prompt  |
+| **Métricas** |                                              |                      |
+| GET          | `/metrics`                                   | Métricas globais     |
+| GET          | `/prompts/{id}/metrics`                      | Métricas por prompt  |
 
 ## 🎣 Hooks Customizados
 
 ### `usePrompts(search?)`
+
 Fetch de lista paginada de prompts com debounce.
 
 ### `usePromptDetail(id)`
+
 Fetch de detalhes de um prompt específico.
 
 ### `useTestExecution(testId)`
+
 Fetch do status e resultado de um teste executado.
 
 ## 🧑‍💻 Desenvolvimento Local
 
 ### Pré-requisitos
+
 - Node.js 16+
 - npm ou yarn
 
@@ -259,12 +273,14 @@ npm run test:coverage # Coverage report
 ## 📦 Dependências
 
 ### Main
+
 - **react** ^18.2.0 — UI library
 - **react-dom** ^18.2.0 — DOM binding
 - **react-router-dom** ^6.20.0 — Roteamento
 - **axios** ^1.6.2 — HTTP client
 
 ### Dev
+
 - **TypeScript** ^5.3.3 — Type safety
 - **Vite** ^5.0.8 — Build tool
 - **Vitest** ^1.0.4 — Test runner
@@ -280,7 +296,9 @@ VITE_API_URL=http://localhost:8000
 ```
 
 ### CI/CD (GitHub Actions)
+
 Necessários secrets no GitHub:
+
 - `VITE_API_URL` — URL da API em produção
 
 ## 🚀 Deploy
@@ -304,6 +322,7 @@ CMD ["serve", "-s", "dist", "-l", "3000"]
 ```
 
 ### Nginx (Reverse Proxy)
+
 Ver `nginx.conf` para produção com gzip, cache headers, etc.
 
 ## ✅ Checklist de Requisitos
@@ -329,12 +348,15 @@ Ver `nginx.conf` para produção com gzip, cache headers, etc.
 ## 🐛 Troubleshooting
 
 ### "CORS error"
+
 Verificar se `VITE_API_URL` está correto em `.env`
 
 ### "Token expirado"
+
 localStorage será limpo automaticamente e usuário redirecionado para `/login`
 
 ### "Componente não renderia"
+
 Verificar se está dentro de `<AuthProvider>` (em App.tsx)
 
 ## 📝 Notas de Desenvolvimento

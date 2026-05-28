@@ -70,9 +70,9 @@ async def get_provider_status():
     except (httpx.TimeoutException, httpx.ConnectError):
         ollama_available = False
         ollama_reason = "Service not running (disabled in this deployment)"
-    except Exception as e:
+    except Exception:
         ollama_available = False
-        ollama_reason = f"Service unavailable"
+        ollama_reason = "Service unavailable"
 
     status["ollama"] = {"available": ollama_available, "reason": ollama_reason}
 

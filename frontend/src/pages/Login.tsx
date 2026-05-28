@@ -1,31 +1,31 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import Alert from '../components/Alert';
-import '../styles/Auth.css';
+import React, { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
+import Alert from '../components/Alert'
+import '../styles/Auth.css'
 
 const Login: React.FC = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const { login } = useAuth();
-  const navigate = useNavigate();
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const { login } = useAuth()
+  const navigate = useNavigate()
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
+    e.preventDefault()
+    setLoading(true)
+    setError(null)
 
     try {
-      await login({ email, password });
-      navigate('/dashboard');
+      await login({ email, password })
+      navigate('/dashboard')
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Falha ao fazer login');
+      setError(err instanceof Error ? err.message : 'Falha ao fazer login')
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   return (
     <div className="auth-container">
@@ -37,7 +37,9 @@ const Login: React.FC = () => {
 
         <h2>Login</h2>
 
-        {error && <Alert type="error" message={error} onClose={() => setError(null)} />}
+        {error && (
+          <Alert type="error" message={error} onClose={() => setError(null)} />
+        )}
 
         <form onSubmit={handleSubmit}>
           <div className="form-group">
@@ -81,7 +83,7 @@ const Login: React.FC = () => {
         </p>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default Login;
+export default Login

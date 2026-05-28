@@ -145,23 +145,49 @@ class TestExecuteRequest(BaseModel):
     expected: Optional[str] = None
 
 
+class TestBulkExecuteRequest(BaseModel):
+    """Schema for executing tests in bulk."""
+
+    inputs: list[str]
+    expected: Optional[str] = None
+
+
+class TestBulkResponse(BaseModel):
+    """Schema for bulk test execution response."""
+
+    test_ids: list[str]
+    celery_task_ids: list[str]
+    total_queued: int
+    message: str
+
+
 class TestResultResponse(BaseModel):
     """Schema for test result response."""
 
     id: UUID
     version_id: UUID
+    batch_id: Optional[UUID] = None
     input: str
     output: Optional[str]
     expected: Optional[str]
     latency_ms: Optional[int]
     tokens_used: Optional[int]
     cost_usd: Optional[Decimal]
+    score: Optional[float] = None
+    is_correct: Optional[bool] = None
+    is_human_overridden: Optional[bool] = False
     status: str  # "pending", "completed", "failed"
     error_message: Optional[str]
     created_at: datetime
 
     class Config:
         from_attributes = True
+
+
+class TestOverrideRequest(BaseModel):
+    """Schema for overriding a test result."""
+
+    is_correct: bool
 
 
 class TestListResponse(BaseModel):
@@ -171,6 +197,48 @@ class TestListResponse(BaseModel):
     page: int
     per_page: int
     items: list[TestResultResponse]
+
+
+# ════════════════════════════════════════════════════════════════════════════
+# Playground Schemas
+# ════════════════════════════════════════════════════════════════════════════
+
+
+class PlaygroundConfig(BaseModel):
+    """Configuration for a single provider and model in the playground."""
+
+    provider: str  # "openai", "groq", "ollama", "anthropic"
+    model: str
+
+
+class PlaygroundRunRequest(BaseModel):
+    """Request schema for executing a prompt in the playground against multiple providers."""
+
+    prompt_content: str
+    input: str
+    expected: Optional[str] = None
+    configs: list[PlaygroundConfig]
+
+
+class PlaygroundColumnResult(BaseModel):
+    """Result of a single provider and model execution in the playground."""
+
+    provider: str
+    model: str
+    output: Optional[str] = None
+    latency_ms: float
+    tokens_used: int
+    cost_usd: float
+    score: Optional[float] = None
+    is_correct: Optional[bool] = None
+    status: str  # "completed", "failed"
+    error_message: Optional[str] = None
+
+
+class PlaygroundRunResponse(BaseModel):
+    """Response schema containing results from all playground executions."""
+
+    results: list[PlaygroundColumnResult]
 
 
 # ════════════════════════════════════════════════════════════════════════════
@@ -214,3 +282,31 @@ class ErrorResponse(BaseModel):
     detail: str
     error_code: str
     timestamp: datetime
+
+
+# ════════════════════════════════════════════════════════════════════════════
+# CI/CD Schemas
+# ════════════════════════════════════════════════════════════════════════════
+
+
+class CIRunRequest(BaseModel):
+    """Schema for triggering CI run."""
+
+    prompt_ids: list[UUID]
+
+
+class CIRunResponse(BaseModel):
+    """Schema for CI run response."""
+
+    job_id: UUID
+    status: str
+    message: str
+
+
+class CIJobStatusResponse(BaseModel):
+    """Schema for CI job status."""
+
+    job_id: UUID
+    status: str
+    final_status: Optional[str] = None
+    justification: Optional[str] = None

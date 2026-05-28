@@ -18,6 +18,12 @@ nano .env
 
 ## Variáveis por serviço
 
+### Docker Compose
+
+| Variável | Obrigatório | Padrão | Descrição |
+|----------|-------------|--------|-----------|
+| `COMPOSE_PROJECT_NAME` | ❌ | `sandboxai` | Prefixo estável para recursos Docker (containers, network, volumes) |
+
 ### API
 
 | Variável | Obrigatório | Padrão | Descrição |
@@ -68,6 +74,9 @@ nano .env
 ## Exemplo de arquivo `.env`
 
 ```env
+# ─── Docker Compose ───────────────────────────────
+COMPOSE_PROJECT_NAME=sandboxai
+
 # ─── API ──────────────────────────────────────────
 DATABASE_URL=postgresql://sandboxai:sandboxai@postgres:5432/sandboxai
 REDIS_URL=redis://redis:6379
@@ -102,19 +111,23 @@ VITE_API_URL=http://localhost:8000
 ## Obtendo as chaves de API
 
 ### Groq (Gratuito)
+
 1. Acesse [console.groq.com](https://console.groq.com)
 2. Crie uma conta gratuita
 3. Vá em **API Keys** e gere uma nova chave
 
 ### Ollama (Sem chave necessária)
+
 O Ollama roda localmente e não exige API Key. Basta ter o container rodando.
 
 ### OpenAI
+
 1. Acesse [platform.openai.com](https://platform.openai.com)
 2. Vá em **API Keys**
 3. Gere uma nova chave secreta
 
 ### Anthropic
+
 1. Acesse [console.anthropic.com](https://console.anthropic.com)
 2. Vá em **API Keys**
 3. Gere uma nova chave
@@ -128,3 +141,11 @@ O Ollama roda localmente e não exige API Key. Basta ter o container rodando.
 > ⚠️ **Nunca exponha API Keys em logs, código ou mensagens de commit.**
 
 O arquivo `.env.example` deve sempre estar atualizado com todas as variáveis, mas **sem valores reais**.
+
+---
+
+## Persistência de dados (PostgreSQL)
+
+- Use `docker compose down` para parar o ambiente sem apagar dados.
+- Não use `docker compose down -v` em ambiente onde queira preservar dados.
+- Evite limpeza ampla (`docker system prune -a -v`) sem backup prévio.

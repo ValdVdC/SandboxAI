@@ -2,24 +2,29 @@
 
 import logging
 import os
-from datetime import datetime
-from typing import Optional
+from datetime import datetime, timezone
 from uuid import UUID
 
+import numpy as np
+from fastembed import TextEmbedding
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
 from app.models import TestResult
 from app.workers.config import celery_app
+from app.workers.providers.anthropic import AnthropicProvider
 from app.workers.providers.groq import GroqProvider
 from app.workers.providers.ollama import OllamaProvider
+from app.workers.providers.openai import OpenAIProvider
 
 # Configure logging
 logger = logging.getLogger(__name__)
 
 # Database setup
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://user:password@postgres:5432/db")
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql+asyncpg://user:password@postgres:5432/db")
+if DATABASE_URL.startswith("postgresql://"):
+    DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://", 1)
 engine = create_async_engine(
     DATABASE_URL,
     echo=False,
@@ -35,6 +40,28 @@ AsyncSessionLocal = sessionmaker(
     autoflush=False,
     autocommit=False,
 )
+
+# Global TextEmbedding instance
+_embedding_model = None
+
+
+def get_embedding_model():
+    """Lazily load and return the TextEmbedding model."""
+    global _embedding_model
+    if _embedding_model is None:
+        logger.info("Initializing TextEmbedding model (intfloat/multilingual-e5-small)...")
+        _embedding_model = TextEmbedding(model_name="intfloat/multilingual-e5-small")
+    return _embedding_model
+
+
+def cosine_similarity(vec1, vec2):
+    """Calculate cosine similarity between two vectors."""
+    dot_product = np.dot(vec1, vec2)
+    norm1 = np.linalg.norm(vec1)
+    norm2 = np.linalg.norm(vec2)
+    if norm1 == 0 or norm2 == 0:
+        return 0.0
+    return float(dot_product / (norm1 * norm2))
 
 
 @celery_app.task(bind=True, max_retries=3, default_retry_delay=10)
@@ -118,7 +145,7 @@ async def _execute_test_async(
             stmt = (
                 update(TestResult)
                 .where(TestResult.id == test_id)
-                .values(status="running", updated_at=datetime.utcnow())
+                .values(status="running", updated_at=datetime.now(timezone.utc))
             )
             await db.execute(stmt)
             await db.commit()
@@ -129,22 +156,28 @@ async def _execute_test_async(
             raise
 
     # Interpolate prompt with test input
-    # Support both Python format style {input} and Jinja2 style {{input}}
-    if test_input:
+    final_prompt = prompt_content
+    if test_input is not None:
+        import json
+
+        from jinja2 import StrictUndefined
+        from jinja2.sandbox import SandboxedEnvironment
+
         try:
-            # Try Python format style: {input}
-            final_prompt = prompt_content.format(input=test_input)
-        except (KeyError, ValueError):
-            try:
-                # Try Jinja2 style: {{input}} → convert to {input} and format
-                final_prompt = prompt_content.replace("{{input}}", "{input}").format(
-                    input=test_input
-                )
-            except (KeyError, ValueError):
-                # If template doesn't have placeholders, use as-is
-                final_prompt = prompt_content
-    else:
-        final_prompt = prompt_content
+            # Try to parse test_input as JSON to support multiple variables
+            input_data = json.loads(test_input)
+            if isinstance(input_data, dict):
+                env = SandboxedEnvironment(undefined=StrictUndefined)
+                template = env.from_string(prompt_content)
+                final_prompt = template.render(**input_data)
+            else:
+                # If it's a JSON but not a dictionary, fallback
+                final_prompt = final_prompt.replace("{{input}}", str(test_input))
+                final_prompt = final_prompt.replace("{input}", str(test_input))
+        except (json.JSONDecodeError, TypeError):
+            # Not valid JSON, fallback to simple string replacement
+            final_prompt = final_prompt.replace("{{input}}", str(test_input))
+            final_prompt = final_prompt.replace("{input}", str(test_input))
 
     # Execute provider (outside database session to avoid conflicts)
     try:
@@ -162,7 +195,7 @@ async def _execute_test_async(
                     .values(
                         status="failed",
                         error_message=str(e)[:500],
-                        updated_at=datetime.utcnow(),
+                        updated_at=datetime.now(timezone.utc),
                     )
                 )
                 await db.execute(stmt)
@@ -175,6 +208,49 @@ async def _execute_test_async(
     # Update with results in new session
     async with AsyncSessionLocal() as db:
         try:
+            # Basic validation if expected output is provided
+            is_correct = None
+            score = None
+
+            stmt = select(TestResult).where(TestResult.id == test_id)
+            result_obj = await db.execute(stmt)
+            test_result = result_obj.scalar_one_or_none()
+
+            if test_result and test_result.expected and result.output:
+                expected_norm = test_result.expected.lower().strip()
+                output_norm = result.output.lower().strip()
+
+                # Semantic Similarity validation via fastembed
+                try:
+                    model = get_embedding_model()
+
+                    # Generate embeddings for both texts
+                    # embed() returns a generator, so we convert it to a list
+                    embeddings = list(model.embed([expected_norm, output_norm]))
+
+                    if len(embeddings) == 2:
+                        similarity = cosine_similarity(embeddings[0], embeddings[1])
+
+                        threshold = float(os.getenv("SEMANTIC_THRESHOLD", "0.8"))
+                        # Ensure score is bound between 0.0 and 1.0
+                        score = max(0.0, min(1.0, similarity))
+                        is_correct = score >= threshold
+
+                        logger.info(
+                            f"Semantic validation for {test_id}: Score={score:.4f}, Threshold={threshold}, Correct={is_correct}"
+                        )
+                    else:
+                        logger.warning(
+                            f"Embedding generation failed for {test_id}. Fallback to exact match."
+                        )
+                        is_correct = expected_norm in output_norm or output_norm in expected_norm
+                        score = 1.0 if is_correct else 0.0
+                except Exception as eval_err:
+                    logger.error(f"Error during semantic validation for {test_id}: {eval_err}")
+                    # Fallback to exact match on error
+                    is_correct = expected_norm in output_norm or output_norm in expected_norm
+                    score = 1.0 if is_correct else 0.0
+
             stmt = (
                 update(TestResult)
                 .where(TestResult.id == test_id)
@@ -183,9 +259,11 @@ async def _execute_test_async(
                     latency_ms=result.latency_ms,
                     tokens_used=result.tokens_used,
                     cost_usd=result.cost_usd,
+                    is_correct=is_correct,
+                    score=score,
                     status="completed",
                     error_message=None,
-                    updated_at=datetime.utcnow(),
+                    updated_at=datetime.now(timezone.utc),
                 )
             )
             await db.execute(stmt)
@@ -211,7 +289,7 @@ def _get_provider(provider_name: str):
     Factory function to get the appropriate provider instance.
 
     Args:
-        provider_name: Name of the provider ("groq" or "ollama")
+        provider_name: Name of the provider ("groq", "ollama", "openai", "anthropic")
 
     Returns:
         Provider instance
@@ -219,10 +297,15 @@ def _get_provider(provider_name: str):
     Raises:
         ValueError: If provider is not supported
     """
-    if provider_name.lower() == "groq":
+    provider_name = provider_name.lower()
+    if provider_name == "groq":
         return GroqProvider()
-    elif provider_name.lower() == "ollama":
+    elif provider_name == "ollama":
         return OllamaProvider()
+    elif provider_name == "openai":
+        return OpenAIProvider()
+    elif provider_name == "anthropic":
+        return AnthropicProvider()
     else:
         raise ValueError(f"Unsupported provider: {provider_name}")
 
@@ -269,7 +352,7 @@ async def _cleanup_stale_tests_async(hours: int):
 
     async with AsyncSessionLocal() as db:
         # Find tests stuck in "running" status
-        stale_threshold = datetime.utcnow() - timedelta(hours=hours)
+        stale_threshold = datetime.now(timezone.utc) - timedelta(hours=hours)
 
         # Update stale running tests to failed
         await db.execute(

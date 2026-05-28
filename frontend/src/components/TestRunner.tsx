@@ -1,104 +1,299 @@
-import React, { useState } from 'react';
-import apiClient from '../services/api';
-import Alert from './Alert';
-import '../styles/TestRunner.css';
+import React, { useState, useRef } from 'react'
+import Papa from 'papaparse'
+import apiClient from '../services/api'
+import Alert from './Alert'
+import '../styles/TestRunner.css'
 
 interface TestRunnerProps {
-  promptId: string;
-  versionId: string;
-  versionNumber: number;
-  onTestStarted: (testId: string) => void;
+  promptId: string
+  versionNumber: number
+  onTestStarted: (testId: string) => void
+  onBulkStarted?: (testIds: string[]) => void
 }
 
-const TestRunner: React.FC<TestRunnerProps> = ({ promptId, versionId, versionNumber, onTestStarted }) => {
-  const [testInput, setTestInput] = useState('');
-  const [expectedOutput, setExpectedOutput] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+const TestRunner: React.FC<TestRunnerProps> = ({
+  promptId,
+  versionNumber,
+  onTestStarted,
+  onBulkStarted,
+}) => {
+  const [testInput, setTestInput] = useState('')
+  const [expectedOutput, setExpectedOutput] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [mode, setMode] = useState<'single' | 'bulk' | 'upload'>('single')
+  const [file, setFile] = useState<File | null>(null)
+  const [previewHeaders, setPreviewHeaders] = useState<string[]>([])
+  const [previewRows, setPreviewRows] = useState<string[][]>([])
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
-  // Debug log
-  console.log('TestRunner props:', { promptId, versionId, versionNumber });
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setError(null)
+    setPreviewHeaders([])
+    setPreviewRows([])
+    
+    const selectedFile = e.target.files?.[0]
+    if (!selectedFile) {
+      setFile(null)
+      return
+    }
+
+    setFile(selectedFile)
+
+    // Create preview
+    if (selectedFile.name.endsWith('.csv')) {
+      Papa.parse(selectedFile, {
+        header: true,
+        preview: 3,
+        complete: (results: Papa.ParseResult<Record<string, string>>) => {
+          if (results.meta.fields) {
+            setPreviewHeaders(results.meta.fields)
+            setPreviewRows(
+              results.data.map((row) =>
+                results.meta.fields!.map((f) => row[f] ?? '')
+              )
+            )
+          }
+        },
+      })
+    } else if (selectedFile.name.endsWith('.json')) {
+      const reader = new FileReader()
+      reader.onload = (event) => {
+        try {
+          const json = JSON.parse(event.target?.result as string) as Record<
+            string,
+            unknown
+          >[]
+          if (Array.isArray(json) && json.length > 0) {
+            const headers = Object.keys(json[0])
+            setPreviewHeaders(headers)
+            setPreviewRows(
+              json
+                .slice(0, 3)
+                .map((obj) => headers.map((h) => String(obj[h] ?? '')))
+            )
+          }
+        } catch (errorParse) {
+          setError('Failed to parse JSON for preview')
+        }
+      }
+      reader.readAsText(selectedFile)
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    console.log('Submit handler called with:', { promptId, versionNumber, testInput, expectedOutput });
-    
-    // Validation: ensure versionNumber is valid
+    e.preventDefault()
+
     if (!versionNumber || versionNumber <= 0) {
-      const errorMsg = 'Versão inválida. Selecione uma versão válida.';
-      console.error(errorMsg, { versionNumber });
-      setError(errorMsg);
-      return;
+      setError('Versão inválida. Selecione uma versão válida.')
+      return
     }
-    
-    setLoading(true);
-    setError(null);
+
+    setLoading(true)
+    setError(null)
 
     try {
-      const payload = {
-        input: testInput,
-        expected: expectedOutput || undefined,
-      };
-      console.log('Executing test with:', { promptId, versionNumber, payload });
-      const test = await apiClient.executeTest(
-        promptId,
-        versionNumber,
-        payload
-      );
-      console.log('Test response:', test);
-      console.log('Test test_id:', test.test_id);
-      setTestInput('');
-      setExpectedOutput('');
-      if (test.test_id) {
-        console.log('Calling onTestStarted with:', test.test_id);
-        onTestStarted(test.test_id);
-      } else {
-        throw new Error('No test_id in response');
+      if (mode === 'single') {
+        const test = await apiClient.executeTest(promptId, versionNumber, {
+          input: testInput,
+          expected: expectedOutput || undefined,
+        })
+        setTestInput('')
+        setExpectedOutput('')
+        if (test.test_id) {
+          onTestStarted(test.test_id)
+        }
+      } else if (mode === 'bulk') {
+        // Bulk mode
+        const inputs = testInput
+          .split('\n')
+          .map((i) => i.trim())
+          .filter((i) => i.length > 0)
+        if (inputs.length === 0) {
+          throw new Error('Insira ao menos uma entrada válida por linha.')
+        }
+
+        const response = await apiClient.executeBulkTests(
+          promptId,
+          versionNumber,
+          {
+            inputs,
+            expected: expectedOutput || undefined,
+          }
+        )
+
+        setTestInput('')
+        setExpectedOutput('')
+        if (onBulkStarted && response.test_ids) {
+          onBulkStarted(response.test_ids)
+        }
+      } else if (mode === 'upload') {
+        if (!file) throw new Error('Selecione um arquivo CSV ou JSON.')
+        const response = await apiClient.executeBulkTestsUpload(
+          promptId,
+          versionNumber,
+          file
+        )
+        setFile(null)
+        setPreviewHeaders([])
+        setPreviewRows([])
+        if (fileInputRef.current) fileInputRef.current.value = ''
+        if (onBulkStarted && response.test_ids) {
+          onBulkStarted(response.test_ids)
+        }
       }
     } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : 'Failed to start test';
-      console.error('Test execution error:', { error: err, errorMsg });
-      setError(errorMsg);
+      setError(err instanceof Error ? err.message : 'Falha ao iniciar teste(s)')
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   return (
-    <form className="test-runner" onSubmit={handleSubmit}>
-      <h3>Executar Teste</h3>
-
-      {error && <Alert type="error" message={error} onClose={() => setError(null)} />}
-
-      <div className="form-group">
-        <label htmlFor="input">Entrada de Teste</label>
-        <textarea
-          id="input"
-          value={testInput}
-          onChange={(e) => setTestInput(e.target.value)}
-          placeholder="Digite o texto de entrada para testar o prompt"
-          required
-          rows={4}
-        />
+    <div className="test-runner-container">
+      <div className="runner-tabs">
+        <button
+          className={`tab-btn ${mode === 'single' ? 'active' : ''}`}
+          onClick={() => setMode('single')}
+        >
+          Teste Único
+        </button>
+        <button
+          className={`tab-btn ${mode === 'bulk' ? 'active' : ''}`}
+          onClick={() => setMode('bulk')}
+        >
+          Teste em Lote (Manual)
+        </button>
+        <button
+          className={`tab-btn ${mode === 'upload' ? 'active' : ''}`}
+          onClick={() => setMode('upload')}
+        >
+          Upload Dataset (CSV/JSON)
+        </button>
       </div>
 
-      <div className="form-group">
-        <label htmlFor="expected">Saída Esperada (Opcional)</label>
-        <textarea
-          id="expected"
-          value={expectedOutput}
-          onChange={(e) => setExpectedOutput(e.target.value)}
-          placeholder="Se definido, será comparado com a saída real"
-          rows={3}
-        />
-      </div>
+      <form className="test-runner" onSubmit={handleSubmit}>
+        <h3>
+          {mode === 'single'
+            ? 'Executar Teste'
+            : mode === 'bulk'
+              ? 'Executar Testes em Lote'
+              : 'Upload de Dataset'}
+        </h3>
 
-      <button type="submit" disabled={loading} className="btn btn-primary">
-        {loading ? 'Executando...' : 'Executar Teste'}
-      </button>
-    </form>
-  );
-};
+        {error && (
+          <Alert type="error" message={error} onClose={() => setError(null)} />
+        )}
 
-export default TestRunner;
+        {mode === 'upload' ? (
+          <div className="form-group">
+            <label>Selecione um arquivo .csv ou .json</label>
+            <input
+              type="file"
+              accept=".csv,.json"
+              onChange={handleFileChange}
+              ref={fileInputRef}
+              required
+              className="d-block-mb-1"
+            />
+            {file && previewHeaders.length > 0 && (
+              <div className="dataset-preview">
+                <h4>Preview ({file.name})</h4>
+                <div className="overflow-x-auto">
+                  <table className="preview-table">
+                    <thead>
+                      <tr>
+                        {previewHeaders.map((h, i) => (
+                          <th
+                            key={i}
+                            style={
+                              h.toLowerCase() === 'expected'
+                                ? { color: 'var(--success-color)' }
+                                : {}
+                            }
+                          >
+                            {h}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {previewRows.map((row, i) => (
+                        <tr key={i}>
+                          {row.map((cell, j) => (
+                            <td key={j}>
+                              {String(cell).length > 50
+                                ? String(cell).substring(0, 50) + '...'
+                                : String(cell)}
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <small className="text-muted">
+                  Apenas as 3 primeiras linhas são exibidas.
+                </small>
+              </div>
+            )}
+          </div>
+        ) : (
+          <>
+            <div className="form-group">
+              <label htmlFor="input">
+                {mode === 'single'
+                  ? 'Entrada de Teste'
+                  : 'Entradas de Teste (uma por linha)'}
+              </label>
+              <textarea
+                id="input"
+                value={testInput}
+                onChange={(e) => setTestInput(e.target.value)}
+                placeholder={
+                  mode === 'single'
+                    ? 'Digite o texto de entrada...'
+                    : 'Entrada 1\nEntrada 2\nEntrada 3...'
+                }
+                required
+                rows={mode === 'single' ? 4 : 8}
+              />
+              {mode === 'bulk' && (
+                <small className="text-muted">
+                  Cada linha será executada como um teste independente.
+                </small>
+              )}
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="expected">Saída Esperada (Opcional)</label>
+              <textarea
+                id="expected"
+                value={expectedOutput}
+                onChange={(e) => setExpectedOutput(e.target.value)}
+                placeholder="Se definido, será comparado com a saída real"
+                rows={3}
+              />
+            </div>
+          </>
+        )}
+
+        <button
+          type="submit"
+          disabled={loading || (mode === 'upload' && !file)}
+          className="btn btn-primary"
+        >
+          {loading
+            ? 'Processando...'
+            : mode === 'single'
+              ? 'Executar Teste'
+              : mode === 'bulk'
+                ? `Executar ${testInput.split('\n').filter((l) => l.trim()).length} Testes`
+                : 'Fazer Upload e Executar'}
+        </button>
+      </form>
+    </div>
+  )
+}
+
+export default TestRunner

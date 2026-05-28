@@ -49,6 +49,7 @@ frontend:
 ```
 
 **Responsabilidades:**
+
 - Interface para criação e versionamento de prompts
 - Visualização de resultados e métricas
 - Comparação side-by-side de versões
@@ -74,6 +75,7 @@ api:
 ```
 
 **Responsabilidades:**
+
 - Autenticação e autorização
 - CRUD de prompts e versões
 - Enfileiramento de testes no Redis
@@ -95,24 +97,22 @@ api:
 
 ### 3. Worker (Python + Celery)
 
-Responsável pela execução isolada dos testes de prompts. Cada teste é executado em um container Docker dedicado.
+Responsável pela execução assíncrona dos testes de prompts.
 
 ```yaml
 worker:
   build: ./backend
-  command: celery -A app.worker worker
-  volumes:
-    - /var/run/docker.sock:/var/run/docker.sock
+  command: celery -A app.workers.config worker
   depends_on:
     - redis
     - postgres
 ```
 
 **Responsabilidades:**
+
 - Consumir fila de testes do Redis
-- Criar containers Docker isolados por teste
-- Chamar providers de LLM (Groq, OpenAI, Ollama)
-- Destruir containers após execução
+- Processar templates e variáveis do prompt
+- Chamar providers de LLM via chamadas HTTP/API (Groq, OpenAI, Ollama)
 - Persistir resultados e métricas no banco
 
 **Fluxo de execução de um teste:**
@@ -124,19 +124,13 @@ Redis Queue
 Worker recebe tarefa
     │
     ▼
-Cria container Docker isolado
-    │
-    ▼
 Injeta prompt + variáveis
     │
     ▼
-Chama provider LLM
+Chama provider LLM (API HTTP)
     │
     ▼
 Coleta resultado + métricas
-    │
-    ▼
-Destrói container
     │
     ▼
 Persiste no PostgreSQL
@@ -207,6 +201,7 @@ redis:
 ```
 
 **Responsabilidades:**
+
 - Fila de execução de testes
 - Cache de resultados frequentes
 - Controle de rate limiting por usuário
@@ -227,6 +222,7 @@ ollama:
 ```
 
 **Modelos suportados:**
+
 - `llama3:8b` — uso geral, equilibrado
 - `mistral:7b` — rápido e eficiente
 - `gemma:7b` — bom para tarefas estruturadas
@@ -247,17 +243,18 @@ ollama:
 
 ## Decisões de Arquitetura
 
-### Por que Docker para cada teste?
+### Por que processamento em Background (Worker)?
 
-Cada teste de prompt roda em um container isolado para garantir:
-- **Reprodutibilidade** — mesmo ambiente sempre
-- **Isolamento** — falha em um teste não afeta outros
-- **Segurança** — código de terceiros não acessa o host
-- **Paralelismo** — múltiplos testes simultâneos sem conflito
+Testes de prompts via API podem sofrer com timeouts e alta latência. Utilizar um worker Celery garante:
+
+- **Resiliência** — retry automático em caso de falha do provider de LLM
+- **Desacoplamento** — a API principal não é bloqueada
+- **Escalabilidade** — múltiplos workers podem ser instanciados paralelamente
 
 ### Por que Redis como fila?
 
 Testes de LLM são operações lentas (1-30 segundos). Usar uma fila assíncrona permite:
+
 - API responde imediatamente sem bloquear
 - Worker processa em background
 - Frontend consulta status via polling ou WebSocket
@@ -278,17 +275,18 @@ Testes de LLM são operações lentas (1-30 segundos). Usar uma fila assíncrona
 O SandboxAI utiliza Alembic para versionamento e execução de migrações de banco de dados. Cada mudança no schema é registrada como uma migração SQL reutilizável.
 
 **Migrações existentes:**
+
 - `001_initial.py` — Schema inicial (users, prompts, prompt_versions, test_results)
 - `002_add_change_description.py` — Adição do campo `change_description` em `prompt_versions`
 
-**Localização:** `backend/app/migrations/versions/`
+**Localização:** `backend/migrations/versions/`
 
 ### Execução Programática de Migrações
 
 Em vez de usar CLI do Alembic (que causa conflitos de import com ambientes containerizados), o SandboxAI executa migrações programaticamente:
 
 ```python
-# backend/app/run_migrations.py
+# backend/run_migrations.py
 async def run_migrations():
     """Executa todas as migrações pendentes ao iniciar a API."""
     config = Config("alembic.ini")
@@ -297,6 +295,7 @@ async def run_migrations():
 ```
 
 Isso garante:
+
 - ✅ Migrations executam automaticamente no startup do container
 - ✅ Sem conflitos de CLI em ambientes isolados
 - ✅ Sem necessidade de comandos manuais pós-deployment
@@ -318,7 +317,7 @@ python /app/run_migrations.py
 if [ "$SERVICE_TYPE" = "api" ]; then
     exec uvicorn app.main:app --host 0.0.0.0 --port 8000
 else
-    exec celery -A app.worker worker
+    exec celery -A app.workers.config worker
 fi
 ```
 
@@ -349,27 +348,28 @@ API/Worker inicia (pronto para requisições)
 O Worker é um consumer Celery que processa testes em background:
 
 1. **Enfileiramento** — API coloca tarefa no Redis
+
    ```python
    execute_test.delay(version_id, test_input)
    ```
 
 2. **Pickup** — Worker consome tarefa da fila
+
    ```python
    @app.task(bind=True)
    def execute_test(self, version_id, test_input):
        # Process test
    ```
 
-3. **Execução** — Worker cria container isolado
+3. **Execução** — Worker chama o provedor configurado
+
    ```python
-   docker.containers.run(
-       image="sandboxai-runner",
-       environment={"PROMPT": prompt_content},
-       ...
-   )
+   provider = _get_provider(provider_name)
+   result = await provider.execute(final_prompt, model, timeout)
    ```
 
 4. **Persistência** — Resultados salvos no PostgreSQL
+
    ```python
    test_result = TestResult(
        version_id=version_id,
@@ -398,8 +398,8 @@ Redis garante que cada tarefa seja processada uma única vez, distribuindo entre
 
 - Comunicação entre serviços via rede Docker interna (não exposta)
 - API Keys de LLMs armazenadas apenas em variáveis de ambiente
-- Containers de teste sem acesso à rede do host
 - Autenticação JWT em todos os endpoints protegidos
+- Isolamento lógico por usuário (nenhum usuário acessa prompts de outros)
 
 ---
 

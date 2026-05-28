@@ -1,20 +1,32 @@
 """Test execution and result endpoints."""
 
-from datetime import datetime
+import csv
+import io
+import json
+from datetime import datetime, timezone
 from typing import Optional
 from uuid import UUID, uuid4
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
+from fastapi.responses import StreamingResponse
 from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.dependencies import get_current_user, get_user_prompt
 from app.models import Prompt, PromptVersion, TestResult, User
-from app.schemas import TestExecuteRequest, TestListResponse, TestResultResponse
+from app.schemas import (
+    TestBulkExecuteRequest,
+    TestExecuteRequest,
+    TestListResponse,
+    TestOverrideRequest,
+    TestResultResponse,
+)
 from app.workers.tasks import execute_test as execute_test_task
 
 router = APIRouter(prefix="/prompts", tags=["Tests"])
+
+MAX_BULK_TESTS = 50
 
 
 @router.post("/{prompt_id}/versions/{version_num}/tests", status_code=status.HTTP_202_ACCEPTED)
@@ -44,7 +56,7 @@ async def execute_test(
         HTTPException: If prompt/version not found or user doesn't own prompt
     """
     # Validate ownership and get prompt
-    prompt = await get_user_prompt(prompt_id, user, db)
+    await get_user_prompt(prompt_id, user, db)
 
     # Get specific version
     stmt = select(PromptVersion).where(
@@ -75,7 +87,7 @@ async def execute_test(
         cost_usd=0.0,
         status="queued",
         error_message=None,
-        created_at=datetime.utcnow(),
+        created_at=datetime.now(timezone.utc),
     )
 
     db.add(test_result)
@@ -96,6 +108,334 @@ async def execute_test(
         "status": "queued",
         "message": "Test queued for execution",
     }
+
+
+@router.post(
+    "/{prompt_id}/versions/{version_num}/tests/bulk",
+    status_code=status.HTTP_202_ACCEPTED,
+)
+async def execute_bulk_tests(
+    prompt_id: UUID,
+    version_num: int,
+    bulk_data: TestBulkExecuteRequest,
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    """
+    Execute multiple tests for a specific prompt version in bulk.
+
+    Args:
+        prompt_id: ID of prompt
+        version_num: Version number
+        bulk_data: List of inputs
+        user: Current authenticated user
+        db: Database session
+
+    Returns:
+        Summary of queued tests
+    """
+    # Validate ownership
+    await get_user_prompt(prompt_id, user, db)
+
+    if len(bulk_data.inputs) > MAX_BULK_TESTS:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Muitos testes em um único lote. Máximo permitido: {MAX_BULK_TESTS}",
+        )
+
+    # Get version
+    stmt = select(PromptVersion).where(
+        and_(
+            PromptVersion.prompt_id == prompt_id,
+            PromptVersion.version == version_num,
+        )
+    )
+    result = await db.execute(stmt)
+    version = result.scalar_one_or_none()
+
+    if not version:
+        raise HTTPException(status_code=404, detail=f"Version {version_num} not found")
+
+    test_ids = []
+    batch_id = uuid4()
+
+    try:
+        # Create all records first
+        for test_input in bulk_data.inputs:
+            test_id = uuid4()
+            test_result = TestResult(
+                id=test_id,
+                version_id=version.id,
+                batch_id=batch_id,
+                input=test_input,
+                status="queued",
+                expected=bulk_data.expected,
+                created_at=datetime.now(timezone.utc),
+            )
+            db.add(test_result)
+            test_ids.append(str(test_id))
+
+        await db.commit()
+    except Exception as e:
+        await db.rollback()
+        raise HTTPException(status_code=500, detail="Failed to queue bulk tests") from e
+
+    # Queue tasks in parallel after commit
+    task_ids = []
+    for t_id in test_ids:
+        try:
+            task = execute_test_task.delay(
+                test_id=t_id,
+                prompt_content=version.content,
+                provider=version.provider,
+                model=version.model,
+            )
+            task_ids.append(task.id)
+        except Exception as e:
+            import logging
+
+            logging.error("Failed to queue celery task for test %s: %s", t_id, e)
+            from sqlalchemy import update
+
+            stmt = (
+                update(TestResult)
+                .where(TestResult.id == t_id)
+                .values(status="failed", error_message="Failed to queue task")
+            )
+            await db.execute(stmt)
+            await db.commit()
+
+    return {
+        "test_ids": test_ids,
+        "celery_task_ids": task_ids,
+        "total_queued": len(test_ids),
+        "message": f"Successfully queued {len(test_ids)} tests",
+    }
+
+
+@router.post(
+    "/{prompt_id}/versions/{version_num}/tests/bulk/upload",
+    status_code=status.HTTP_202_ACCEPTED,
+)
+async def execute_bulk_tests_upload(
+    prompt_id: UUID,
+    version_num: int,
+    file: UploadFile = File(...),
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    """
+    Upload a CSV or JSON file to execute tests in bulk.
+    """
+    import codecs
+
+    # Validate ownership
+    await get_user_prompt(prompt_id, user, db)
+
+    # Get version
+    stmt = select(PromptVersion).where(
+        and_(
+            PromptVersion.prompt_id == prompt_id,
+            PromptVersion.version == version_num,
+        )
+    )
+    result = await db.execute(stmt)
+    version = result.scalar_one_or_none()
+
+    if not version:
+        raise HTTPException(status_code=404, detail=f"Version {version_num} not found")
+
+    filename = file.filename or ""
+    rows = []
+    try:
+        if filename.endswith(".csv"):
+            csv_reader = csv.DictReader(codecs.iterdecode(file.file, "utf-8"))
+            for row in csv_reader:
+                rows.append(row)
+        elif filename.endswith(".json"):
+            data = json.load(file.file)
+            if not isinstance(data, list):
+                raise ValueError("JSON must be a list of objects")
+            rows = data
+        else:
+            raise ValueError("Unsupported file format. Use CSV or JSON.")
+    except (csv.Error, json.JSONDecodeError, UnicodeDecodeError, ValueError) as e:
+        raise HTTPException(status_code=400, detail=f"Error parsing file: {e}") from e
+
+    if len(rows) > MAX_BULK_TESTS:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Muitos testes em um único lote. Máximo permitido: {MAX_BULK_TESTS}",
+        )
+
+    if any(not isinstance(row, dict) for row in rows):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cada item do CSV/JSON deve ser um objeto com os campos de entrada.",
+        )
+
+    test_ids = []
+    batch_id = uuid4()
+
+    try:
+        for row in rows:
+            # Extract expected
+            expected = None
+            # Case insensitive search for 'expected' key
+            expected_key = next((k for k in row if k.lower() == "expected"), None)
+            if expected_key:
+                expected = str(row.pop(expected_key))
+
+            # Rest of the row is input variables
+            test_input_json = json.dumps(row)
+
+            test_id = uuid4()
+            test_result = TestResult(
+                id=test_id,
+                version_id=version.id,
+                batch_id=batch_id,
+                input=test_input_json,
+                status="queued",
+                expected=expected,
+                created_at=datetime.now(timezone.utc),
+            )
+            db.add(test_result)
+            test_ids.append(str(test_id))
+
+        await db.commit()
+    except Exception as e:
+        await db.rollback()
+        raise HTTPException(status_code=500, detail="Failed to queue bulk tests from file") from e
+
+    # Queue tasks in parallel after commit
+    task_ids = []
+    for t_id in test_ids:
+        try:
+            task = execute_test_task.delay(
+                test_id=t_id,
+                prompt_content=version.content,
+                provider=version.provider,
+                model=version.model,
+            )
+            task_ids.append(task.id)
+        except Exception as e:
+            import logging
+
+            logging.error("Failed to queue celery task for test %s: %s", t_id, e)
+            from sqlalchemy import update
+
+            stmt = (
+                update(TestResult)
+                .where(TestResult.id == t_id)
+                .values(status="failed", error_message="Failed to queue task")
+            )
+            await db.execute(stmt)
+            await db.commit()
+
+    return {
+        "test_ids": test_ids,
+        "celery_task_ids": task_ids,
+        "total_queued": len(test_ids),
+        "message": f"Successfully queued {len(test_ids)} tests from file",
+    }
+
+
+@router.get("/{prompt_id}/versions/{version_num}/export")
+async def export_tests_csv(
+    prompt_id: UUID,
+    version_num: int,
+    batch_id: Optional[UUID] = None,
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> StreamingResponse:
+    """
+    Export test results to a CSV file.
+
+    Retrieves tests for a specific prompt version (and optionally a batch ID)
+    and returns a downloadable CSV stream. Requires authentication via get_current_user.
+
+    Args:
+        prompt_id: ID of the prompt
+        version_num: Version number
+        batch_id: Optional ID to filter by batch
+        user: Current authenticated user
+        db: Database session
+
+    Returns:
+        CSV file stream via StreamingResponse
+    """
+    # Validate ownership
+    await get_user_prompt(prompt_id, user, db)
+
+    # Get version
+    stmt = select(PromptVersion).where(
+        and_(
+            PromptVersion.prompt_id == prompt_id,
+            PromptVersion.version == version_num,
+        )
+    )
+    result = await db.execute(stmt)
+    version = result.scalar_one_or_none()
+
+    if not version:
+        raise HTTPException(status_code=404, detail="Version not found")
+
+    # Fetch tests
+    query = select(TestResult).where(TestResult.version_id == version.id)
+    if batch_id:
+        query = query.where(TestResult.batch_id == batch_id)
+
+    query = query.order_by(TestResult.created_at.desc())
+    result = await db.execute(query)
+    tests = result.scalars().all()
+
+    # Generate CSV in memory
+    output = io.StringIO()
+    writer = csv.writer(output)
+
+    # Header
+    writer.writerow(
+        [
+            "ID",
+            "Input",
+            "Output",
+            "Expected",
+            "Status",
+            "Latency (ms)",
+            "Tokens",
+            "Cost ($)",
+            "Created At",
+        ]
+    )
+
+    # Rows
+    for t in tests:
+        writer.writerow(
+            [
+                str(t.id),
+                t.input,
+                t.output or "",
+                t.expected or "",
+                t.status,
+                t.latency_ms or 0,
+                t.tokens_used or 0,
+                f"{float(t.cost_usd or 0):.6f}",
+                t.created_at.strftime("%Y-%m-%d %H:%M:%S") if t.created_at else "",
+            ]
+        )
+
+    csv_content = output.getvalue()
+    output.close()
+
+    filename = f"tests_prompt_{prompt_id}_v{version_num}.csv"
+    if batch_id:
+        filename = f"tests_batch_{batch_id}.csv"
+
+    return StreamingResponse(
+        io.StringIO(csv_content),
+        media_type="text/csv",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
 
 
 @router.get("/{prompt_id}/versions/{version_num}/tests", response_model=TestListResponse)
@@ -125,7 +465,7 @@ async def list_tests(
         HTTPException: If prompt/version not found or user doesn't own prompt
     """
     # Validate ownership
-    prompt = await get_user_prompt(prompt_id, user, db)
+    await get_user_prompt(prompt_id, user, db)
 
     # Get version
     stmt = select(PromptVersion).where(
@@ -214,5 +554,59 @@ async def get_test_result(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Test result not found",
         )
+
+    return TestResultResponse.from_orm(test_result)
+
+
+@router.patch("/tests/{test_id}/override", response_model=TestResultResponse)
+async def override_test_result(
+    test_id: UUID,
+    override_data: TestOverrideRequest,
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> TestResultResponse:
+    """
+    Override the correctness assessment of a test result.
+
+    Sets `is_correct` to the provided value and marks `is_human_overridden` as True.
+    """
+    # Get test result with ownership validation
+    stmt = (
+        select(TestResult)
+        .join(PromptVersion, TestResult.version_id == PromptVersion.id)
+        .join(Prompt, PromptVersion.prompt_id == Prompt.id)
+        .where(
+            and_(
+                TestResult.id == test_id,
+                Prompt.user_id == user.id,
+            )
+        )
+    )
+
+    result = await db.execute(stmt)
+    test_result = result.scalar_one_or_none()
+
+    if not test_result:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Test result not found",
+        )
+
+    test_result.is_correct = override_data.is_correct
+    test_result.is_human_overridden = True
+
+    try:
+        await db.commit()
+        await db.refresh(test_result)
+    except Exception as e:
+        import logging
+
+        logger = logging.getLogger(__name__)
+        logger.exception("Error during test override: %s", e)
+        await db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Erro interno ao atualizar o resultado do teste",
+        ) from e
 
     return TestResultResponse.from_orm(test_result)

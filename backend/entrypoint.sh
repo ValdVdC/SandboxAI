@@ -5,11 +5,20 @@ set -e
 
 echo "🚀 Starting SandboxAI Backend..."
 
+DB_HOST="${POSTGRES_HOST:-postgres}"
+DB_PORT="${POSTGRES_PORT:-5432}"
+DB_USER="${POSTGRES_USER:-sandboxai}"
+DB_PASSWORD="${POSTGRES_PASSWORD:-sandboxai}"
+DB_NAME="${POSTGRES_DB:-sandboxai}"
+
 # Wait for database to be ready
 echo "⏳ Waiting for database to be ready..."
+echo "   Target: ${DB_USER}@${DB_HOST}:${DB_PORT}/${DB_NAME}"
 max_attempts=30
 attempt=1
-while ! python -c "import asyncpg; import asyncio; asyncio.run(asyncpg.connect('postgresql://sandboxai:change-me-in-production@postgres:5432/sandboxai'))" 2>/dev/null; do
+export PGPASSWORD="$DB_PASSWORD"
+while ! psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -c '\q' > /dev/null 2>&1
+do
     if [ $attempt -ge $max_attempts ]; then
         echo "❌ Database failed to start after $max_attempts attempts"
         exit 1
@@ -39,8 +48,8 @@ echo "🔄 Running database migrations..."
 python /app/run_migrations.py
 
 # Seed database with test data (development only)
-echo "Seeding database with test data..."
-python /app/seed_database.py
+# echo "Seeding database with test data..."
+# python /app/seed_database.py
 
 # Start the application
 echo "✅ Starting FastAPI server..."

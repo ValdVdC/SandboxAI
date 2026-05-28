@@ -2,7 +2,7 @@
 
 import uuid
 
-from sqlalchemy import UUID, Column, ForeignKey, Integer, String, Text
+from sqlalchemy import UUID, Column, ForeignKey, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import relationship
 
 from .base import BaseModel
@@ -35,10 +35,7 @@ class PromptVersion(BaseModel):
         foreign_keys="TestResult.version_id",
     )
 
-    __table_args__ = (
-        # Unique constraint: each prompt can have only one version number
-        # We'll add this via migration for better control
-    )
+    __table_args__ = (UniqueConstraint("prompt_id", "version", name="uq_prompt_version"),)
 
     def __repr__(self) -> str:
         return f"<PromptVersion(id={self.id}, prompt_id={self.prompt_id}, version={self.version}, provider={self.provider}, model={self.model})>"

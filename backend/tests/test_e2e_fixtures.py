@@ -1,8 +1,10 @@
 """E2E Tests for Database Fixtures."""
 
-import pytest
 import uuid
+
+import pytest
 from sqlalchemy import select
+
 from app.models import User
 
 

@@ -1,0 +1,84 @@
+name: SandboxAI Continuous Prompt Testing
+
+permissions:
+  contents: read
+
+# ==============================================================================
+# Documentação e Processo de CI/CD para Usuários (SandboxAI)
+# ==============================================================================
+# Este arquivo é um template de workflow do GitHub Actions.
+# Copie este arquivo para o diretório `.github/workflows/` do seu repositório
+# para integrar a avaliação de Prompts diretamente no seu processo de DevOps.
+#
+# Ele será acionado automaticamente sempre que um Pull Request for aberto ou 
+# atualizado, garantindo que as alterações no seu código (ou no seu `sandboxai-ci.yml`) 
+# não causem "drift" semântico (queda de precisão) ou estouro de orçamento (>20%).
+# ==============================================================================
+
+on:
+  pull_request:
+    # O workflow será disparado em PRs direcionados à branch principal.
+    branches: ["main"]
+
+jobs:
+  sandboxai-tests:
+    name: Run SandboxAI Prompt Validations
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Faz o checkout do código do seu repositório
+      - name: Checkout repository
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+        with:
+          persist-credentials: false
+
+      # 2. Configura a versão do Python necessária para rodar o cliente CLI
+      - name: Setup Python 3.11
+        uses: actions/setup-python@82c7e631bb3cdc910f68e0081d67478d79c6982d
+        with:
+          python-version: '3.11'
+
+      # 3. Instala as dependências mínimas do CLI (neste caso, apenas o PyYAML)
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyyaml
+
+      # 4. Executa o Motor de Trigger (CLI) da SandboxAI
+      # 
+      # CRÍTICO: Configuração do Segredo de Autenticação
+      # Para que este passo funcione, você DEVE configurar o segredo `SANDBOXAI_API_KEY`
+      # no seu repositório do GitHub. A CLI o usará como Bearer Token.
+      # 
+      # Como configurar:
+      #   1. Vá até a página principal do seu repositório no GitHub.
+      #   2. Clique em 'Settings' (Configurações).
+      #   3. Na barra lateral esquerda, em 'Security', expanda 'Secrets and variables' e clique em 'Actions'.
+      #   4. Clique no botão verde 'New repository secret'.
+      #   5. No campo 'Name', insira exatamente: SANDBOXAI_API_KEY
+      #   6. No campo 'Secret', cole a sua API Key gerada na SandboxAI.
+      #   7. Clique em 'Add secret'.
+      #
+      # PRÉ-REQUISITO: 
+      # Certifique-se de que exista um arquivo chamado `sandboxai-ci.yml` na 
+      # raiz do seu repositório. Ele deve conter os IDs dos prompts alvo.
+      # Exemplo do sandboxai-ci.yml:
+      #   prompts:
+      #     - "550e8400-e29b-41d4-a716-446655440000"
+      - name: Run SandboxAI CI/CD CLI
+        env:
+          # O script lerá esta variável de ambiente para autenticar com a API SandboxAI
+          SANDBOXAI_API_KEY: ${{ secrets.SANDBOXAI_API_KEY }}
+        run: |
+          # O script abaixo lerá o arquivo `sandboxai-ci.yml` local e fará uma 
+          # requisição POST para a API da SandboxAI iniciar os testes em background.
+          # Em seguida, fará um "polling" (consultas periódicas) usando GET no 
+          # status do job.
+          # 
+          # Regras de Auditoria (Server-side):
+          # Se o custo médio das requisições explodir (> 20%) ou a precisão 
+          # semântica média (score) despencar, a CLI imprimirá a justificativa 
+          # de falha e encerrará com `sys.exit(1)`, quebrando seu PR.
+          # 
+          # Se tudo estiver dentro dos parâmetros (PASS), terminará com sucesso.
+          python ./backend/scripts/sandboxai_cli.py

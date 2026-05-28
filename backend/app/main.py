@@ -1,34 +1,181 @@
 """
-🚀 SandboxAI — Backend FastAPI
+SandboxAI — Backend FastAPI
 
 Aplicação principal para versionamento e teste de prompts para LLMs.
 """
 
-import asyncio
+import os
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.openapi.utils import get_openapi
 from fastapi.responses import JSONResponse
 from sqlalchemy import text
 
-from app.api import auth, metrics, prompts, providers, tests, versions
+from app.api import auth, metrics, playground, prompts, providers, tests, versions
 from app.core.database import dispose_engine, engine
+
+# Trigger CIs
+
+
+# Tags metadata for better organization
+tags_metadata = [
+    {
+        "name": "Authentication",
+        "description": "Autenticação de usuários e gerenciamento de tokens JWT.",
+    },
+    {
+        "name": "Prompts",
+        "description": "Gerenciamento dos projetos de prompts (CRUD).",
+    },
+    {
+        "name": "Versions",
+        "description": "Controle de versionamento histórico dos prompts.",
+    },
+    {
+        "name": "Tests",
+        "description": "Execução de testes individuais e em lote (Bulk Testing).",
+    },
+    {
+        "name": "Metrics",
+        "description": "Métricas de performance, custos e evolução histórica.",
+    },
+    {
+        "name": "providers",
+        "description": "Status e configuração de provedores de LLM (OpenAI, Groq, Ollama).",
+    },
+]
+
+
+# Startup and shutdown events
+async def startup_event():
+    """Validate database connection on startup."""
+    print("Validating database connection...")
+    run_migrations = False
+    try:
+        async with engine.begin() as conn:
+            await conn.execute(text("SELECT 1"))
+
+            # Check if tables exist
+            sql_query = """
+                SELECT
+                    to_regclass('public.users') IS NOT NULL AS has_users,
+                    to_regclass('public.alembic_version') IS NOT NULL AS has_alembic
+                """
+            tables_stmt = text(sql_query)
+            result = await conn.execute(tables_stmt)
+            status_row = result.mappings().one()
+
+            if not status_row["has_users"] or not status_row["has_alembic"]:
+                run_migrations = True
+
+        if run_migrations:
+            print("⚠️ Critical database schema is missing. Running migrations automatically...")
+            import subprocess
+
+            try:
+                subprocess.run(["alembic", "upgrade", "head"], check=True)
+                print("✅ Migrations completed successfully.")
+            except subprocess.CalledProcessError as sub_e:
+                print(f"❌ Migrations failed: {sub_e}")
+                raise RuntimeError(
+                    "Database schema missing and automatic migration failed."
+                ) from sub_e
+
+        print("✅ Database connection validated")
+    except Exception as e:
+        print(f"❌ Database connection failed: {e}")
+        raise
+
+
+async def shutdown_event():
+    """Cleanup on application shutdown."""
+    print("🔌 Disposing database connections...")
+    await dispose_engine()
+    print("✅ Database connections closed")
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await startup_event()
+    try:
+        yield
+    finally:
+        await shutdown_event()
+
 
 # Criar aplicação FastAPI
 app = FastAPI(
     title="SandboxAI API",
-    description="Plataforma de versionamento, teste e comparação de prompts para LLMs",
+    description="""
+SandboxAI é uma plataforma avançada para engenharia de prompts.
+
+Utilize o botão **Authorize** para autenticar com seu token JWT.
+""",
     version="1.0.0",
+    openapi_tags=tags_metadata,
+    contact={
+        "name": "SandboxAI Support",
+        "url": "https://github.com/ValdVdC/SandboxAI",
+    },
+    license_info={
+        "name": "MIT",
+    },
     servers=[
         {"url": "http://localhost:8000", "description": "Local development"},
         {"url": "http://api:8000", "description": "Docker environment"},
     ],
+    lifespan=lifespan,
 )
 
+
+# Enable Authorize button in Swagger UI
+def custom_openapi():
+    if app.openapi_schema:
+        return app.openapi_schema
+    openapi_schema = get_openapi(
+        title=app.title,
+        version=app.version,
+        description=app.description,
+        routes=app.routes,
+        tags=app.openapi_tags,
+    )
+    openapi_schema["components"]["securitySchemes"] = {
+        "BearerAuth": {
+            "type": "http",
+            "scheme": "bearer",
+            "bearerFormat": "JWT",
+        }
+    }
+    PUBLIC_PATHS = {"/", "/health"}
+    for path in openapi_schema["paths"]:
+        for method in openapi_schema["paths"][path]:
+            if path in PUBLIC_PATHS or openapi_schema["paths"][path][method].get("security"):
+                continue
+            openapi_schema["paths"][path][method]["security"] = [{"BearerAuth": []}]
+    app.openapi_schema = openapi_schema
+    return app.openapi_schema
+
+
+app.openapi = custom_openapi
+
 # Middleware CORS
+allowed_origins_env = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:5173")
+if allowed_origins_env.strip() == "*":
+    print(
+        "⚠️ WARNING: ALLOWED_ORIGINS='*' is incompatible with "
+        "allow_credentials=True. Falling back to localhost."
+    )
+    allowed_origins = ["http://localhost:3000", "http://localhost:5173"]
+else:
+    allowed_origins = [
+        origin.strip() for origin in allowed_origins_env.split(",") if origin.strip()
+    ]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Em produção, configurar com variáveis de ambiente
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -42,27 +189,7 @@ app.include_router(versions.router)
 app.include_router(tests.router)
 app.include_router(metrics.router)
 app.include_router(providers.router)
-
-
-# Startup and shutdown events
-@app.on_event("startup")
-async def startup_event():
-    """Validate database connection on startup (migrations already run)."""
-    print("🚀 Validating database connection...")
-    try:
-        async with engine.begin() as conn:
-            await conn.execute(text("SELECT 1"))
-        print("✅ Database connection validated")
-    except Exception as e:
-        print(f"❌ Database connection failed: {e}")
-
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    """Cleanup on application shutdown."""
-    print("🔌 Disposing database connections...")
-    await dispose_engine()
-    print("✅ Database connections closed")
+app.include_router(playground.router)
 
 
 # Health check endpoint
@@ -107,9 +234,12 @@ async def global_exception_handler(request, exc):
     Returns:
         JSONResponse: Resposta com erro
     """
+    import logging
+
+    logging.exception("Unhandled exception:")
     return JSONResponse(
         status_code=500,
-        content={"detail": "Erro interno do servidor", "type": type(exc).__name__},
+        content={"detail": "Erro interno do servidor"},
     )
 
 

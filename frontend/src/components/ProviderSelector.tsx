@@ -1,50 +1,57 @@
-import React from 'react';
-import '../styles/ProviderSelector.css';
+import React from 'react'
+import '../styles/ProviderSelector.css'
 
 interface ProviderStatus {
   [key: string]: {
-    available: boolean;
-    reason: string;
-  };
+    available: boolean
+    reason: string
+  }
 }
 
 interface ProviderSelectorProps {
-  value: string;
-  onChange: (provider: string) => void;
-  status: ProviderStatus;
+  value: string
+  onChange: (provider: string) => void
+  status: ProviderStatus
 }
 
-const PROVIDER_INFO: Record<string, { label: string; icon: string; color: string }> = {
+const PROVIDER_INFO: Record<
+  string,
+  { label: string; icon: string; color: string }
+> = {
   groq: {
     label: 'Groq',
     icon: '⚡',
-    color: '#f39c12'
+    color: '#f39c12',
   },
   ollama: {
     label: 'Ollama',
     icon: '🦙',
-    color: '#9b59b6'
+    color: '#9b59b6',
   },
   openai: {
     label: 'OpenAI',
     icon: '🤖',
-    color: '#3498db'
+    color: '#3498db',
   },
   anthropic: {
     label: 'Anthropic',
     icon: '🧠',
-    color: '#e74c3c'
+    color: '#e74c3c',
   },
-};
+}
 
-const ProviderSelector: React.FC<ProviderSelectorProps> = ({ value, onChange, status }) => {
+const ProviderSelector: React.FC<ProviderSelectorProps> = ({
+  value,
+  onChange,
+  status,
+}) => {
   return (
     <div className="provider-selector">
       <label className="provider-label">Selecione o Provider</label>
       <div className="provider-grid">
         {Object.entries(PROVIDER_INFO).map(([key, info]) => {
-          const isAvailable = status[key]?.available === true;
-          const isSelected = value === key;
+          const isAvailable = status[key]?.available === true
+          const isSelected = value === key
 
           return (
             <button
@@ -53,7 +60,7 @@ const ProviderSelector: React.FC<ProviderSelectorProps> = ({ value, onChange, st
               className={`provider-card ${isSelected ? 'selected' : ''} ${!isAvailable ? 'disabled' : ''}`}
               onClick={() => {
                 if (isAvailable) {
-                  onChange(key);
+                  onChange(key)
                 }
               }}
               disabled={!isAvailable}
@@ -75,11 +82,11 @@ const ProviderSelector: React.FC<ProviderSelectorProps> = ({ value, onChange, st
                 <div className="provider-reason">{status[key]?.reason}</div>
               )}
             </button>
-          );
+          )
         })}
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default ProviderSelector;
+export default ProviderSelector

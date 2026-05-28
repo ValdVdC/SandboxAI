@@ -1,5 +1,5 @@
 """
-🚀 SandboxAI — Backend FastAPI
+SandboxAI — Backend FastAPI
 
 Aplicação principal para versionamento e teste de prompts para LLMs.
 """
@@ -30,15 +30,11 @@ app.add_middleware(
 async def health_check():
     """
     Verificação de saúde da aplicação.
-    
+
     Returns:
         dict: Status da aplicação
     """
-    return {
-        "status": "healthy",
-        "service": "sandboxai-api",
-        "version": "1.0.0"
-    }
+    return {"status": "healthy", "service": "sandboxai-api", "version": "1.0.0"}
 
 
 # Root endpoint
@@ -46,7 +42,7 @@ async def health_check():
 async def root():
     """
     Endpoint raiz da API.
-    
+
     Returns:
         dict: Informações sobre a API
     """
@@ -54,7 +50,7 @@ async def root():
         "message": "Bem-vindo ao SandboxAI API",
         "version": "1.0.0",
         "docs": "/docs",
-        "health": "/health"
+        "health": "/health",
     }
 
 
@@ -63,23 +59,24 @@ async def root():
 async def global_exception_handler(request, exc):
     """
     Handler global de exceções.
-    
+
     Args:
         request: Requisição HTTP
         exc: Exceção capturada
-        
+
     Returns:
         JSONResponse: Resposta com erro
     """
+    import logging
+
+    logging.exception("Unhandled exception:")
     return JSONResponse(
         status_code=500,
-        content={
-            "detail": "Erro interno do servidor",
-            "type": type(exc).__name__
-        }
+        content={"detail": "Erro interno do servidor"},
     )
 
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8000)

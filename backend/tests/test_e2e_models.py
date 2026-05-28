@@ -1,9 +1,12 @@
 """E2E Tests for Models — Test database operations."""
 
-import pytest
 import uuid
+
+import pytest
 from sqlalchemy import select
-from app.models import User, Prompt, PromptVersion, TestResult
+from sqlalchemy.exc import IntegrityError
+
+from app.models import Prompt, PromptVersion, TestResult, User
 
 
 @pytest.mark.asyncio
@@ -55,8 +58,9 @@ async def test_user_email_unique_constraint(db_session):
     db_session.add(user2)
 
     # Should raise integrity error
-    with pytest.raises(Exception):  # IntegrityError
+    with pytest.raises(IntegrityError):
         await db_session.commit()
+    await db_session.rollback()
 
 
 @pytest.mark.asyncio

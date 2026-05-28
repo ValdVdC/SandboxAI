@@ -1,10 +1,10 @@
-import React from 'react';
-import '../styles/Alert.css';
+import React from 'react'
+import '../styles/Alert.css'
 
 interface AlertProps {
-  type: 'success' | 'error' | 'warning' | 'info';
-  message: string;
-  onClose?: () => void;
+  type: 'success' | 'error' | 'warning' | 'info'
+  message: string
+  onClose?: () => void
 }
 
 const Alert: React.FC<AlertProps> = ({ type, message, onClose }) => {
@@ -12,12 +12,16 @@ const Alert: React.FC<AlertProps> = ({ type, message, onClose }) => {
     <div className={`alert alert-${type}`}>
       <span>{message}</span>
       {onClose && (
-        <button className="alert-close" onClick={onClose}>
+        <button
+          className="alert-close"
+          onClick={onClose}
+          aria-label="Fechar alerta"
+        >
           ✕
         </button>
       )}
     </div>
-  );
-};
+  )
+}
 
-export default Alert;
+export default Alert

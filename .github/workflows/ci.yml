@@ -1,4 +1,5 @@
 name: CI — Tests & Linting
+# Triggered on changes to backend, frontend, docker-compose, requirements, package.json, or this workflow file
 
 on:
   push:
@@ -45,7 +46,7 @@ jobs:
       
       - name: Format check with black
         run: |
-          black --check backend/app --line-length=100
+          black --check --diff backend/app --line-length=100
       
       - name: Import sort check with isort
         run: |
@@ -105,6 +106,7 @@ jobs:
       - name: Run tests with coverage
         env:
           DATABASE_URL: postgresql+asyncpg://test:test@localhost:5432/test_sandboxai
+          TEST_DATABASE_URL: postgresql+asyncpg://test:test@localhost:5432/test_sandboxai
           REDIS_URL: redis://localhost:6379
           JWT_SECRET: test-secret-key-for-ci
           DEBUG: false
